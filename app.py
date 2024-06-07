@@ -95,7 +95,7 @@ def verify_otp():
 def reset_password():
     if request.method == 'POST':
         password = request.form['password']
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        hashed_password = generate_password_hash(password)
         email = session.get('reset_email')
 
         conn = get_db_connection()
@@ -114,10 +114,7 @@ def dashboard():
     if 'user_role' not in session:
         return redirect(url_for('login'))
 
-    if session['user_role'] == 'admin':
-        return "Welcome Admin: {}".format(session['user_email'])
-    else:
-        return "Welcome User: {}".format(session['user_email'])
+    return render_template('dashboard.html')
 
 @app.route('/logout')
 def logout():

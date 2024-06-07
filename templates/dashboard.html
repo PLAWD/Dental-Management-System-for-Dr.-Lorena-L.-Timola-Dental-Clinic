@@ -15,9 +15,12 @@
         <header>
             <div class="header-left">
                 <button id="toggleSidebar" class="toggle-sidebar-btn">&#9776;</button>
-                <h1>Appointments</h1>
+                <h1>Welcome, {{ session['user_first_name'] }}!</h1>
             </div>
         </header>
+        <div class="appointments-header">
+            <h2>Appointments</h2>
+        </div>
         <div id="calendar"></div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>

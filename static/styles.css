@@ -1,5 +1,13 @@
+/* General styles */
 body {
     font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Styles for login and related pages */
+.center-content {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -58,4 +66,108 @@ a {
 .flashes {
     color: red;
     margin-bottom: 10px;
+}
+
+/* Styles for dashboard page */
+body.dashboard {
+    display: flex;
+    height: 100vh;
+    background-color: #cbc7c2;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #3a3f51;
+    color: #fff;
+    padding: 15px;
+    display: none; /* Hidden by default */
+    flex-shrink: 0;
+}
+
+.sidebar.show {
+    display: block;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.toggle-sidebar-btn {
+    background: none;
+    border: none;
+    color: #5d74e2;
+    font-size: 24px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.toggle-sidebar-btn:hover {
+    color: #4a5cb0;
+}
+
+.actions {
+    display: none; /* Hide the actions section */
+}
+
+#calendar {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* FullCalendar styles */
+.fc-header-toolbar {
+    color: #000; /* Change text color for header */
+}
+
+.fc-button, .fc-button-primary {
+    background-color: #5d74e2;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.fc-button:hover, .fc-button-primary:hover {
+    background-color: #4a5cb0;
+}
+
+.fc-button-primary:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.fc-toolbar-title {
+    color: #000; /* Change title color */
+}
+
+/* Change color of dates inside the calendar */
+.fc-day-grid .fc-day-number, .fc-time-grid .fc-time, .fc-day-grid .fc-day-top {
+    color: #000; /* Change to your desired color */
+}
+
+.fc-day-grid-event .fc-content {
+    color: #000; /* Change event text color */
+}
+
+.fc-day {
+    background-color: #fff; /* Change background color if needed */
+}
+
+.appointments-header {
+    margin-top: 20px;
 }
