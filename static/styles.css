@@ -20,6 +20,16 @@ body {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 400px; /* Fixed width */
+    margin: 0 auto;
+}
+
+.login-title, .forgor-title, .verify-title, .reset-title {
+    color: #D0C8BB;
+}
+
+.login-p, .forgor-p, .verify-p, .reset-p, .forgor-a {
+    color: #D0C8BB;
 }
 
 form {
@@ -30,14 +40,14 @@ form {
 
 h2 {
     margin-bottom: 10px;
-    color: #D0C8BB;
+    color: #f44336;
 }
 
 label {
     margin-bottom: 5px;
 }
 
-input {
+input, textarea, select {
     margin-bottom: 10px;
     padding: 10px;
     border: 1px solid #ccc;
@@ -58,7 +68,7 @@ button:hover {
 }
 
 a {
-    color: #D0C8BB;
+    color: #000;
     text-align: right;
     margin-bottom: 10px;
 }
@@ -99,6 +109,7 @@ header {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    position: relative;
 }
 
 .header-left {
@@ -106,17 +117,47 @@ header {
     align-items: center;
 }
 
-.toggle-sidebar-btn {
-    background: none;
-    border: none;
-    color: #5d74e2;
-    font-size: 24px;
-    cursor: pointer;
-    margin-right: 10px;
+.header-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
-.toggle-sidebar-btn:hover {
-    color: #4a5cb0;
+.search-form {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-form input[type="text"] {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 300px; /* Default width */
+    height: 38px; /* Ensure the input and button have the same height */
+    box-sizing: border-box;
+}
+
+.search-form button.search-btn {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    background-color: #5d74e2;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px; /* Smaller button height */
+    width: 28px; /* Smaller button width */
+    box-sizing: border-box;
+}
+
+.search-form button.search-btn:hover {
+    background-color: #4a5cb0;
 }
 
 .actions {
@@ -124,7 +165,7 @@ header {
 }
 
 #calendar {
-    max-width: 900px;
+    max-width: 1200px; /* Increased width */
     margin: 0 auto;
     padding: 20px;
 }
@@ -132,6 +173,10 @@ header {
 /* FullCalendar styles */
 .fc-header-toolbar {
     color: #000; /* Change text color for header */
+}
+
+.fc-toolbar-title {
+    color: #000; /* Change title color */
 }
 
 .fc-button, .fc-button-primary {
@@ -151,11 +196,6 @@ header {
     box-shadow: none;
 }
 
-.fc-toolbar-title {
-    color: #000; /* Change title color */
-}
-
-/* Change color of dates inside the calendar */
 .fc-day-grid .fc-day-number, .fc-time-grid .fc-time, .fc-day-grid .fc-day-top {
     color: #000; /* Change to your desired color */
 }
@@ -168,6 +208,85 @@ header {
     background-color: #fff; /* Change background color if needed */
 }
 
-.appointments-header {
-    margin-top: 20px;
+.fc-head-container thead tr th {
+    color: #000; /* Change day header color */
+}
+
+/* Specific styles for dashboard h2 */
+.dashboard-title {
+    color: #f44336; /* Change to your desired color */
+}
+
+/* FullCalendar header specific styles for all views */
+.fc-day-header, .fc-widget-header {
+    color: #f44336; /* Change to your desired color */
+}
+
+/* FullCalendar week view specific styles */
+.fc-axis, .fc-time-grid-axis {
+    color: #f44336; /* Change text color for header in week view */
+}
+
+/* Styles for the create appointment button */
+.create-appointment-btn {
+    background-color: #5d74e2;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    display: block;
+    width: calc(100% - 30px);
+    margin: 20px auto;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.create-appointment-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: rgba(120, 77, 60, 1);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    color: #D0C8BB;
+}
+
+.create-appointment-container h2 {
+    color: #D0C8BB;
+}
+
+.create-appointment-container label {
+    display: block;
+    margin-bottom: 5px;
+    color: #D0C8BB;
+}
+
+.create-appointment-container input,
+.create-appointment-container select,
+.create-appointment-container textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.create-appointment-container button {
+    padding: 10px;
+    background-color: #D0C8BB;
+    color: #784D3C;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 48%;
+    margin-right: 2%;
+}
+
+.create-appointment-container button:hover {
+    background-color: #593C3C;
+}
+
+.create-appointment-container button:last-child {
+    margin-right: 0;
 }

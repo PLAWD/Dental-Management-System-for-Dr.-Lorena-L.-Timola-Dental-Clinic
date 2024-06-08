@@ -4,25 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css">
-    <title>Dashboard</title>
+    <title>Login</title>
 </head>
-<body class="dashboard">
-    <div class="sidebar" id="sidebar">
-        <!-- Sidebar content goes here -->
+<body class="center-content">
+    <div class="login-container">
+        <h2 class="login-title">Login</h2>
+        <p class="login-p">Please sign in to continue.</p>
+        <form action="{{ url_for('do_login') }}" method="POST">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+            <a href="{{ url_for('forgot_password') }}" class="forgor-a">Forgot Password</a>
+            <button type="submit">Login</button>
+        </form>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flashes">
+              {% for message in messages %}
+                <li>{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
     </div>
-    <div class="main-content">
-        <header>
-            <div class="header-left">
-                <button id="toggleSidebar" class="toggle-sidebar-btn">&#9776;</button>
-                <h1>Appointments</h1>
-            </div>
-        </header>
-        <div id="calendar"></div>
-    </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
-    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 </body>
 </html>

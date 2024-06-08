@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Appointment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.9.0/dist/fullcalendar.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@3.9.0/dist/fullcalendar.min.css" />
+</head>
+<body>
+<div class="create-appointment-container">
+    <h2>Create Appointment</h2>
+    <form id="appointmentForm">
+        <label for="patient">Select Patient:</label>
+        <select id="patient" name="patient" required>
+            <option value="" disabled selected>Select Patient</option>
+            {% for patient in patients %}
+                <option value="{{ patient.patient_id }}">{{ patient.first_name }} {{ patient.middle_name[0] if patient.middle_name else '' }} {{ patient.last_name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="appointmentDate">Appointment Date:</label>
+        <input type="date" id="appointmentDate" name="appointmentDate" required>
+
+        <label for="startTime">Start Time:</label>
+        <input type="time" id="startTime" name="startTime" required>
+
+        <label for="endTime">End Time:</label>
+        <input type="time" id="endTime" name="endTime" required>
+
+        <label for="appointmentType">Appointment Type:</label>
+        <input type="text" id="appointmentType" name="appointmentType" required>
+
+        <label for="chiefComplaints">Chief Complaints:</label>
+        <textarea id="chiefComplaints" name="chiefComplaints" required></textarea>
+
+        <label for="procedures">Procedures:</label>
+        <textarea id="procedures" name="procedures" required></textarea>
+
+        <label for="dentist">Select Dentist:</label>
+        <select id="dentist" name="dentist" required>
+            <option value="" disabled selected>Select Dentist</option>
+            {% for dentist in dentists %}
+                <option value="{{ dentist.dentist_id }}">{{ dentist.first_name }} {{ dentist.middle_name[0] if dentist.middle_name else '' }} {{ dentist.last_name }}</option>
+            {% endfor %}
+        </select>
+
+        <div class="form-buttons">
+            <button type="submit">Save</button>
+            <button type="button" onclick="window.close()">Discard</button>
+        </div>
+    </form>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#appointmentForm').on('submit', function(event) {
+        event.preventDefault();
+        $.ajax({
+            url: '{{ url_for("submit_appointment") }}',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                const event = {
+                    title: response.patient_name,
+                    start: response.start_time,
+                    end: response.end_time
+                };
+                window.opener.$('#calendar').fullCalendar('renderEvent', event, true);
+                window.close();
+            },
+            error: function(response) {
+                alert('Error saving appointment.');
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>

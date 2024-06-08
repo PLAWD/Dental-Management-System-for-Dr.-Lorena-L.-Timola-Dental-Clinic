@@ -6,24 +6,24 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <title>Verify OTP</title>
 </head>
-<body>
+<body class="center-content">
     <div class="login-container">
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <ul class="flashes">
-                    {% for message in messages %}
-                        <li>{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
-        <form action="{{ url_for('verify_otp') }}" method="post">
-            <h2>Verify OTP</h2>
-            <p>Please enter the OTP sent to your email.</p>
+        <h2 class="verify-title">Verify OTP</h2>
+        <p class="verify-p">Please enter the OTP sent to your email.</p>
+        <form action="{{ url_for('verify_otp') }}" method="POST">
             <label for="otp">OTP</label>
             <input type="text" id="otp" name="otp" required>
             <button type="submit">Submit</button>
         </form>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flashes">
+              {% for message in messages %}
+                <li>{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
     </div>
 </body>
 </html>

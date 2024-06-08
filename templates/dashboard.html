@@ -3,29 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css">
     <title>Dashboard</title>
-</head>
-<body class="dashboard">
-    <div class="sidebar" id="sidebar">
-        <!-- Sidebar content goes here -->
-    </div>
-    <div class="main-content">
-        <header>
-            <div class="header-left">
-                <button id="toggleSidebar" class="toggle-sidebar-btn">&#9776;</button>
-                <h1>Welcome, {{ session['user_first_name'] }}!</h1>
-            </div>
-        </header>
-        <div class="appointments-header">
-            <h2>Appointments</h2>
-        </div>
-        <div id="calendar"></div>
-    </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" />
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
-    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+</head>
+<body class="dashboard">
+    <header>
+        <div class="header-left">
+            <button id="toggleSidebar">☰</button>
+            <h2>Welcome, {{ first_name }}!</h2>
+        </div>
+        <div class="header-center">
+            <form class="search-form" action="{{ url_for('search') }}" method="get">
+                <input type="text" name="query" placeholder="Search...">
+                <button type="submit" class="search-btn">🔍</button>
+            </form>
+        </div>
+    </header>
+    <div id="sidebar" class="sidebar">
+        <!-- Sidebar content -->
+    </div>
+    <div class="main-content">
+        <div id="calendar"></div>
+        <button class="create-appointment-btn" onclick="window.open('{{ url_for('create_appointment') }}', '_blank')">Create Appointment</button>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const toggleSidebarButton = document.getElementById('toggleSidebar');
+
+            toggleSidebarButton.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+            });
+
+            $.getJSON('{{ url_for("get_appointments") }}', function (data) {
+                $('#calendar').fullCalendar({
+                    header: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'month,agendaWeek,agendaDay'
+                    },
+                    navLinks: true,
+                    editable: true,
+                    eventLimit: true,
+                    events: data
+                });
+            });
+        });
+    </script>
 </body>
 </html>
