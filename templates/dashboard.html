@@ -11,10 +11,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
 </head>
 <body class="dashboard">
+    <div class="sidebar-tab" id="sidebarTab">☰</div>
+    <div id="sidebar" class="sidebar">
+        <!-- Sidebar content -->
+    </div>
     <header>
         <div class="header-left">
-            <button id="toggleSidebar">☰</button>
-            <h2>Welcome, {{ first_name }}!</h2>
+            <h2>‎ ‎ ‎ ‎ ‎ Welcome, {{ first_name }}!</h2>
         </div>
         <div class="header-center">
             <form class="search-form" action="{{ url_for('search') }}" method="get">
@@ -23,20 +26,28 @@
             </form>
         </div>
     </header>
-    <div id="sidebar" class="sidebar">
-        <!-- Sidebar content -->
-    </div>
     <div class="main-content">
         <div id="calendar"></div>
-        <button class="create-appointment-btn" onclick="window.open('{{ url_for('create_appointment') }}', '_blank')">Create Appointment</button>
+        <button class="create-appointment-btn" onclick="window.open('{{ url_for('create_appointment') }}', 'Create Appointment', 'width=800,height=600')">Create Appointment</button>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
-            const toggleSidebarButton = document.getElementById('toggleSidebar');
+            const sidebarTab = document.getElementById('sidebarTab');
+            const mainContent = document.querySelector('.main-content');
 
-            toggleSidebarButton.addEventListener('click', function () {
+            sidebarTab.addEventListener('click', function () {
                 sidebar.classList.toggle('show');
+                mainContent.classList.toggle('shifted');
+                sidebarTab.style.display = 'none';
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    mainContent.classList.remove('shifted');
+                    sidebarTab.style.display = 'block';
+                }
             });
 
             $.getJSON('{{ url_for("get_appointments") }}', function (data) {
