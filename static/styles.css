@@ -146,6 +146,9 @@ header {
 }
 
 .header-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
@@ -338,4 +341,184 @@ header {
     position: absolute;
     bottom: 15px;
     width: 100%;
+}
+
+/* Styles for user management page */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 24px;
+    color: #00b4d8;
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.user-table th, .user-table td {
+    padding: 15px;
+    text-align: left;
+}
+
+.user-table th {
+    background-color: #00b4d8;
+    color: #fff;
+}
+
+.user-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+.user-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.status {
+    font-weight: bold;
+}
+
+.status-active {
+    color: green;
+}
+
+.status-inactive {
+    color: orange;
+}
+
+.status-suspended {
+    color: red;
+}
+
+.action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action a {
+    margin: 0 5px;
+    text-decoration: none;
+    color: #000;
+}
+
+.action a.edit {
+    color: #00b4d8;
+}
+
+.action a.delete {
+    color: #f44336;
+}
+
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pagination .entries {
+    font-size: 14px;
+    color: #666;
+}
+
+.pagination .page-numbers {
+    display: flex;
+    list-style-type: none;
+    padding: 0;
+}
+
+.pagination .page-numbers li {
+    margin: 0 5px;
+}
+
+.pagination .page-numbers a {
+    text-decoration: none;
+    color: #00b4d8;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid #00b4d8;
+}
+
+.pagination .page-numbers a.active {
+    background-color: #00b4d8;
+    color: #fff;
+}
+
+/* Styles for register user page */
+body.register-user {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #cbc7c2;
+}
+
+.register-user-container {
+    background-color: rgba(120, 77, 60, 1);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    margin: 0 auto;
+}
+
+.register-user-title {
+    color: #f44336;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.register-user-container form {
+    display: flex;
+    flex-direction: column;
+    color: #D0C8BB;
+}
+
+.register-user-container label {
+    margin-bottom: 5px;
+    color: #000;
+}
+
+.register-user-container input,
+.register-user-container select {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    color: #000;
+}
+
+.register-user-container button {
+    padding: 10px;
+    background-color: #D0C8BB;
+    color: #784D3C;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.register-user-container button:hover {
+    background-color: #593C3C;
 }

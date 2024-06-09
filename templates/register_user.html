@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register User</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="register-user">
+    <div class="register-user-container">
+        <h2>Register User</h2>
+        <form action="{{ url_for('submit_register_user') }}" method="post">
+            <label for="first_name">First Name</label>
+            <input type="text" id="first_name" name="first_name" required>
+
+            <label for="last_name">Last Name</label>
+            <input type="text" id="last_name" name="last_name" required>
+
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="role_id">Role</label>
+            <select id="role_id" name="role_id" required>
+                {% for role in roles %}
+                <option value="{{ role.role_id }}">{{ role.role_name }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="userstat_id">Status</label>
+            <select id="userstat_id" name="userstat_id" required>
+                {% for status in statuses %}
+                <option value="{{ status.userstat_id }}">{{ status.userStatus }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Register</button>
+        </form>
+    </div>
+</body>
+</html>
