@@ -42,8 +42,14 @@ def send_email(to_email, subject, body):
         server.send_message(msg)
 
 
-def generate_captcha():
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+def verify_recaptcha(response):
+    payload = {
+        'secret': RECAPTCHA_SECRET_KEY,
+        'response': response
+    }
+    r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=payload)
+    result = r.json()
+    return result.get('success', False)
 
 
 @app.route('/')
@@ -62,12 +68,13 @@ def do_login():
 
     if user and check_password_hash(user['password_hash'], password):
         session['user_id'] = user['user_id']
-        session['user_role'] = user['role']
+        session['role_id'] = user['role_id']
         session['first_name'] = user['first_name']
         session['user_email'] = user['email']
         return redirect(url_for('dashboard'))
     else:
-        return "Invalid credentials. Please try again."
+        flash('Invalid credentials. Please try again.')
+        return redirect(url_for('login'))
 
 
 @app.route('/forgot_password', methods=['GET', 'POST'])
@@ -111,15 +118,14 @@ def reset_password():
     if request.method == 'POST':
         password = request.form['password']
         confirm_password = request.form['confirm_password']
-        captcha = request.form['captcha']
-        session_captcha = session.get('captcha')
+        recaptcha_response = request.form['g-recaptcha-response']
+
+        if not verify_recaptcha(recaptcha_response):
+            flash('CAPTCHA verification failed. Please try again.')
+            return redirect(url_for('reset_password'))
 
         if password != confirm_password:
             flash('Passwords do not match. Please try again.')
-            return redirect(url_for('reset_password'))
-
-        if captcha != session_captcha:
-            flash('Invalid CAPTCHA. Please try again.')
             return redirect(url_for('reset_password'))
 
         hashed_password = generate_password_hash(password)
@@ -132,26 +138,23 @@ def reset_password():
 
         session.pop('otp', None)
         session.pop('reset_email', None)
-        session.pop('captcha', None)
         flash('Your password has been reset successfully. Please login with your new password.')
         return redirect(url_for('login'))
-    else:
-        session['captcha'] = generate_captcha()
-    return render_template('reset_password.html', captcha=session['captcha'])
+    return render_template('reset_password.html')
 
 
 @app.route('/dashboard')
 def dashboard():
-    if 'user_role' not in session:
+    if 'role_id' not in session:
         return redirect(url_for('login'))
 
     conn = get_db_connection()
+    role = conn.execute('SELECT role_name FROM roles WHERE role_id = ?', (session['role_id'],)).fetchone()
     appointments = conn.execute('SELECT p.first_name || " " || p.last_name AS patient_name, a.appointment_date, a.start_time, a.end_time FROM Appointments a JOIN patients p ON a.patient_id = p.patient_id').fetchall()
     conn.close()
 
     first_name = session.get('first_name')
-    return render_template('dashboard.html', first_name=first_name, appointments=appointments)
-
+    return render_template('dashboard.html', first_name=first_name, role_name=role['role_name'], appointments=appointments)
 
 
 @app.route('/create_appointment')
@@ -214,6 +217,7 @@ def get_appointments():
         })
 
     return jsonify(events)
+
 
 @app.route('/logout')
 def logout():

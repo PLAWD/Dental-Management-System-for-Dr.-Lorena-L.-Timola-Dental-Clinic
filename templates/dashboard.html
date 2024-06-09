@@ -13,11 +13,23 @@
 <body class="dashboard">
     <div class="sidebar-tab" id="sidebarTab">☰</div>
     <div id="sidebar" class="sidebar">
-        <!-- Sidebar content -->
+        <ul>
+            <li><a href="#">Profile</a></li>
+            <li><a href="#">Users</a></li>
+            <li><a href="#">Patients</a></li>
+            <li><a href="#">Records</a></li>
+            <li><a href="#">Maintenance</a></li>
+            <li><a href="#">Inventory</a></li>
+            <li><a href="#">Reports</a></li>
+            <li><a href="#">Settings</a></li>
+        </ul>
+        <ul class="logout">
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
     </div>
     <header>
         <div class="header-left">
-            <h2>‎ ‎ ‎ ‎ ‎ Welcome, {{ first_name }}!</h2>
+            <h2>‎ ‎ ‎ ‎ ‎ ‎ ‎Welcome, {{ first_name }}!</h2>
         </div>
         <div class="header-center">
             <form class="search-form" action="{{ url_for('search') }}" method="get">

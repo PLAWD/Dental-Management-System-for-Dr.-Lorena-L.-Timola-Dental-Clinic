@@ -313,3 +313,29 @@ header {
 .create-appointment-container button:last-child {
     margin-right: 0;
 }
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    padding: 10px 0;
+}
+
+.sidebar ul li a {
+    color: #fff;
+    text-decoration: none;
+    display: block;
+    padding: 10px 15px;
+}
+
+.sidebar ul li a:hover {
+    background-color: #575c66;
+}
+
+.sidebar ul.logout {
+    position: absolute;
+    bottom: 15px;
+    width: 100%;
+}
