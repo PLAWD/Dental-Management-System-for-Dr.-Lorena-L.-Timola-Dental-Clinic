@@ -348,6 +348,9 @@ header {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 header {
@@ -359,7 +362,7 @@ header {
 
 header h1 {
     font-size: 24px;
-    color: #00b4d8;
+    color: #f44336;
 }
 
 .user-table {
@@ -386,14 +389,23 @@ header h1 {
 
 .user-info {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: start;
 }
 
-.user-info img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-right: 10px;
+.user-info a {
+    font-weight: bold;
+    color: #00b4d8;
+    text-decoration: none;
+}
+
+.user-info a:hover {
+    text-decoration: underline;
+}
+
+.user-info .email {
+    font-size: 0.9em;
+    color: #666;
 }
 
 .status {
@@ -412,24 +424,40 @@ header h1 {
     color: red;
 }
 
-.action {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.dropdown {
+    position: relative;
 }
 
-.action a {
-    margin: 0 5px;
+.ellipsis-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    right: 0;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
     text-decoration: none;
-    color: #000;
+    display: block;
 }
 
-.action a.edit {
-    color: #00b4d8;
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
 }
 
-.action a.delete {
-    color: #f44336;
+.dropdown .show {
+    display: block;
 }
 
 .pagination {
@@ -464,6 +492,19 @@ header h1 {
 .pagination .page-numbers a.active {
     background-color: #00b4d8;
     color: #fff;
+}
+
+.add-patient-btn {
+    background-color: #00b4d8;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+    display: block;
 }
 
 /* Styles for register user page */
@@ -522,3 +563,383 @@ body.register-user {
 .register-user-container button:hover {
     background-color: #593C3C;
 }
+
+/* Styles for patient management page */
+body.patient-management .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 24px;
+    color: #007bff;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+}
+
+.sort-by {
+    margin-right: 20px;
+}
+
+.sort-by label {
+    margin-right: 10px;
+}
+
+.sort-by select {
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.buttons button {
+    padding: 10px 15px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+}
+
+.buttons button:hover {
+    background-color: #0056b3;
+}
+
+.patient-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.patient-table th, .patient-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.patient-table th {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.patient-table tbody tr:hover {
+    background-color: #f1f3f5;
+}
+
+.patient-info {
+    display: flex;
+    align-items: center;
+}
+
+.patient-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.patient-info div p {
+    margin: 0;
+    font-weight: bold;
+}
+
+.patient-info div span {
+    font-size: 12px;
+    color: #666;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+}
+
+.actions a {
+    margin-right: 10px;
+    text-decoration: none;
+    color: #007bff;
+}
+
+.actions a.edit {
+    color: #007bff;
+}
+
+.actions a.duplicate {
+    color: #6c757d;
+}
+
+.actions a.delete {
+    color: #dc3545;
+}
+
+.patients-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.patients-summary h2 {
+    font-size: 24px;
+    color: #00b4d8;
+}
+
+.sort-by {
+    display: flex;
+    align-items: center;
+}
+
+.sort-by label {
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+.sort-by select {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.patients-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.patients-table th, .patients-table td {
+    padding: 15px;
+    text-align: left;
+}
+
+.patients-table th {
+    background-color: #00b4d8;
+    color: #fff;
+}
+
+.patients-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.basic-info {
+    display: flex;
+    align-items: center;
+}
+
+.basic-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.basic-info div {
+    display: flex;
+    flex-direction: column;
+}
+
+.basic-info div span {
+    font-size: 14px;
+    color: #666;
+}
+
+.action {
+    position: relative;
+}
+
+.ellipsis {
+    cursor: pointer;
+    font-size: 24px;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.ellipsis-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+}
+
+.dropdown-content.show {
+    display: block;
+}
+
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pagination .entries {
+    font-size: 14px;
+    color: #666;
+}
+
+.pagination .page-numbers {
+    display: flex;
+    list-style-type: none;
+    padding: 0;
+}
+
+.pagination .page-numbers li {
+    margin: 0 5px;
+}
+
+.pagination .page-numbers a {
+    text-decoration: none;
+    color: #00b4d8;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid #00b4d8;
+}
+
+.pagination .page-numbers a.active {
+    background-color: #00b4d8;
+    color: #fff;
+}
+
+/* Styles for add patient page */
+.add-patient-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 50px;
+    background-color: rgba(120, 77, 60, 1);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    color: #D0C8BB;
+}
+
+.add-patient-container h2 {
+    color: #D0C8BB;
+}
+
+.add-patient-container label {
+    display: block;
+    margin-bottom: 5px;
+    color: #D0C8BB;
+}
+
+.add-patient-container input,
+.add-patient-container select,
+.add-patient-container textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.add-patient-container button {
+    padding: 10px;
+    background-color: #D0C8BB;
+    color: #784D3C;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 48%;
+    margin-right: 2%;
+}
+
+.add-patient-container button:hover {
+    background-color: #593C3C;
+}
+
+.add-patient-container button:last-child {
+    margin-right: 0;
+}
+
+/* Styles for view patient page */
+.patient-details-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 50px;
+    background-color: rgba(120, 77, 60, 1);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    color: #D0C8BB;
+}
+
+.patient-details-container h2 {
+    color: #D0C8BB;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.patient-details-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.patient-details-table th,
+.patient-details-table td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+}
+
+.patient-details-table th {
+    background-color: #593C3C;
+    color: #D0C8BB;
+}
+
+.patient-details-table td {
+    background-color: #D0C8BB;
+    color: #593C3C;
+}
+
+.actions {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.actions a {
+    margin: 0 10px;
+    padding: 10px 20px;
+    background-color: #593C3C;
+    color: #D0C8BB;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.actions a:hover {
+    background-color: #784D3C;
+}
+
+
