@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="dashboard">
+    <div class="sidebar-tab" id="sidebarTab">☰</div>
+    <div id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+            <li><a href="{{ url_for('patients') }}">Patients</a></li>
+            <li><a href="#">Records</a></li>
+            <li><a href="#">Maintenance</a></li>
+            <li><a href="#">Inventory</a></li>
+            <li><a href="{{ url_for('reports') }}">Reports</a></li>
+            <li><a href="#">Settings</a></li>
+        </ul>
+        <ul class="logout">
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+    <header>
+        <div class="header-left">
+            <h1>‎ ‎ ‎ ‎ ‎ ‎ ‎Reports</h1>
+        </div>
+    </header>
+    <div class="main-content">
+        <div class="container">
+            <form action="{{ url_for('generate_report') }}" method="POST">
+                <label for="report_type">Select Report Type:</label>
+                <select name="report_type" id="report_type">
+                    <option value="appointments">Appointments</option>
+                    <option value="payments">Payments</option>
+                    <option value="patients">Patients</option>
+                </select>
+                <label for="start_date">Start Date:</label>
+                <input type="date" id="start_date" name="start_date" required>
+                <label for="end_date">End Date:</label>
+                <input type="date" id="end_date" name="end_date" required>
+                <button type="submit">Generate Report</button>
+            </form>
+            <div class="report-actions">
+                <button onclick="window.print()">Print Report</button>
+                <button onclick="window.open('{{ url_for('download_report', report_id=report_id) }}', '_blank')">Export to PDF</button>
+            </div>
+            <div class="report-table">
+                <table>
+                    <thead>
+                        <tr id="report-headers">
+                            <!-- Headers will be dynamically added here -->
+                        </tr>
+                    </thead>
+                    <tbody id="report-data">
+                        <!-- Data will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarTab = document.getElementById('sidebarTab');
+            const mainContent = document.querySelector('.main-content');
+
+            sidebarTab.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                mainContent.classList.toggle('shifted');
+                sidebarTab.style.display = 'none';
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    mainContent.classList.remove('shifted');
+                    sidebarTab.style.display = 'block';
+                }
+            });
+
+            // Placeholder for dynamic data loading
+            const reportTypeSelect = document.getElementById('report_type');
+            const reportHeaders = document.getElementById('report-headers');
+            const reportData = document.getElementById('report-data');
+
+            reportTypeSelect.addEventListener('change', function () {
+                const reportType = reportTypeSelect.value;
+
+                fetch(`{{ url_for('get_report', report_type='') }}${reportType}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Clear existing data
+                        reportHeaders.innerHTML = '';
+                        reportData.innerHTML = '';
+
+                        // Populate headers
+                        if (data.length > 0) {
+                            const headers = Object.keys(data[0]);
+                            headers.forEach(header => {
+                                const th = document.createElement('th');
+                                th.textContent = header;
+                                reportHeaders.appendChild(th);
+                            });
+
+                            // Populate data rows
+                            data.forEach(row => {
+                                const tr = document.createElement('tr');
+                                headers.forEach(header => {
+                                    const td = document.createElement('td');
+                                    td.textContent = row[header];
+                                    tr.appendChild(td);
+                                });
+                                reportData.appendChild(tr);
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error fetching report:', error));
+            });
+        });
+    </script>
+</body>
+</html>

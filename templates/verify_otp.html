@@ -3,27 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <title>Verify OTP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body class="center-content">
-    <div class="login-container">
-        <h2 class="verify-title">Verify OTP</h2>
-        <p class="verify-p">Please enter the OTP sent to your email.</p>
-        <form action="{{ url_for('verify_otp') }}" method="POST">
-            <label for="otp">OTP</label>
-            <input type="text" id="otp" name="otp" required>
-            <button type="submit">Submit</button>
-        </form>
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            <ul class="flashes">
-              {% for message in messages %}
-                <li>{{ message }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        {% endwith %}
+<body>
+    <div class="center-content">
+        <div class="login-container">
+            <h2 class="verify-title">Verify OTP</h2>
+            <form action="{{ url_for('verify_otp') }}" method="post">
+                <label for="otp">OTP:</label>
+                <input type="text" id="otp" name="otp" required>
+                <button type="submit">Verify</button>
+            </form>
+            <p><a href="#" id="resend-otp-btn" class="forgor-a" onclick="resendOtp()">Resend OTP</a></p>
+            <p><span id="countdown"></span></p>
+        </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let countdownElement = document.getElementById('countdown');
+            let resendOtpBtn = document.getElementById('resend-otp-btn');
+            let countdown = {{ session.get('resend_timer', 0) }};
+
+            if (countdown > 0) {
+                startCountdown(countdown);
+            }
+
+            function startCountdown(seconds) {
+                resendOtpBtn.style.display = 'none';
+                countdownElement.innerText = 'Please wait ' + seconds + ' seconds before resending OTP.';
+
+                let interval = setInterval(function () {
+                    seconds--;
+                    if (seconds <= 0) {
+                        clearInterval(interval);
+                        countdownElement.innerText = '';
+                        resendOtpBtn.style.display = 'inline';
+                    } else {
+                        countdownElement.innerText = 'Please wait ' + seconds + ' seconds before resending OTP.';
+                    }
+                }, 1000);
+            }
+
+            window.resendOtp = function () {
+                fetch("{{ url_for('resend_otp') }}", { method: "POST" })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            countdown = data.new_timer;
+                            startCountdown(countdown);
+                        } else {
+                            countdownElement.innerText = data.message;
+                        }
+                    });
+            };
+        });
+    </script>
 </body>
 </html>

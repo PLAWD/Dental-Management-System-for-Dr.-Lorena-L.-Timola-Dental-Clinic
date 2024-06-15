@@ -392,7 +392,6 @@ header h1 {
     flex-direction: column;
     align-items: start;
 }
-
 .user-info a {
     font-weight: bold;
     color: #00b4d8;
@@ -942,4 +941,98 @@ header h1 {
     background-color: #784D3C;
 }
 
+/* Styles for reports page */
+.reports-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.report-header h1 {
+    font-size: 24px;
+    color: #00b4d8;
+}
+
+.report-header .dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.report-header .dropdown select {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.date-range {
+    display: flex;
+    align-items: center;
+}
+
+.date-range label {
+    margin-right: 10px;
+    color: #333;
+}
+
+.date-range input {
+    margin-right: 20px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.generate-report-btn, .print-btn, .pdf-btn {
+    background-color: #00b4d8;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    margin-right: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.generate-report-btn:hover, .print-btn:hover, .pdf-btn:hover {
+    background-color: #008bb5;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.report-table th, .report-table td {
+    padding: 15px;
+    text-align: left;
+}
+
+.report-table th {
+    background-color: #00b4d8;
+    color: #fff;
+}
+
+.report-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.status-checked-in {
+    color: green;
+}
+
+.status-cancelled {
+    color: red;
+}
 
