@@ -3,8 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>‎ ‎ ‎ ‎ ‎ ‎ ‎User Management</title>
+    <title>Users</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .status-active {
+            color: #28a745;
+        }
+        .status-inactive {
+            color: #6c757d;
+        }
+        .status-suspended {
+            color: #fd7e14;
+        }
+        .status-banned {
+            color: #dc3545;
+        }
+        .status-password-reset-required {
+            color: #ffc107;
+        }
+        .status-locked {
+            color: #007bff;
+        }
+    </style>
 </head>
 <body class="dashboard">
     <div class="sidebar-tab" id="sidebarTab">☰</div>
@@ -25,7 +45,7 @@
     </div>
     <header>
         <div class="header-left">
-            <h1>‎ ‎ ‎ ‎ ‎ ‎ ‎User Management</h1>
+            <h1>‎ ‎ ‎ ‎ ‎ ‎ ‎Users</h1>
         </div>
         <div class="header-center">
             <form class="search-form" action="{{ url_for('search') }}" method="get">
@@ -36,32 +56,40 @@
     </header>
     <div class="main-content">
         <div class="container">
-            <button class="register-user-btn" onclick="window.open('{{ url_for('register_user') }}', 'Register User', 'width=800,height=600')">Register User</button>
+            <button class="add-user-btn" onclick="openModal()">Add User</button>
+            <h2>Total Users: {{ total_users }}</h2>
             <table class="user-table">
                 <thead>
                     <tr>
-                        <th>User ID</th>
-                        <th>Name</th>
-                        <th>Date Created</th>
+                        <th>Basic Info</th>
                         <th>Role</th>
                         <th>Status</th>
-                        <th>Action</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for user in users %}
                     <tr>
-                        <td>{{ user.user_id }}</td>
                         <td class="user-info">
-                            <img src="{{ url_for('static', filename='profile_pics/' ~ user.user_id ~ '.jpg') }}" alt="User Picture">
-                            {{ user.name }}
+                            <a href="#" class="name">{{ user.name }}</a>
+                            <span class="email">{{ user.email }}</span>
                         </td>
-                        <td>{{ user.date_created }}</td>
                         <td>{{ user.role }}</td>
-                        <td class="status {% if user.status == 'Active' %}status-active{% elif user.status == 'Inactive' %}status-inactive{% else %}status-suspended{% endif %}">{{ user.status }}</td>
-                        <td class="action">
-                            <a href="#" class="edit">✎</a>
-                            <a href="#" class="delete">✖</a>
+                        <td class="status
+                            {% if user.status == 'Active' %}status-active
+                            {% elif user.status == 'Inactive' %}status-inactive
+                            {% elif user.status == 'Suspended' %}status-suspended
+                            {% elif user.status == 'Banned' %}status-banned
+                            {% elif user.status == 'Password Reset Required' %}status-password-reset-required
+                            {% elif user.status == 'Locked' %}status-locked
+                            {% endif %}
+                        ">{{ user.status }}</td>
+                        <td class="dropdown">
+                            <button class="ellipsis-btn">⋮</button>
+                            <div class="dropdown-content">
+                                <a href="#" onclick="editUser({{ user.user_id }})">Edit User</a>
+                                <a href="#" onclick="deleteUser({{ user.user_id }})">Delete User</a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -81,6 +109,38 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 class="register-user-title">Register User</h2>
+            <form action="{{ url_for('submit_register_user') }}" method="POST">
+                <label for="first_name">First Name:</label>
+                <input type="text" id="first_name" name="first_name" required>
+                <label for="last_name">Last Name:</label>
+                <input type="text" id="last_name" name="last_name" required>
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <label for="role_id">Role:</label>
+                <select id="role_id" name="role_id" required>
+                    {% for role in roles %}
+                        <option value="{{ role.role_id }}">{{ role.role_name }}</option>
+                    {% endfor %}
+                </select>
+                <label for="userstat_id">Status:</label>
+                <select id="userstat_id" name="userstat_id" required>
+                    {% for status in statuses %}
+                        <option value="{{ status.userstat_id }}">{{ status.userStatus }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Register</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
@@ -100,7 +160,31 @@
                     sidebarTab.style.display = 'block';
                 }
             });
+
+            // Dropdown functionality
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                const btn = dropdown.querySelector('.ellipsis-btn');
+                const content = dropdown.querySelector('.dropdown-content');
+
+                btn.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    content.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function () {
+                    content.classList.remove('show');
+                });
+            });
         });
+
+        function openModal() {
+            document.getElementById('userModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
     </script>
 </body>
 </html>

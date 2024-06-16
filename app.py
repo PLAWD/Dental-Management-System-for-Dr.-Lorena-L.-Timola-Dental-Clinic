@@ -215,11 +215,14 @@ def dashboard():
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    appointments = conn.execute('SELECT p.first_name || " " || p.last_name AS patient_name, a.appointment_date, a.start_time, a.end_time FROM Appointments a JOIN patients p ON a.patient_id = p.patient_id').fetchall()
+    appointments = conn.execute('SELECT p.first_name || " " || p.last_name AS patient_name, a.appointment_date, a.start_time, a.end_time FROM appointments a JOIN patients p ON a.patient_id = p.patient_id').fetchall()
+    patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
+    dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
     conn.close()
 
     first_name = session.get('first_name')
-    return render_template('dashboard.html', first_name=first_name, appointments=appointments)
+    return render_template('dashboard.html', first_name=first_name, appointments=appointments, patients=patients, dentists=dentists)
+
 
 @app.route('/create_appointment')
 def create_appointment():
@@ -227,28 +230,94 @@ def create_appointment():
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
     conn.close()
-    return render_template('create_appointment.html', patients=patients, dentists=dentists)
+    return render_template('dashboard.html', patients=patients, dentists=dentists)
+
 
 @app.route('/submit_appointment', methods=['POST'])
 def submit_appointment():
-    patient_id = request.form['patient']
-    appointment_date = request.form['appointmentDate']
-    start_time = request.form['startTime']
-    end_time = request.form['endTime']
-    appointment_type = request.form['appointmentType']
-    chief_complaints = request.form['chiefComplaints']
+    patient_id = request.form['patient_id']
+    appointment_date = request.form['appointment_date']
+    start_time = request.form['start_time']
+    end_time = request.form['end_time']
+    appointment_type = request.form['appointment_type']
+    chief_complaints = request.form['chief_complaints']
     procedures = request.form['procedures']
-    dentist_id = request.form['dentist']
+    dentist_id = request.form['dentist_id']
 
     conn = get_db_connection()
-    conn.execute(
-        'INSERT INTO appointments (patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        (patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id)
-    )
+    conn.execute('''
+        INSERT INTO appointments (patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+    patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id))
+
+    # Update the patient's next appointment
+    conn.execute('UPDATE patients SET next_appointment = ? WHERE patient_id = ?', (appointment_date, patient_id))
     conn.commit()
     conn.close()
+
     flash('Appointment created successfully')
     return redirect(url_for('dashboard'))
+
+@app.route('/view_appointment')
+def view_appointment():
+    appointment_id = request.args.get('id')
+    conn = get_db_connection()
+    appointment = conn.execute('''
+        SELECT a.*, 
+               p.first_name || " " || p.middle_name || " " || p.last_name AS patient_name,
+               d.first_name || " " || d.last_name AS dentist_name
+        FROM appointments a
+        JOIN patients p ON a.patient_id = p.patient_id
+        JOIN dentists d ON a.dentist_id = d.dentist_id
+        WHERE a.appointment_id = ?
+    ''', (appointment_id,)).fetchone()
+    conn.close()
+
+    if appointment:
+        return jsonify(dict(appointment))
+    return jsonify({'error': 'Appointment not found'}), 404
+
+
+@app.route('/update_appointment', methods=['POST'])
+def update_appointment():
+    appointment_id = request.form['appointment_id']
+    appointment_date = request.form['appointment_date']
+    start_time = request.form['start_time']
+    end_time = request.form['end_time']
+    appointment_type = request.form['appointment_type']
+    chief_complaints = request.form['chief_complaints']
+    procedures = request.form['procedures']
+    dentist_id = request.form['dentist_id']
+
+    conn = get_db_connection()
+    conn.execute('''
+        UPDATE appointments 
+        SET appointment_date = ?, start_time = ?, end_time = ?, appointment_type = ?, chief_complaints = ?, procedures = ?, dentist_id = ?
+        WHERE appointment_id = ?
+    ''', (
+    appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, appointment_id))
+
+    # Update the patient's next appointment if necessary
+    patient_id = \
+    conn.execute('SELECT patient_id FROM appointments WHERE appointment_id = ?', (appointment_id,)).fetchone()[
+        'patient_id']
+    conn.execute('UPDATE patients SET next_appointment = ? WHERE patient_id = ?', (appointment_date, patient_id))
+    conn.commit()
+    conn.close()
+
+    flash('Appointment updated successfully')
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/cancel_appointment', methods=['POST'])
+def cancel_appointment():
+    appointment_id = request.form['id']
+    conn = get_db_connection()
+    conn.execute('DELETE FROM appointments WHERE appointment_id = ?', (appointment_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
 
 @app.route('/search', methods=['GET'])
 def search():
@@ -261,21 +330,21 @@ def get_appointments():
     conn = get_db_connection()
     appointments = conn.execute('''
         SELECT 
-            a.appointment_id,
-            p.first_name || " " || substr(p.middle_name, 1, 1) || ". " || p.last_name as title,
-            a.appointment_date || "T" || a.start_time as start
+            a.appointment_id AS id,
+            p.first_name || " " || p.last_name AS title,
+            a.appointment_date || "T" || a.start_time AS start,
+            a.appointment_date || "T" || a.end_time AS end,
+            a.appointment_type,
+            a.chief_complaints,
+            a.procedures,
+            d.first_name || " " || d.last_name AS dentist_name
         FROM appointments a
         JOIN patients p ON a.patient_id = p.patient_id
+        JOIN dentists d ON a.dentist_id = d.dentist_id
     ''').fetchall()
     conn.close()
 
-    events = []
-    for appointment in appointments:
-        events.append({
-            'title': appointment['title'],
-            'start': appointment['start']
-        })
-
+    events = [dict(row) for row in appointments]
     return jsonify(events)
 
 
@@ -289,9 +358,13 @@ def users():
         JOIN userStatus us ON u.userstat_id = us.userstat_id
     ''').fetchall()
     total_users = conn.execute('SELECT COUNT(*) as count FROM users').fetchone()['count']
+
+    roles = conn.execute('SELECT role_id, role_name FROM roles').fetchall()
+    statuses = conn.execute('SELECT userstat_id, userStatus FROM userStatus').fetchall()
+
     conn.close()
 
-    return render_template('users.html', users=users, total_users=total_users)
+    return render_template('users.html', users=users, total_users=total_users, roles=roles, statuses=statuses)
 
 
 @app.route('/register_user')
@@ -319,9 +392,9 @@ def submit_register_user():
     # Save user to the database
     conn = get_db_connection()
     conn.execute('''
-            INSERT INTO users (first_name, last_name, username, email, password_hash, role_id, userstat_id, date_created)
-            VALUES (?, ?, ?, ?, ?, ?, ?, DATE('now'))
-        ''', (first_name, last_name, username, email, hashed_password, role_id, userstat_id))
+        INSERT INTO users (first_name, last_name, username, email, password_hash, role_id, userstat_id, date_created)
+        VALUES (?, ?, ?, ?, ?, ?, ?, DATE('now'))
+    ''', (first_name, last_name, username, email, hashed_password, role_id, userstat_id))
     conn.commit()
     conn.close()
 
@@ -336,16 +409,8 @@ def submit_register_user():
 def patients():
     conn = get_db_connection()
     patients = conn.execute('''
-        SELECT 
-            patient_id, 
-            first_name || " " || middle_name || " " || last_name AS name, 
-            phone AS phone_number, 
-            address AS city, 
-            next_appointment, 
-            last_appointment, 
-            register_date,
-            email
-        FROM patients
+        SELECT p.patient_id, p.first_name || ' ' || p.middle_name || ' ' || p.last_name AS name, p.phone AS phone_number, p.address, p.city, p.next_appointment, p.last_appointment, p.register_date, p.email
+        FROM patients p
     ''').fetchall()
     total_patients = conn.execute('SELECT COUNT(*) as count FROM patients').fetchone()['count']
     conn.close()
@@ -353,17 +418,89 @@ def patients():
     return render_template('patients.html', patients=patients, total_patients=total_patients)
 
 
+
 @app.route('/view_patient/<int:patient_id>')
 def view_patient(patient_id):
     conn = get_db_connection()
-    patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
+    patient = conn.execute('''
+        SELECT 
+            patient_id, 
+            first_name, 
+            middle_name, 
+            last_name, 
+            dob, 
+            phone, 
+            email, 
+            address, 
+            city, 
+            next_appointment, 
+            last_appointment, 
+            register_date,
+            medical_conditions,
+            current_medication,
+            employment_status,
+            other_employment_detail,
+            occupation
+        FROM patients WHERE patient_id = ?
+    ''', (patient_id,)).fetchone()
+
+    emergency_contacts = conn.execute('''
+        SELECT contact_name, relationship, contact_phone 
+        FROM emergency_contacts WHERE patient_id = ?
+    ''', (patient_id,)).fetchall()
+
     conn.close()
-    return render_template('view_patient.html', patient=patient)
+
+    if not patient:
+        flash('Patient not found.')
+        return redirect(url_for('patients'))
+
+    return render_template('view_patient.html', patient=patient, emergency_contacts=emergency_contacts)
 
 
-@app.route('/add_patient')
+@app.route('/add_patient', methods=['POST'])
 def add_patient():
-    return render_template('add_patient.html')
+    first_name = request.form['first_name']
+    middle_name = request.form['middle_name']
+    last_name = request.form['last_name']
+    dob = request.form['dob']
+    phone = request.form['phone']
+    email = request.form['email']
+    address = request.form['address']
+    city = request.form['city']
+    next_appointment = request.form['next_appointment']
+    last_appointment = request.form['last_appointment']
+    emergency_contact_names = request.form.getlist('emergency_contact_name[]')
+    emergency_contact_relationships = request.form.getlist('emergency_contact_relationship[]')
+    emergency_contact_phones = request.form.getlist('emergency_contact_phone[]')
+    medical_conditions = request.form['medical_conditions']
+    current_medication = request.form['current_medication']
+    employment_status = request.form['employment_status']
+    other_employment_detail = request.form.get('other_employment_detail', '')
+    occupation = request.form['occupation']
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('''
+        INSERT INTO patients 
+        (first_name, middle_name, last_name, dob, phone, email, address, city, next_appointment, last_appointment, medical_conditions, current_medication, employment_status, other_employment_detail, occupation, register_date) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE('now'))
+    ''', (first_name, middle_name, last_name, dob, phone, email, address, city, next_appointment, last_appointment,
+          medical_conditions, current_medication, employment_status, other_employment_detail, occupation))
+    patient_id = cur.lastrowid
+
+    for name, relationship, phone in zip(emergency_contact_names, emergency_contact_relationships,
+                                         emergency_contact_phones):
+        cur.execute('''
+            INSERT INTO emergency_contacts (patient_id, contact_name, relationship, contact_phone) 
+            VALUES (?, ?, ?, ?)
+        ''', (patient_id, name, relationship, phone))
+
+    conn.commit()
+    conn.close()
+
+    flash('Patient added successfully.')
+    return redirect(url_for('patients'))
 
 
 @app.route('/submit_add_patient', methods=['POST'])
