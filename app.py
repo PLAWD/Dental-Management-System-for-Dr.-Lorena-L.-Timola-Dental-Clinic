@@ -319,11 +319,23 @@ def cancel_appointment():
     conn.close()
     return jsonify({'success': True})
 
-@app.route('/search', methods=['GET'])
-def search():
-    query = request.args.get('query')
-    return f"Search results for: {query}"
+# Other imports and configurations remain the same
 
+@app.route('/complete_appointment', methods=['POST'])
+def complete_appointment():
+    appointment_id = request.form['id']
+    conn = get_db_connection()
+    appointment = conn.execute('SELECT patient_id, appointment_date FROM appointments WHERE appointment_id = ?', (appointment_id,)).fetchone()
+    if appointment:
+        patient_id = appointment['patient_id']
+        appointment_date = appointment['appointment_date']
+        conn.execute('UPDATE patients SET last_appointment = ? WHERE patient_id = ?', (appointment_date, patient_id))
+        conn.execute('DELETE FROM appointments WHERE appointment_id = ?', (appointment_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
+    conn.close()
+    return jsonify({'success': False, 'message': 'Appointment not found'})
 
 @app.route('/get_appointments')
 def get_appointments():
@@ -348,6 +360,11 @@ def get_appointments():
     return jsonify(events)
 
 
+@app.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('query')
+    return f"Search results for: {query}"
+
 @app.route('/users')
 def users():
     conn = get_db_connection()
@@ -365,6 +382,84 @@ def users():
     conn.close()
 
     return render_template('users.html', users=users, total_users=total_users, roles=roles, statuses=statuses)
+
+@app.route('/get_user_details')
+def get_user_details():
+    user_id = request.args.get('user_id')
+    conn = get_db_connection()
+    user = conn.execute('''
+        SELECT u.first_name, u.last_name, u.username, u.email, r.role_name, us.userStatus, u.date_created
+        FROM users u
+        JOIN roles r ON u.role_id = r.role_id
+        JOIN userStatus us ON u.userstat_id = us.userstat_id
+        WHERE u.user_id = ?
+    ''', (user_id,)).fetchone()
+    conn.close()
+
+    if user:
+        user_details = {
+            'first_name': user['first_name'],
+            'last_name': user['last_name'],
+            'username': user['username'],
+            'email': user['email'],
+            'role_name': user['role_name'],
+            'userStatus': user['userStatus'],
+            'date_created': user['date_created']
+        }
+        return jsonify(user_details)
+    else:
+        return jsonify({'error': 'User not found'}), 404
+
+
+@app.route('/disable_user', methods=['POST'])
+def disable_user():
+    data = request.get_json()
+    user_id = data['user_id']
+
+    conn = get_db_connection()
+    conn.execute('UPDATE users SET userstat_id = ? WHERE user_id = ?', (7, user_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
+
+
+
+@app.route('/update_user', methods=['POST'])
+def update_user():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
+    username = data.get('username')
+    email = data.get('email')
+    role_id = data.get('role_id')
+    userstat_id = data.get('userstat_id')
+
+    conn = get_db_connection()
+    conn.execute('''
+        UPDATE users 
+        SET first_name = ?, last_name = ?, username = ?, email = ?, role_id = ?, userstat_id = ?
+        WHERE user_id = ?
+    ''', (first_name, last_name, username, email, role_id, userstat_id, user_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
+
+
+def get_user_status(userstat_id):
+    conn = get_db_connection()
+    status = conn.execute('SELECT userStatus FROM userStatus WHERE userstat_id = ?', (userstat_id,)).fetchone()
+    conn.close()
+    return status['userStatus'] if status else 'Unknown'
+
+def get_role_name(role_id):
+    conn = get_db_connection()
+    role = conn.execute('SELECT role_name FROM roles WHERE role_id = ?', (role_id,)).fetchone()
+    conn.close()
+    return role['role_name'] if role else 'Unknown'
+
 
 
 @app.route('/register_user')
@@ -527,6 +622,31 @@ def submit_add_patient():
 
     flash('Patient added successfully')
     return redirect(url_for('patients'))
+
+
+@app.route('/records')
+def records():
+    return render_template('records.html')
+
+
+@app.route('/get_records/<record_type>')
+def get_records(record_type):
+    conn = get_db_connection()
+    if record_type == 'appointments':
+        data = conn.execute('SELECT * FROM appointments').fetchall()
+    elif record_type == 'financial':
+        data = conn.execute('SELECT * FROM financial_records').fetchall()
+    elif record_type == 'operational':
+        data = conn.execute('SELECT * FROM operational_records').fetchall()
+    elif record_type == 'communication':
+        data = conn.execute('SELECT * FROM communication_records').fetchall()
+    else:
+        conn.close()
+        return jsonify([])
+
+    conn.close()
+    return jsonify([dict(row) for row in data])
+
 
 
 @app.route('/logout')

@@ -1136,3 +1136,78 @@ header h1 {
 
 .user-info .email {
     font-size: 0.
+}
+
+/* Records page styles */
+.records-container {
+    padding: 20px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.records-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.records-dropdown {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.records-dropdown select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.records-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.records-table th, .records-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.records-table th {
+    background-color: #343a40;
+    color: white;
+}
+
+.no-records {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+}
+
+/* User Status Styles */
+.status-active {
+  color: #28a745;
+}
+.status-inactive {
+  color: #6c757d;
+}
+.status-suspended {
+  color: #fd7e14;
+}
+.status-banned {
+  color: #dc3545;
+}
+.status-password-reset-required {
+  color: #ffc107;
+}
+.status-locked {
+  color: #007bff;
+}
+
+.status-disabled {
+  color: #808080;
+}

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Records</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="sidebar-tab" id="sidebarTab">☰</div>
+    <div id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+            <li><a href="{{ url_for('patients') }}">Patients</a></li>
+            <li><a href="{{ url_for('records') }}">Records</a></li>
+            <li><a href="#">Maintenance</a></li>
+            <li><a href="#">Inventory</a></li>
+            <li><a href="{{ url_for('reports') }}">Reports</a></li>
+            <li><a href="#">Settings</a></li>
+        </ul>
+        <ul class="logout">
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+    <header>
+        <div class="header-left">
+            <h2>Records</h2>
+        </div>
+        <div class="header-center">
+            <form class="search-form" action="{{ url_for('search') }}" method="get">
+                <input type="text" name="query" placeholder="Search...">
+                <button type="submit" class="search-btn">🔍</button>
+            </form>
+        </div>
+    </header>
+    <div class="main-content">
+        <div class="records-container">
+            <h2 class="records-header">Records</h2>
+            <div class="records-dropdown">
+                <select id="recordType" onchange="fetchRecords()">
+                    <option value="appointments">Appointment Records</option>
+                    <option value="financial">Financial Records</option>
+                    <option value="operational">Operational Records</option>
+                    <option value="communication">Communication Records</option>
+                </select>
+            </div>
+            <table class="records-table" id="recordsTable">
+                <!-- Table content will be loaded dynamically -->
+            </table>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarTab = document.getElementById('sidebarTab');
+            const mainContent = document.querySelector('.main-content');
+
+            sidebarTab.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                mainContent.classList.toggle('shifted');
+                sidebarTab.style.display = 'none';
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    mainContent.classList.remove('shifted');
+                    sidebarTab.style.display = 'block';
+                }
+            });
+
+            fetchRecords();
+        });
+
+        function fetchRecords() {
+            const recordType = document.getElementById('recordType').value;
+            fetch(`{{ url_for('get_records', record_type='') }}` + recordType)
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById('recordsTable');
+                    table.innerHTML = '';
+                    if (data.length > 0) {
+                        const headers = Object.keys(data[0]);
+                        let headerRow = '<tr>';
+                        headers.forEach(header => {
+                            headerRow += `<th>${header}</th>`;
+                        });
+                        headerRow += '</tr>';
+                        table.innerHTML += headerRow;
+
+                        data.forEach(record => {
+                            let row = '<tr>';
+                            headers.forEach(header => {
+                                row += `<td>${record[header]}</td>`;
+                            });
+                            row += '</tr>';
+                            table.innerHTML += row;
+                        });
+                    } else {
+                        table.innerHTML = '<tr><td colspan="100%">No records found</td></tr>';
+                    }
+                });
+        }
+    </script>
+</body>
+</html>

@@ -17,7 +17,7 @@
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
             <li><a href="{{ url_for('users') }}">Users</a></li>
             <li><a href="{{ url_for('patients') }}">Patients</a></li>
-            <li><a href="#">Records</a></li>
+            <li><a href="{{ url_for('records') }}">Records</a></li>
             <li><a href="#">Maintenance</a></li>
             <li><a href="#">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
@@ -86,6 +86,7 @@
             <div id="appointment-details"></div>
             <button onclick="openEditAppointmentModal()">Edit Appointment</button>
             <button onclick="cancelAppointment()">Cancel Appointment</button>
+            <button onclick="completeAppointment()">Complete Appointment</button>
         </div>
     </div>
 
@@ -219,7 +220,20 @@
                 });
             }
         }
+
+        function completeAppointment() {
+            const appointmentId = document.getElementById('edit_appointment_id').value;
+            if (confirm('Are you sure you want to complete this appointment?')) {
+                $.post('{{ url_for("complete_appointment") }}', { id: appointmentId }, function (data) {
+                    if (data.success) {
+                        $('#calendar').fullCalendar('refetchEvents');
+                        closeViewAppointmentModal();
+                    } else {
+                        alert('Failed to complete appointment.');
+                    }
+                });
+            }
+        }
     </script>
 </body>
 </html>
-

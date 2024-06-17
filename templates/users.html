@@ -5,26 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Users</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <style>
-        .status-active {
-            color: #28a745;
-        }
-        .status-inactive {
-            color: #6c757d;
-        }
-        .status-suspended {
-            color: #fd7e14;
-        }
-        .status-banned {
-            color: #dc3545;
-        }
-        .status-password-reset-required {
-            color: #ffc107;
-        }
-        .status-locked {
-            color: #007bff;
-        }
-    </style>
 </head>
 <body class="dashboard">
     <div class="sidebar-tab" id="sidebarTab">☰</div>
@@ -33,7 +13,7 @@
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
             <li><a href="{{ url_for('users') }}">Users</a></li>
             <li><a href="{{ url_for('patients') }}">Patients</a></li>
-            <li><a href="#">Records</a></li>
+            <li><a href="{{ url_for('records') }}">Records</a></li>
             <li><a href="#">Maintenance</a></li>
             <li><a href="#">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
@@ -71,7 +51,7 @@
                     {% for user in users %}
                     <tr>
                         <td class="user-info">
-                            <a href="#" class="name">{{ user.name }}</a>
+                            <a href="#" class="name" onclick="viewUser({{ user.user_id }})">{{ user.name }}</a>
                             <span class="email">{{ user.email }}</span>
                         </td>
                         <td>{{ user.role }}</td>
@@ -88,7 +68,7 @@
                             <button class="ellipsis-btn">⋮</button>
                             <div class="dropdown-content">
                                 <a href="#" onclick="editUser({{ user.user_id }})">Edit User</a>
-                                <a href="#" onclick="deleteUser({{ user.user_id }})">Delete User</a>
+                                <a href="#" onclick="disableUser({{ user.user_id }})">Disable User</a>
                             </div>
                         </td>
                     </tr>
@@ -141,6 +121,47 @@
         </div>
     </div>
 
+    <!-- View User Modal -->
+    <div id="viewUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeViewUserModal()">&times;</span>
+            <h2>User Information</h2>
+            <div id="userDetails"></div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditUserModal()">&times;</span>
+            <h2>Edit User</h2>
+            <form id="editUserForm" onsubmit="updateUser(event)">
+                <input type="hidden" id="edit_user_id" name="user_id">
+                <label for="edit_first_name">First Name:</label>
+                <input type="text" id="edit_first_name" name="first_name" required>
+                <label for="edit_last_name">Last Name:</label>
+                <input type="text" id="edit_last_name" name="last_name" required>
+                <label for="edit_username">Username:</label>
+                <input type="text" id="edit_username" name="username" required>
+                <label for="edit_email">Email:</label>
+                <input type="email" id="edit_email" name="email" required>
+                <label for="edit_role_id">Role:</label>
+                <select id="edit_role_id" name="role_id" required>
+                    {% for role in roles %}
+                        <option value="{{ role.role_id }}">{{ role.role_name }}</option>
+                    {% endfor %}
+                </select>
+                <label for="edit_userstat_id">Status:</label>
+                <select id="edit_userstat_id" name="userstat_id" required>
+                    {% for status in statuses %}
+                        <option value="{{ status.userstat_id }}">{{ status.userStatus }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Update</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
@@ -182,9 +203,97 @@
             document.getElementById('userModal').style.display = 'block';
         }
 
+        function openModal() {
+            document.getElementById('userModal').style.display = 'block';
+        }
+
         function closeModal() {
             document.getElementById('userModal').style.display = 'none';
+        }
+
+        function closeViewUserModal() {
+            document.getElementById('viewUserModal').style.display = 'none';
+        }
+
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').style.display = 'none';
+        }
+
+        function viewUser(userId) {
+            fetch(`{{ url_for('get_user_details') }}?user_id=${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const userDetails = document.getElementById('userDetails');
+                    userDetails.innerHTML = `
+                        <p><strong>First Name:</strong> ${data.first_name}</p>
+                        <p><strong>Last Name:</strong> ${data.last_name}</p>
+                        <p><strong>Username:</strong> ${data.username}</p>
+                        <p><strong>Email:</strong> ${data.email}</p>
+                        <p><strong>Role:</strong> ${data.role_name}</p>
+                        <p><strong>Status:</strong> ${data.userStatus}</p>
+                        <p><strong>Date Created:</strong> ${data.date_created}</p>
+                    `;
+                    document.getElementById('viewUserModal').style.display = 'block';
+                });
+        }
+
+        function editUser(userId) {
+            fetch(`{{ url_for('get_user_details') }}?user_id=${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('edit_user_id').value = data.user_id;
+                    document.getElementById('edit_first_name').value = data.first_name;
+                    document.getElementById('edit_last_name').value = data.last_name;
+                    document.getElementById('edit_username').value = data.username;
+                    document.getElementById('edit_email').value = data.email;
+                    document.getElementById('edit_role_id').value = data.role_id;
+                    document.getElementById('edit_userstat_id').value = data.userstat_id;
+                    document.getElementById('editUserModal').style.display = 'block';
+                });
+        }
+
+        function disableUser(userId) {
+            if (confirm('Are you sure you want to disable this user?')) {
+                fetch(`{{ url_for('disable_user') }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: userId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to disable user.');
+                    }
+                });
+            }
+        }
+
+        function updateUser(event) {
+            event.preventDefault();
+            const formData = new FormData(document.getElementById('editUserForm'));
+            const userId = formData.get('user_id');
+
+            fetch(`{{ url_for('update_user') }}`, {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to update user.');
+                }
+            });
         }
     </script>
 </body>
 </html>
+
