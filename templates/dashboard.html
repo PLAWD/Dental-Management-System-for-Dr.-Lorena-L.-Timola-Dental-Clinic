@@ -104,136 +104,151 @@
                 <label for="end_time">End Time:</label>
                 <input type="time" id="edit_end_time" name="end_time" required>
                 <label for="appointment_type">Type:</label>
-                <input type="text" id="edit_appointment_type" name="appointment_type" required>
-                <label for="chief_complaints">Chief Complaints:</label>
-                <input type="text" id="edit_chief_complaints" name="chief_complaints" required>
-                <label for="procedures">Procedures:</label>
-                <input type="text" id="edit_procedures" name="procedures" required>
-                <label for="dentist_id">Dentist:</label>
-                <select id="edit_dentist_id" name="dentist_id" required>
-                    {% for dentist in dentists %}
-                    <option value="{{ dentist.dentist_id }}">{{ dentist.first_name }} {{ dentist.last_name }}</option>
-                    {% endfor %}
-                </select>
-                <button type="submit">Update</button>
-            </form>
-        </div>
-    </div>
+<input type="text" id="edit_appointment_type" name="appointment_type" required>
+<label for="edit_chief_complaints">Chief Complaints:</label>
+<input type="text" id="edit_chief_complaints" name="chief_complaints" required>
+<label for="edit_procedures">Procedures:</label>
+<input type="text" id="edit_procedures" name="procedures" required>
+<label for="edit_dentist_id">Dentist:</label>
+<select id="edit_dentist_id" name="dentist_id" required>
+    {% for dentist in dentists %}
+    <option value="{{ dentist.dentist_id }}">{{ dentist.first_name }} {{ dentist.last_name }}</option>
+    {% endfor %}
+</select>
+<button type="submit">Update</button>
+</form>
+</div>
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const sidebar = document.getElementById('sidebar');
-            const sidebarTab = document.getElementById('sidebarTab');
-            const mainContent = document.querySelector('.main-content');
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarTab = document.getElementById('sidebarTab');
+    const mainContent = document.querySelector('.main-content');
 
-            sidebarTab.addEventListener('click', function () {
-                sidebar.classList.toggle('show');
-                mainContent.classList.toggle('shifted');
-                sidebarTab.style.display = 'none';
-            });
+    sidebarTab.addEventListener('click', function () {
+        sidebar.classList.toggle('show');
+        mainContent.classList.toggle('shifted');
+        sidebarTab.style.display = 'none';
+    });
 
-            document.addEventListener('click', function (event) {
-                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
-                    sidebar.classList.remove('show');
-                    mainContent.classList.remove('shifted');
-                    sidebarTab.style.display = 'block';
+    document.addEventListener('click', function (event) {
+        if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+            sidebar.classList.remove('show');
+            mainContent.classList.remove('shifted');
+            sidebarTab.style.display = 'block';
+        }
+    });
+
+    $.getJSON('{{ url_for("get_appointments") }}', function (data) {
+        $('#calendar').fullCalendar({
+            header: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'month,agendaWeek,agendaDay'
+            },
+            navLinks: true,
+            editable: true,
+            eventLimit: true,
+            events: data,
+            eventRender: function(event, element) {
+                if (event.status === 'completed' || moment(event.end).isBefore(moment())) {
+                    element.css('background-color', 'gray');
                 }
-            });
-
-            $.getJSON('{{ url_for("get_appointments") }}', function (data) {
-                $('#calendar').fullCalendar({
-                    header: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'month,agendaWeek,agendaDay'
-                    },
-                    navLinks: true,
-                    editable: true,
-                    eventLimit: true,
-                    events: data,
-                    eventClick: function (event) {
-                        viewAppointment(event.id);
-                    }
-                });
-            });
+            },
+            eventClick: function (event) {
+                viewAppointment(event.id);
+            }
         });
+    });
+});
 
-        function openCreateAppointmentModal() {
-            document.getElementById('createAppointmentModal').style.display = 'block';
-        }
+function openCreateAppointmentModal() {
+    document.getElementById('createAppointmentModal').style.display = 'block';
+}
 
-        function closeCreateAppointmentModal() {
-            document.getElementById('createAppointmentModal').style.display = 'none';
-        }
+function closeCreateAppointmentModal() {
+    document.getElementById('createAppointmentModal').style.display = 'none';
+}
 
-        function viewAppointment(appointmentId) {
-            $.getJSON('{{ url_for("view_appointment") }}', { id: appointmentId }, function (data) {
-                const details = document.getElementById('appointment-details');
-                details.innerHTML = `
-                    <p>Patient: ${data.patient_name}</p>
-                    <p>Date: ${data.appointment_date}</p>
-                    <p>Start Time: ${data.start_time}</p>
-                    <p>End Time: ${data.end_time}</p>
-                    <p>Type: ${data.appointment_type}</p>
-                    <p>Chief Complaints: ${data.chief_complaints}</p>
-                    <p>Procedures: ${data.procedures}</p>
-                    <p>Dentist: ${data.dentist_name}</p>
-                `;
-                document.getElementById('viewAppointmentModal').style.display = 'block';
-                document.getElementById('edit_appointment_id').value = appointmentId;
-            });
-        }
+function viewAppointment(appointmentId) {
+    $.getJSON('{{ url_for("view_appointment") }}', { id: appointmentId }, function (data) {
+        const details = document.getElementById('appointment-details');
+        details.innerHTML = `
+            <p>Patient: ${data.patient_name}</p>
+            <p>Date: ${data.appointment_date}</p>
+            <p>Start Time: ${data.start_time}</p>
+            <p>End Time: ${data.end_time}</p>
+            <p>Type: ${data.appointment_type}</p>
+            <p>Chief Complaints: ${data.chief_complaints}</p>
+            <p>Procedures: ${data.procedures}</p>
+            <p>Dentist: ${data.dentist_name}</p>
+            <p>Status: ${data.status}</p>
+        `;
+        document.getElementById('viewAppointmentModal').style.display = 'block';
+        document.getElementById('edit_appointment_id').value = appointmentId;
+    });
+}
 
-        function openEditAppointmentModal() {
-            const appointmentId = document.getElementById('edit_appointment_id').value;
-            $.getJSON('{{ url_for("view_appointment") }}', { id: appointmentId }, function (data) {
-                document.getElementById('edit_appointment_date').value = data.appointment_date;
-                document.getElementById('edit_start_time').value = data.start_time;
-                document.getElementById('edit_end_time').value = data.end_time;
-                document.getElementById('edit_appointment_type').value = data.appointment_type;
-                document.getElementById('edit_chief_complaints').value = data.chief_complaints;
-                document.getElementById('edit_procedures').value = data.procedures;
-                document.getElementById('edit_dentist_id').value = data.dentist_id;
-                document.getElementById('viewAppointmentModal').style.display = 'none';
-                document.getElementById('editAppointmentModal').style.display = 'block';
-            });
-        }
+function openEditAppointmentModal() {
+    const appointmentId = document.getElementById('edit_appointment_id').value;
+    $.getJSON('{{ url_for("view_appointment") }}', { id: appointmentId }, function (data) {
+        document.getElementById('edit_appointment_date').value = data.appointment_date;
+        document.getElementById('edit_start_time').value = data.start_time;
+        document.getElementById('edit_end_time').value = data.end_time;
+        document.getElementById('edit_appointment_type').value = data.appointment_type;
+        document.getElementById('edit_chief_complaints').value = data.chief_complaints;
+        document.getElementById('edit_procedures').value = data.procedures;
+        document.getElementById('edit_dentist_id').value = data.dentist_id;
+        document.getElementById('viewAppointmentModal').style.display = 'none';
+        document.getElementById('editAppointmentModal').style.display = 'block';
+    });
+}
 
-        function closeEditAppointmentModal() {
-            document.getElementById('editAppointmentModal').style.display = 'none';
-        }
+function closeEditAppointmentModal() {
+    document.getElementById('editAppointmentModal').style.display = 'none';
+}
 
-        function closeViewAppointmentModal() {
-            document.getElementById('viewAppointmentModal').style.display = 'none';
-        }
+function closeViewAppointmentModal() {
+    document.getElementById('viewAppointmentModal').style.display = 'none';
+}
 
-        function cancelAppointment() {
-            const appointmentId = document.getElementById('edit_appointment_id').value;
-            if (confirm('Are you sure you want to cancel this appointment?')) {
-                $.post('{{ url_for("cancel_appointment") }}', { id: appointmentId }, function (data) {
-                    if (data.success) {
-                        $('#calendar').fullCalendar('refetchEvents');
-                        closeViewAppointmentModal();
-                    } else {
-                        alert('Failed to cancel appointment.');
-                    }
-                });
+function closeSuccessModal() {
+    document.getElementById('successModal').style.display = 'none';
+}
+
+function closeConflictModal() {
+    document.getElementById('conflictModal').style.display = 'none';
+}
+
+function completeAppointment() {
+    const appointmentId = document.getElementById('edit_appointment_id').value;
+    if (confirm('Are you sure you want to mark this appointment as completed?')) {
+        $.post('{{ url_for("complete_appointment") }}', { id: appointmentId }, function (data) {
+            if (data.success) {
+                $('#calendar').fullCalendar('refetchEvents');
+                closeViewAppointmentModal();
+            } else {
+                alert('Failed to complete appointment.');
             }
-        }
+        });
+    }
+}
 
-        function completeAppointment() {
-            const appointmentId = document.getElementById('edit_appointment_id').value;
-            if (confirm('Are you sure you want to complete this appointment?')) {
-                $.post('{{ url_for("complete_appointment") }}', { id: appointmentId }, function (data) {
-                    if (data.success) {
-                        $('#calendar').fullCalendar('refetchEvents');
-                        closeViewAppointmentModal();
-                    } else {
-                        alert('Failed to complete appointment.');
-                    }
-                });
+function cancelAppointment() {
+    const appointmentId = document.getElementById('edit_appointment_id').value;
+    if (confirm('Are you sure you want to cancel this appointment?')) {
+        $.post('{{ url_for("cancel_appointment") }}', { id: appointmentId }, function (data) {
+            if (data.success) {
+                $('#calendar').fullCalendar('refetchEvents');
+                closeViewAppointmentModal();
+            } else {
+                alert('Failed to cancel appointment.');
             }
-        }
-    </script>
+        });
+    }
+}
+</script>
+
 </body>
 </html>

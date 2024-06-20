@@ -245,19 +245,38 @@ def submit_appointment():
     dentist_id = request.form['dentist_id']
 
     conn = get_db_connection()
+
+    # Check for conflicts
+    conflict = conn.execute('''
+        SELECT a.*, 
+               p.first_name || " " || p.middle_name || " " || p.last_name AS patient_name,
+               d.first_name || " " || d.last_name AS dentist_name
+        FROM appointments a
+        JOIN patients p ON a.patient_id = p.patient_id
+        JOIN dentists d ON a.dentist_id = d.dentist_id
+        WHERE a.dentist_id = ? AND a.appointment_date = ? AND (
+            (a.start_time <= ? AND a.end_time > ?) OR
+            (a.start_time < ? AND a.end_time >= ?) OR
+            (a.start_time >= ? AND a.end_time <= ?)
+        )
+    ''', (dentist_id, appointment_date, start_time, start_time, end_time, end_time, start_time, end_time)).fetchone()
+
+    if conflict:
+        conn.close()
+        return jsonify({'success': False, 'conflict': dict(conflict)})
+
     conn.execute('''
         INSERT INTO appointments (patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
-    patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id))
+        patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id))
 
     # Update the patient's next appointment
     conn.execute('UPDATE patients SET next_appointment = ? WHERE patient_id = ?', (appointment_date, patient_id))
     conn.commit()
     conn.close()
 
-    flash('Appointment created successfully')
-    return redirect(url_for('dashboard'))
+    return jsonify({'success': True})
 
 @app.route('/view_appointment')
 def view_appointment():
@@ -512,8 +531,6 @@ def patients():
 
     return render_template('patients.html', patients=patients, total_patients=total_patients)
 
-
-
 @app.route('/view_patient/<int:patient_id>')
 def view_patient(patient_id):
     conn = get_db_connection()
@@ -551,6 +568,17 @@ def view_patient(patient_id):
         return redirect(url_for('patients'))
 
     return render_template('view_patient.html', patient=patient, emergency_contacts=emergency_contacts)
+
+@app.route('/get_patient_details', methods=['GET'])
+def get_patient_details():
+    patient_id = request.args.get('patient_id')
+    conn = get_db_connection()
+    patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
+    conn.close()
+
+    if patient:
+        return jsonify(dict(patient))
+    return jsonify({'error': 'Patient not found'}), 404
 
 
 @app.route('/add_patient', methods=['POST'])
@@ -623,6 +651,40 @@ def submit_add_patient():
     flash('Patient added successfully')
     return redirect(url_for('patients'))
 
+@app.route('/update_patient', methods=['POST'])
+def update_patient():
+    data = request.get_json()
+    patient_id = data.get('patient_id')
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
+    phone = data.get('phone')
+    email = data.get('email')
+    address = data.get('address')
+    city = data.get('city')
+    next_appointment = data.get('next_appointment')
+    last_appointment = data.get('last_appointment')
+    register_date = data.get('register_date')
+
+    conn = get_db_connection()
+    conn.execute('''
+        UPDATE patients
+        SET first_name = ?, last_name = ?, phone = ?, email = ?, address = ?, city = ?, next_appointment = ?, last_appointment = ?, register_date = ?
+        WHERE patient_id = ?
+    ''', (first_name, last_name, phone, email, address, city, next_appointment, last_appointment, register_date, patient_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
+
+@app.route('/disable_patient', methods=['POST'])
+def disable_patient():
+    patient_id = request.form['patient_id']
+    conn = get_db_connection()
+    conn.execute('UPDATE patients SET is_active = 0 WHERE patient_id = ?', (patient_id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
 
 @app.route('/records')
 def records():

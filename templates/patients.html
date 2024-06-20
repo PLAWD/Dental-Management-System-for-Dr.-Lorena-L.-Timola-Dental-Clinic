@@ -5,6 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patients</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .filter-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .filter-container .search-form {
+            display: flex;
+            justify-content: flex-end;
+            width: 50%;
+        }
+
+        .filter-container .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-container select,
+        .filter-container button {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .search-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-form input[type="text"] {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .search-form button {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body class="dashboard">
     <div class="sidebar-tab" id="sidebarTab">☰</div>
@@ -13,7 +54,7 @@
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
             <li><a href="{{ url_for('users') }}">Users</a></li>
             <li><a href="{{ url_for('patients') }}">Patients</a></li>
-            <li><a href="#">Records</a></li>
+            <li><a href="{{ url_for('records') }}">Records</a></li>
             <li><a href="#">Maintenance</a></li>
             <li><a href="#">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
@@ -25,20 +66,34 @@
     </div>
     <header>
         <div class="header-left">
-            <h1>‎ ‎ ‎ ‎ ‎ ‎ ‎Patients</h1>
+            <h1>‎ ‎ ‎ ‎ ‎ ‎ ‎Total Patients: {{ total_patients }}</h1>
         </div>
         <div class="header-center">
-            <form class="search-form" action="{{ url_for('search') }}" method="get">
-                <input type="text" name="query" placeholder="Search...">
-                <button type="submit" class="search-btn">🔍</button>
-            </form>
         </div>
     </header>
     <div class="main-content">
         <div class="container">
-            <button class="add-patient-btn" onclick="openModal()">Add Patient</button>
-            <h2>Total Patients: {{ total_patients }}</h2>
-            <table class="patient-table">
+            <div class="filter-container">
+                <div class="controls">
+                    <button class="add-user-btn" onclick="openModal()">Add Patient</button>
+                    <select id="filterPatients" onchange="filterPatients()">
+                        <option value="">Filter Patients</option>
+                        <!-- Add options for filtering patients -->
+                        <option value="role1">Role 1</option>
+                        <option value="role2">Role 2</option>
+                        <option value="role3">Role 3</option>
+                    </select>
+                    <select id="sortPatients" onchange="sortPatients()">
+                        <option value="">Sort Patients By</option>
+                        <option value="name">Name</option>
+                        <option value="date">Date</option>
+                    </select>
+                </div>
+                <div class="search-form">
+                    <input type="text" id="searchInput" onkeyup="searchPatients()" placeholder="Search patients...">
+                </div>
+            </div>
+            <table class="user-table">
                 <thead>
                     <tr>
                         <th>Basic Info</th>
@@ -47,30 +102,26 @@
                         <th>City</th>
                         <th>Next Appointment</th>
                         <th>Last Appointment</th>
-                        <th>Register Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for patient in patients %}
                     <tr>
-                        <td>
-                            <a href="{{ url_for('view_patient', patient_id=patient.patient_id) }}" class="patient-name">{{ patient.name }}</a><br>
-                            <span class="patient-email">{{ patient.email }}</span>
+                        <td class="user-info">
+                            <a href="#" class="name" onclick="viewPatient({{ patient.patient_id }})">{{ patient.name }}</a>
+                            <span class="email">{{ patient.email }}</span>
                         </td>
                         <td>{{ patient.phone_number }}</td>
                         <td>{{ patient.address }}</td>
                         <td>{{ patient.city }}</td>
                         <td>{{ patient.next_appointment }}</td>
                         <td>{{ patient.last_appointment }}</td>
-                        <td>{{ patient.register_date }}</td>
-                        <td class="action">
-                            <div class="dropdown">
-                                <button class="dropdown-btn">⋮</button>
-                                <div class="dropdown-content">
-                                    <a href="#" onclick="editPatient({{ patient.patient_id }})">Edit Patient</a>
-                                    <a href="#" onclick="deletePatient({{ patient.patient_id }})">Delete Patient</a>
-                                </div>
+                        <td class="dropdown">
+                            <button class="ellipsis-btn">⋮</button>
+                            <div class="dropdown-content">
+                                <a href="#" onclick="editPatient({{ patient.patient_id }})">Edit Patient</a>
+                                <a href="#" onclick="disablePatient({{ patient.patient_id }})">Disable Patient</a>
                             </div>
                         </td>
                     </tr>
@@ -92,24 +143,20 @@
         </div>
     </div>
 
-    <!-- Modal -->
-    <div id="patientModal" class="modal">
+    <!-- Add Patient Modal -->
+    <div id="userModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
             <h2 class="register-user-title">Add Patient</h2>
-            <form action="{{ url_for('add_patient') }}" method="POST">
+            <form action="{{ url_for('submit_add_patient') }}" method="POST">
                 <label for="first_name">First Name:</label>
                 <input type="text" id="first_name" name="first_name" required>
-                <label for="middle_name">Middle Name:</label>
-                <input type="text" id="middle_name" name="middle_name">
                 <label for="last_name">Last Name:</label>
                 <input type="text" id="last_name" name="last_name" required>
-                <label for="dob">Date of Birth:</label>
-                <input type="date" id="dob" name="dob" required>
-                <label for="phone">Phone Number:</label>
+                <label for="phone">Phone:</label>
                 <input type="text" id="phone" name="phone" required>
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email">
+                <input type="email" id="email" name="email" required>
                 <label for="address">Address:</label>
                 <input type="text" id="address" name="address" required>
                 <label for="city">City:</label>
@@ -118,32 +165,44 @@
                 <input type="date" id="next_appointment" name="next_appointment">
                 <label for="last_appointment">Last Appointment:</label>
                 <input type="date" id="last_appointment" name="last_appointment">
-                <label for="medical_conditions">Please list any medical conditions:</label>
-                <textarea id="medical_conditions" name="medical_conditions"></textarea>
-                <label for="current_medication">Please list any current medication:</label>
-                <textarea id="current_medication" name="current_medication"></textarea>
-                <label for="employment_status">Employment Status:</label>
-                <select id="employment_status" name="employment_status" required>
-                    <option value="Employed">Employed</option>
-                    <option value="Self Employed">Self Employed</option>
-                    <option value="Unemployed">Unemployed</option>
-                    <option value="Other">Other</option>
-                </select>
-                <label for="other_employment_detail">If other, please specify:</label>
-                <input type="text" id="other_employment_detail" name="other_employment_detail">
-                <label for="occupation">Occupation:</label>
-                <input type="text" id="occupation" name="occupation">
-                <div id="emergency-contacts">
-                    <label>Emergency Contact:</label>
-                    <div class="emergency-contact">
-                        <input type="text" name="emergency_contact_name[]" placeholder="Full name">
-                        <input type="text" name="emergency_contact_relationship[]" placeholder="Relationship">
-                        <input type="text" name="emergency_contact_phone[]" placeholder="Phone number">
-                        <span class="remove-emergency-contact" onclick="removeEmergencyContact(this)">×</span>
-                    </div>
-                </div>
-                <button type="button" onclick="addEmergencyContact()">Add Another Emergency Contact</button>
-                <button type="submit">Add Patient</button>
+                <button type="submit">Add</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Patient Modal -->
+    <div id="viewPatientModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeViewPatientModal()">&times;</span>
+            <h2>Patient Information</h2>
+            <div id="patientDetails"></div>
+        </div>
+    </div>
+
+    <!-- Edit Patient Modal -->
+    <div id="editPatientModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditPatientModal()">&times;</span>
+            <h2>Edit Patient</h2>
+            <form id="editPatientForm" action="{{ url_for('update_patient') }}" method="POST">
+                <input type="hidden" id="edit_patient_id" name="patient_id">
+                <label for="edit_first_name">First Name:</label>
+                <input type="text" id="edit_first_name" name="first_name" required>
+                <label for="edit_last_name">Last Name:</label>
+                <input type="text" id="edit_last_name" name="last_name" required>
+                <label for="edit_phone">Phone:</label>
+                <input type="text" id="edit_phone" name="phone" required>
+                <label for="edit_email">Email:</label>
+                <input type="email" id="edit_email" name="email" required>
+                <label for="edit_address">Address:</label>
+                <input type="text" id="edit_address" name="address" required>
+                <label for="edit_city">City:</label>
+                <input type="text" id="edit_city" name="city" required>
+                <label for="edit_next_appointment">Next Appointment:</label>
+                <input type="date" id="edit_next_appointment" name="next_appointment">
+                <label for="edit_last_appointment">Last Appointment:</label>
+                <input type="date" id="edit_last_appointment" name="last_appointment">
+                <button type="submit">Update</button>
             </form>
         </div>
     </div>
@@ -171,7 +230,7 @@
             // Dropdown functionality
             const dropdowns = document.querySelectorAll('.dropdown');
             dropdowns.forEach(dropdown => {
-                const btn = dropdown.querySelector('.dropdown-btn');
+                const btn = dropdown.querySelector('.ellipsis-btn');
                 const content = dropdown.querySelector('.dropdown-content');
 
                 btn.addEventListener('click', function (event) {
@@ -186,28 +245,104 @@
         });
 
         function openModal() {
-            document.getElementById('patientModal').style.display = 'block';
+            document.getElementById('userModal').style.display = 'block';
         }
 
         function closeModal() {
-            document.getElementById('patientModal').style.display = 'none';
+            document.getElementById('userModal').style.display = 'none';
         }
 
-        function addEmergencyContact() {
-            const container = document.getElementById('emergency-contacts');
-            const newContact = document.createElement('div');
-            newContact.classList.add('emergency-contact');
-            newContact.innerHTML = `
-                <input type="text" name="emergency_contact_name[]" placeholder="Full name">
-                <input type="text" name="emergency_contact_relationship[]" placeholder="Relationship">
-                <input type="text" name="emergency_contact_phone[]" placeholder="Phone number">
-                <span class="remove-emergency-contact" onclick="removeEmergencyContact(this)">×</span>
-            `;
-            container.appendChild(newContact);
+        function closeViewPatientModal() {
+            document.getElementById('viewPatientModal').style.display = 'none';
         }
 
-        function removeEmergencyContact(element) {
-            element.parentElement.remove();
+        function closeEditPatientModal() {
+            document.getElementById('editPatientModal').style.display = 'none';
+        }
+
+        function viewPatient(patientId) {
+            fetch(`{{ url_for('get_patient_details') }}?patient_id=${patientId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const patientDetails = document.getElementById('patientDetails');
+                    patientDetails.innerHTML = `
+                        <p><strong>First Name:</strong> ${data.first_name}</p>
+                        <p><strong>Last Name:</strong> ${data.last_name}</p>
+                        <p><strong>Phone:</strong> ${data.phone}</p>
+                        <p><strong>Email:</strong> ${data.email}</p>
+                        <p><strong>Address:</strong> ${data.address}</p>
+                        <p><strong>City:</strong> ${data.city}</p>
+                        <p><strong>Next Appointment:</strong> ${data.next_appointment}</p>
+                        <p><strong>Last Appointment:</strong> ${data.last_appointment}</p>
+                    `;
+                    document.getElementById('viewPatientModal').style.display = 'block';
+                });
+        }
+
+        function editPatient(patientId) {
+            fetch(`{{ url_for('get_patient_details') }}?patient_id=${patientId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('edit_patient_id').value = data.patient_id;
+                    document.getElementById('edit_first_name').value = data.first_name;
+                    document.getElementById('edit_last_name').value = data.last_name;
+                    document.getElementById('edit_phone').value = data.phone;
+                    document.getElementById('edit_email').value = data.email;
+                    document.getElementById('edit_address').value = data.address;
+                    document.getElementById('edit_city').value = data.city;
+                    document.getElementById('edit_next_appointment').value = data.next_appointment;
+                    document.getElementById('edit_last_appointment').value = data.last_appointment;
+                    document.getElementById('editPatientModal').style.display = 'block';
+                });
+        }
+
+        function disablePatient(patientId) {
+            if (confirm('Are you sure you want to disable this patient?')) {
+                fetch(`{{ url_for('disable_patient') }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ patient_id: patientId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to disable patient.');
+                    }
+                });
+            }
+        }
+
+        function filterPatients() {
+            const filterValue = document.getElementById('filterPatients').value;
+            // Implement the filter logic here
+        }
+
+        function sortPatients() {
+            const sortValue = document.getElementById('sortPatients').value;
+            // Implement the sort logic here
+        }
+
+        function searchPatients() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const table = document.querySelector('.user-table tbody');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const td = rows[i].getElementsByTagName('td')[0];
+                if (td) {
+                    const txtValue = td.textContent || td.innerText;
+                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                        rows[i].style.display = '';
+                    } else {
+                        rows[i].style.display = 'none';
+                    }
+                }
+            }
         }
     </script>
 </body>

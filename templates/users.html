@@ -25,7 +25,7 @@
     </div>
     <header>
         <div class="header-left">
-            <h1>‎ ‎ ‎ ‎ ‎ ‎ ‎Users</h1>
+            <h1>‎ ‎ ‎ ‎ ‎ ‎ ‎Total Users: {{ total_users }}</h1>
         </div>
         <div class="header-center">
             <form class="search-form" action="{{ url_for('search') }}" method="get">
@@ -37,7 +37,7 @@
     <div class="main-content">
         <div class="container">
             <button class="add-user-btn" onclick="openModal()">Add User</button>
-            <h2>Total Users: {{ total_users }}</h2>
+            <hr style="height:1px; visibility:hidden;" />
             <table class="user-table">
                 <thead>
                     <tr>
