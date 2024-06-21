@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.security import generate_password_hash, check_password_hash
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from functools import wraps
 import json
 
 app = Flask(__name__)
@@ -16,6 +17,26 @@ app.secret_key = 'supersecretkey'
 # Email configuration
 EMAIL_ADDRESS = 'dentaluserfr@gmail.com'
 EMAIL_PASSWORD = 'hvcw gyiy bvyq zwlf'
+
+
+def role_required(roles):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'role_id' not in session:
+                flash('You need to be logged in to access this page.')
+                return redirect(url_for('login'))
+
+            user_role_id = session['role_id']
+            # Assuming role_id 1 is admin and role_id 2 is user
+            if user_role_id not in roles:
+                flash('You do not have permission to access this page.')
+                return redirect(url_for('dashboard'))
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
 
 def get_db_connection():
     conn = sqlite3.connect(app.config['DATABASE'], timeout=30)
@@ -197,6 +218,7 @@ def reset_password():
                 flash('You cannot use your previous 5 passwords. Please choose a different password.')
                 return redirect(url_for('reset_password'))
 
+        # Update the user's password and set their status to active (assuming active status id is 1)
         conn.execute('UPDATE users SET password_hash = ?, userstat_id = 1 WHERE email = ?', (hashed_password, email))
         conn.execute('INSERT INTO password_history (user_id, password_hash) VALUES ((SELECT user_id FROM users WHERE email = ?), ?)', (email, hashed_password))
         conn.commit()
@@ -218,10 +240,12 @@ def dashboard():
     appointments = conn.execute('SELECT p.first_name || " " || p.last_name AS patient_name, a.appointment_date, a.start_time, a.end_time FROM appointments a JOIN patients p ON a.patient_id = p.patient_id').fetchall()
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
+    statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
     conn.close()
 
     first_name = session.get('first_name')
-    return render_template('dashboard.html', first_name=first_name, appointments=appointments, patients=patients, dentists=dentists)
+    return render_template('dashboard.html', first_name=first_name, appointments=appointments, patients=patients, dentists=dentists, statuses=statuses)
+
 
 
 @app.route('/create_appointment')
@@ -229,8 +253,9 @@ def create_appointment():
     conn = get_db_connection()
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
+    statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
     conn.close()
-    return render_template('dashboard.html', patients=patients, dentists=dentists)
+    return render_template('dashboard.html', patients=patients, dentists=dentists, statuses=statuses)
 
 
 @app.route('/submit_appointment', methods=['POST'])
@@ -385,6 +410,7 @@ def search():
     return f"Search results for: {query}"
 
 @app.route('/users')
+@role_required([1])  # Only admin can access
 def users():
     conn = get_db_connection()
     users = conn.execute('''
@@ -407,7 +433,7 @@ def get_user_details():
     user_id = request.args.get('user_id')
     conn = get_db_connection()
     user = conn.execute('''
-        SELECT u.first_name, u.last_name, u.username, u.email, r.role_name, us.userStatus, u.date_created
+        SELECT u.user_id, u.first_name, u.last_name, u.username, u.email, u.role_id, u.userstat_id, r.role_name, us.userStatus, u.date_created
         FROM users u
         JOIN roles r ON u.role_id = r.role_id
         JOIN userStatus us ON u.userstat_id = us.userstat_id
@@ -417,10 +443,13 @@ def get_user_details():
 
     if user:
         user_details = {
+            'user_id': user['user_id'],
             'first_name': user['first_name'],
             'last_name': user['last_name'],
             'username': user['username'],
             'email': user['email'],
+            'role_id': user['role_id'],
+            'userstat_id': user['userstat_id'],
             'role_name': user['role_name'],
             'userStatus': user['userStatus'],
             'date_created': user['date_created']
@@ -428,6 +457,7 @@ def get_user_details():
         return jsonify(user_details)
     else:
         return jsonify({'error': 'User not found'}), 404
+
 
 
 @app.route('/disable_user', methods=['POST'])
@@ -446,7 +476,7 @@ def disable_user():
 
 @app.route('/update_user', methods=['POST'])
 def update_user():
-    data = request.get_json()
+    data = request.json  # Ensure JSON data is used
     user_id = data.get('user_id')
     first_name = data.get('first_name')
     last_name = data.get('last_name')
@@ -465,6 +495,7 @@ def update_user():
     conn.close()
 
     return jsonify({'success': True})
+
 
 
 def get_user_status(userstat_id):
@@ -520,6 +551,7 @@ def submit_register_user():
 
 
 @app.route('/patients')
+@role_required([1, 2])  # Both admin and user can access
 def patients():
     conn = get_db_connection()
     patients = conn.execute('''
@@ -687,6 +719,7 @@ def disable_patient():
     return jsonify({'success': True})
 
 @app.route('/records')
+@role_required([1])  # Only admin can access
 def records():
     return render_template('records.html')
 
@@ -709,8 +742,6 @@ def get_records(record_type):
     conn.close()
     return jsonify([dict(row) for row in data])
 
-
-
 @app.route('/logout')
 def logout():
     session.clear()
@@ -718,6 +749,7 @@ def logout():
 
 
 @app.route('/reports')
+@role_required([1, 2])  # Both admin and user can access
 def reports():
     return render_template('reports.html')
 

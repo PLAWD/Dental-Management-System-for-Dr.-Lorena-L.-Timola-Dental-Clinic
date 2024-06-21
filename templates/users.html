@@ -7,25 +7,34 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body class="dashboard">
-    <div class="sidebar-tab" id="sidebarTab">☰</div>
-    <div id="sidebar" class="sidebar">
+<div class="sidebar-tab" id="sidebarTab">☰</div>
+<div id="sidebar" class="sidebar">
         <ul>
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="#">Profile</a></li>
+            {% if session['role_id'] == 1 %}
             <li><a href="{{ url_for('users') }}">Users</a></li>
-            <li><a href="{{ url_for('patients') }}">Patients</a></li>
             <li><a href="{{ url_for('records') }}">Records</a></li>
             <li><a href="#">Maintenance</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('patients') }}">Patients</a></li>
             <li><a href="#">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <li><a href="#">Settings</a></li>
-        </ul>
-        <ul class="logout">
+            <li><a href="#">Payments</a></li>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <li><a href="#">Help</a></li>
+            <li><a href="#">About</a>
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
         </ul>
-    </div>
+</div>
     <header>
         <div class="header-left">
-            <h1>‎ ‎ ‎ ‎ ‎ ‎ ‎Total Users: {{ total_users }}</h1>
+            <h1>‎ ‎ ‎ ‎ ‎ ‎ ‎Users</h1>
         </div>
         <div class="header-center">
             <form class="search-form" action="{{ url_for('search') }}" method="get">
@@ -37,7 +46,7 @@
     <div class="main-content">
         <div class="container">
             <button class="add-user-btn" onclick="openModal()">Add User</button>
-            <hr style="height:1px; visibility:hidden;" />
+            <h2>Total Users: {{ total_users }}</h2>
             <table class="user-table">
                 <thead>
                     <tr>
@@ -135,7 +144,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeEditUserModal()">&times;</span>
             <h2>Edit User</h2>
-            <form id="editUserForm" onsubmit="updateUser(event)">
+            <form id="editUserForm">
                 <input type="hidden" id="edit_user_id" name="user_id">
                 <label for="edit_first_name">First Name:</label>
                 <input type="text" id="edit_first_name" name="first_name" required>
@@ -203,10 +212,6 @@
             document.getElementById('userModal').style.display = 'block';
         }
 
-        function openModal() {
-            document.getElementById('userModal').style.display = 'block';
-        }
-
         function closeModal() {
             document.getElementById('userModal').style.display = 'none';
         }
@@ -252,6 +257,41 @@
                 });
         }
 
+        document.getElementById('editUserForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const userId = document.getElementById('edit_user_id').value;
+            const firstName = document.getElementById('edit_first_name').value;
+            const lastName = document.getElementById('edit_last_name').value;
+            const username = document.getElementById('edit_username').value;
+            const email = document.getElementById('edit_email').value;
+            const roleId = document.getElementById('edit_role_id').value;
+            const userstatId = document.getElementById('edit_userstat_id').value;
+
+            fetch(`{{ url_for('update_user') }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    first_name: firstName,
+                    last_name: lastName,
+                    username: username,
+                    email: email,
+                    role_id: roleId,
+                    userstat_id: userstatId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to update user.');
+                }
+            });
+        });
+
         function disableUser(userId) {
             if (confirm('Are you sure you want to disable this user?')) {
                 fetch(`{{ url_for('disable_user') }}`, {
@@ -270,28 +310,6 @@
                     }
                 });
             }
-        }
-
-        function updateUser(event) {
-            event.preventDefault();
-            const formData = new FormData(document.getElementById('editUserForm'));
-            const userId = formData.get('user_id');
-
-            fetch(`{{ url_for('update_user') }}`, {
-                method: 'POST',
-                body: JSON.stringify(Object.fromEntries(formData)),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Failed to update user.');
-                }
-            });
         }
     </script>
 </body>

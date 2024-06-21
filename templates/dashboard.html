@@ -15,15 +15,24 @@
     <div id="sidebar" class="sidebar">
         <ul>
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="#">Profile</a></li>
+            {% if session['role_id'] == 1 %}
             <li><a href="{{ url_for('users') }}">Users</a></li>
-            <li><a href="{{ url_for('patients') }}">Patients</a></li>
             <li><a href="{{ url_for('records') }}">Records</a></li>
             <li><a href="#">Maintenance</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('patients') }}">Patients</a></li>
             <li><a href="#">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <li><a href="#">Settings</a></li>
-        </ul>
-        <ul class="logout">
+            <li><a href="#">Payments</a></li>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <li><a href="#">Help</a></li>
+            <li><a href="#">About</a>
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
         </ul>
     </div>
@@ -34,7 +43,6 @@
         <div class="header-center">
             <form class="search-form" action="{{ url_for('search') }}" method="get">
                 <input type="text" name="query" placeholder="Search...">
-                <button type="submit" class="search-btn">🔍</button>
             </form>
         </div>
     </header>
@@ -73,6 +81,12 @@
                     <option value="{{ dentist.dentist_id }}">{{ dentist.first_name }} {{ dentist.last_name }}</option>
                     {% endfor %}
                 </select>
+                <label for="status">Status:</label>
+                <select id="status" name="status" required>
+                    {% for status in statuses %}
+                    <option value="{{ status.status_id }}">{{ status.status_name }}</option>
+                    {% endfor %}
+                </select>
                 <button type="submit">Create</button>
             </form>
         </div>
@@ -104,15 +118,21 @@
                 <label for="end_time">End Time:</label>
                 <input type="time" id="edit_end_time" name="end_time" required>
                 <label for="appointment_type">Type:</label>
-<input type="text" id="edit_appointment_type" name="appointment_type" required>
-<label for="edit_chief_complaints">Chief Complaints:</label>
-<input type="text" id="edit_chief_complaints" name="chief_complaints" required>
-<label for="edit_procedures">Procedures:</label>
-<input type="text" id="edit_procedures" name="procedures" required>
-<label for="edit_dentist_id">Dentist:</label>
-<select id="edit_dentist_id" name="dentist_id" required>
-    {% for dentist in dentists %}
-    <option value="{{ dentist.dentist_id }}">{{ dentist.first_name }} {{ dentist.last_name }}</option>
+                <input type="text" id="edit_appointment_type" name="appointment_type" required>
+                <label for="edit_chief_complaints">Chief Complaints:</label>
+                <input type="text" id="edit_chief_complaints" name="chief_complaints" required>
+                <label for="edit_procedures">Procedures:</label>
+                <input type="text" id="edit_procedures" name="procedures" required>
+                <label for="edit_dentist_id">Dentist:</label>
+                <select id="edit_dentist_id" name="dentist_id" required>
+                    {% for dentist in dentists %}
+                    <option value="{{ dentist.dentist_id }}">{{ dentist.first_name }} {{ dentist.last_name }}</option>
+                    {% endfor %}
+                </select>
+<label for="edit_status_id">Status:</label>
+<select id="edit_status_id" name="status" required>
+    {% for status in statuses %}
+    <option value="{{ status.status_id }}">{{ status.status_name }}</option>
     {% endfor %}
 </select>
 <button type="submit">Update</button>
@@ -200,6 +220,7 @@ function openEditAppointmentModal() {
         document.getElementById('edit_chief_complaints').value = data.chief_complaints;
         document.getElementById('edit_procedures').value = data.procedures;
         document.getElementById('edit_dentist_id').value = data.dentist_id;
+        document.getElementById('edit_status_id').value = data.status_id;
         document.getElementById('viewAppointmentModal').style.display = 'none';
         document.getElementById('editAppointmentModal').style.display = 'block';
     });
@@ -252,3 +273,4 @@ function cancelAppointment() {
 
 </body>
 </html>
+
