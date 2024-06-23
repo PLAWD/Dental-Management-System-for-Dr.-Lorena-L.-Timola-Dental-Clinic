@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Records</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar-tab" id="sidebarTab">☰</div>
+        <div id="sidebar" class="sidebar">
+            <ul>
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="#">Profile</a></li>
+                <li><a href="{{ url_for('users') }}">Users</a></li>
+                <li><a href="{{ url_for('patients') }}">Patients</a></li>
+                <li class="dropdown">
+                    <a href="#">Records</a>
+                    <div class="dropdown-content">
+                        <a href="#">Patient Records</a>
+                        <a href="#">Appointment Records</a>
+                        <a href="#">Treatment Records</a>
+                    </div>
+                </li>
+                <li><a href="#">Maintenance</a></li>
+                <li><a href="#">Inventory</a></li>
+                <li><a href="{{ url_for('reports') }}">Reports</a></li>
+                <li><a href="#">Payments</a></li>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <li><a href="#">Help</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </div>
+        <div class="header">
+            <h1>Patient Records</h1>
+        </div>
+        <div class="patient-info">
+            <div>
+                <h2>Gloie El Gatto A. Santos <span class="status-badge">Active</span></h2>
+                <p>Email: Gloie.Gatto@gmail.com</p>
+                <p>Mobile number: +63 9574795839</p>
+                <p>Address: 20 B. Chowking, Daily</p>
+                <p>City: Quezon City</p>
+                <p>Patient ID: 37283</p>
+                <p>Patient since: 2023-12-19</p>
+            </div>
+            <div>
+                <p>Age: 1</p>
+                <p>Birth date: 2023-12-19</p>
+                <p>Status: Single</p>
+            </div>
+        </div>
+        <div class="section">
+            <div class="box">
+                <h3>Appointments</h3>
+                <table class="appointment-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Visit Type</th>
+                            <th>Status</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2024-06-21</td>
+                            <td>Braces</td>
+                            <td><span class="appointment-status" style="background-color: #FFA500;">Pending</span></td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>2024-01-12</td>
+                            <td>binigg</td>
+                            <td><span class="appointment-status" style="background-color: #1E90FF;">Scheduled</span></td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>2024-01-10</td>
+                            <td>Braces</td>
+                            <td><span class="appointment-status" style="background-color: #006400;">Completed</span></td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <a href="#" class="view-all-btn">View All</a>
+            </div>
+            <div class="box">
+                <h3>Treatment</h3>
+                <p>Procedures: Root canal treatment</p>
+                <p>Medications Prescribed: Fluconazole, ...</p>
+                <p>Materials used: Resin Sealers, ...</p>
+                <p>Duration of treatment: 10:30 am - 2:20pm</p>
+                <p>Follow-up instruction: Drink medicine 2 times a day for etc etc etc,....</p>
+                <a href="#" class="view-all-btn">View All</a>
+            </div>
+        </div>
+        <div class="section">
+            <div class="box">
+                <h3>Notes</h3>
+                <p>Notes: Lorem ipsum dolor sit amet, consectetur adipiscing elit. ...</p>
+                <p>Observations: Lorem ipsum dolor sit amet, consectetur adipiscing elit. ...</p>
+                <p>Treatment progress: Lorem ipsum dolor sit amet, consectetur adipiscing elit. ...</p>
+                <p>Patient feedback: Lorem ipsum dolor sit amet, consectetur adipiscing elit. ...</p>
+                <a href="#" class="view-all-btn">View All</a>
+            </div>
+            <div class="box">
+                <h3>Plan</h3>
+                <p>Proposed treatment: Lorem ipsum dolor sit amet, consectetur adipiscing elit. ...</p>
+                <p>Expected outcome: Lorem ipsum dolor sit amet, consectetur adipiscing elit. ...</p>
+                <p>Alternative treatments: Lorem ipsum dolor sit ...</p>
+                <p>Consent form: Image</p>
+                <a href="#" class="view-all-btn">View All</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarTab = document.getElementById('sidebarTab');
+            const mainContent = document.querySelector('.main-content');
+
+            sidebarTab.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                mainContent.classList.toggle('shifted');
+                sidebarTab.style.display = 'none';
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    mainContent.classList.remove('shifted');
+                    sidebarTab.style.display = 'block';
+                }
+            });
+
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                const btn = dropdown.querySelector('a');
+                const content = dropdown.querySelector('.dropdown-content');
+
+                btn.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    content.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function () {
+                    content.classList.remove('show');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

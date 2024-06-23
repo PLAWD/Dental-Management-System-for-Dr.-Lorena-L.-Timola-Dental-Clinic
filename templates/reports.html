@@ -7,31 +7,36 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body class="dashboard">
-    <div class="sidebar-tab" id="sidebarTab">☰</div>
-    <div id="sidebar" class="sidebar">
-        <ul>
-            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li><a href="#">Profile</a></li>
-            {% if session['role_id'] == 1 %}
-            <li><a href="{{ url_for('users') }}">Users</a></li>
-            <li><a href="{{ url_for('records') }}">Records</a></li>
-            <li><a href="#">Maintenance</a></li>
-            {% endif %}
-            <li><a href="{{ url_for('patients') }}">Patients</a></li>
-            <li><a href="#">Inventory</a></li>
-            <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <li><a href="#">Payments</a></li>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <li><a href="#">Help</a></li>
-            <li><a href="#">About</a>
-            <li><a href="{{ url_for('logout') }}">Logout</a></li>
-        </ul>
-    </div>
+<div class="sidebar-tab" id="sidebarTab">☰</div>
+<div id="sidebar" class="sidebar">
+    <ul>
+        <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        <li><a href="#">Profile</a></li>
+        <li><a href="{{ url_for('users') }}">Users</a></li>
+        <li><a href="{{ url_for('patients') }}">Patients</a></li>
+        <li class="dropdown">
+            <a href="#">Records</a>
+            <div class="dropdown-content">
+                <a href="{{ url_for('patient_records') }}">Patient Records</a>
+                <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                <a href="#">Treatment Records</a>
+            </div>
+        </li>
+        <li><a href="#">Maintenance</a></li>
+        <li><a href="#">Inventory</a></li>
+        <li><a href="{{ url_for('reports') }}">Reports</a></li>
+        <li><a href="#">Payments</a></li>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <li><a href="#">Help</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+</div>
     <header>
         <div class="header-left">
             <h1>‎ ‎ ‎ ‎ ‎ ‎ ‎Reports</h1>

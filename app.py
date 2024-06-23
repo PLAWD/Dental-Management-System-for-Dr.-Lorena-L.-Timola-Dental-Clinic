@@ -325,33 +325,47 @@ def view_appointment():
 
 @app.route('/update_appointment', methods=['POST'])
 def update_appointment():
-    appointment_id = request.form['appointment_id']
-    appointment_date = request.form['appointment_date']
-    start_time = request.form['start_time']
-    end_time = request.form['end_time']
-    appointment_type = request.form['appointment_type']
-    chief_complaints = request.form['chief_complaints']
-    procedures = request.form['procedures']
-    dentist_id = request.form['dentist_id']
+    data = request.get_json()
+    appointment_id = data.get('appointment_id')
+    appointment_date = data.get('appointment_date')
+    start_time = data.get('start_time')
+    end_time = data.get('end_time')
+    appointment_type = data.get('appointment_type')
+    chief_complaints = data.get('chief_complaints')
+    procedures = data.get('procedures')
+    dentist_id = data.get('dentist_id')
+    status_id = data.get('status_id')
 
     conn = get_db_connection()
+
+    # Check for conflicts with other appointments
+    conflict = conn.execute('''
+        SELECT * FROM appointments 
+        WHERE appointment_date = ? 
+        AND dentist_id = ? 
+        AND appointment_id != ? 
+        AND (
+            (start_time < ? AND end_time > ?) OR
+            (start_time < ? AND end_time > ?) OR
+            (? < start_time AND ? > end_time)
+        )
+    ''', (appointment_date, dentist_id, appointment_id, start_time, start_time, end_time, end_time, start_time, end_time)).fetchone()
+
+    if conflict:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Conflict detected with another appointment.'})
+
+    # Update the appointment details
     conn.execute('''
         UPDATE appointments 
-        SET appointment_date = ?, start_time = ?, end_time = ?, appointment_type = ?, chief_complaints = ?, procedures = ?, dentist_id = ?
+        SET appointment_date = ?, start_time = ?, end_time = ?, appointment_type = ?, chief_complaints = ?, procedures = ?, dentist_id = ?, status_id = ?
         WHERE appointment_id = ?
-    ''', (
-    appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, appointment_id))
+    ''', (appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id, appointment_id))
 
-    # Update the patient's next appointment if necessary
-    patient_id = \
-    conn.execute('SELECT patient_id FROM appointments WHERE appointment_id = ?', (appointment_id,)).fetchone()[
-        'patient_id']
-    conn.execute('UPDATE patients SET next_appointment = ? WHERE patient_id = ?', (appointment_date, patient_id))
     conn.commit()
     conn.close()
 
-    flash('Appointment updated successfully')
-    return redirect(url_for('dashboard'))
+    return jsonify({'success': True, 'message': 'Appointment updated successfully.'})
 
 
 @app.route('/cancel_appointment', methods=['POST'])
@@ -717,6 +731,20 @@ def disable_patient():
     conn.close()
 
     return jsonify({'success': True})
+
+@app.route('/patient_records')
+def patient_records():
+    conn = get_db_connection()
+    patient_records = conn.execute('SELECT * FROM patients').fetchall()
+    conn.close()
+    return render_template('patient_records.html', records=patient_records)
+
+@app.route('/appointment_records')
+def appointment_records():
+    conn = get_db_connection()
+    appointment_records = conn.execute('SELECT * FROM appointments').fetchall()
+    conn.close()
+    return render_template('appointment_records.html', records=appointment_records)
 
 @app.route('/records')
 @role_required([1])  # Only admin can access

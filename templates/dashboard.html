@@ -12,30 +12,37 @@
 </head>
 <body class="dashboard">
     <div class="sidebar-tab" id="sidebarTab">☰</div>
-    <div id="sidebar" class="sidebar">
-        <ul>
-            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li><a href="#">Profile</a></li>
-            {% if session['role_id'] == 1 %}
-            <li><a href="{{ url_for('users') }}">Users</a></li>
-            <li><a href="{{ url_for('records') }}">Records</a></li>
-            <li><a href="#">Maintenance</a></li>
-            {% endif %}
-            <li><a href="{{ url_for('patients') }}">Patients</a></li>
-            <li><a href="#">Inventory</a></li>
-            <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <li><a href="#">Payments</a></li>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <li><a href="#">Help</a></li>
-            <li><a href="#">About</a>
-            <li><a href="{{ url_for('logout') }}">Logout</a></li>
-        </ul>
-    </div>
+<div id="sidebar" class="sidebar">
+    <ul>
+        <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        <li><a href="#">Profile</a></li>
+        <li><a href="{{ url_for('users') }}">Users</a></li>
+        <li><a href="{{ url_for('patients') }}">Patients</a></li>
+        <li><a href="#">Treatment</a></li>
+        <li class="dropdown">
+            <a href="#">Records</a>
+            <div class="dropdown-content">
+                <a href="{{ url_for('patient_records') }}">Patient Records</a>
+                <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                <a href="#">Treatment Records</a>
+            </div>
+        </li>
+        <li><a href="#">Maintenance</a></li>
+        <li><a href="#">Inventory</a></li>
+        <li><a href="{{ url_for('reports') }}">Reports</a></li>
+        <li><a href="#">Payments</a></li>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <li><a href="#">Help</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+</div>
+
     <header>
         <div class="header-left">
             <h2>‎ ‎ ‎ ‎ ‎ ‎ ‎Welcome, {{ first_name }}!</h2>
@@ -43,6 +50,7 @@
         <div class="header-center">
             <form class="search-form" action="{{ url_for('search') }}" method="get">
                 <input type="text" name="query" placeholder="Search...">
+                <button type="submit" class="search-btn">🔍</button>
             </form>
         </div>
     </header>
@@ -81,8 +89,8 @@
                     <option value="{{ dentist.dentist_id }}">{{ dentist.first_name }} {{ dentist.last_name }}</option>
                     {% endfor %}
                 </select>
-                <label for="status">Status:</label>
-                <select id="status" name="status" required>
+                <label for="status_id">Status:</label>
+                <select id="status_id" name="status_id" required>
                     {% for status in statuses %}
                     <option value="{{ status.status_id }}">{{ status.status_name }}</option>
                     {% endfor %}
@@ -104,173 +112,272 @@
         </div>
     </div>
 
-    <!-- Edit Appointment Modal -->
-    <div id="editAppointmentModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeEditAppointmentModal()">&times;</span>
-            <h2>Edit Appointment</h2>
-            <form id="edit-appointment-form" action="{{ url_for('update_appointment') }}" method="POST">
-                <input type="hidden" id="edit_appointment_id" name="appointment_id">
-                <label for="appointment_date">Date:</label>
-                <input type="date" id="edit_appointment_date" name="appointment_date" required>
-                <label for="start_time">Start Time:</label>
-                <input type="time" id="edit_start_time" name="start_time" required>
-                <label for="end_time">End Time:</label>
-                <input type="time" id="edit_end_time" name="end_time" required>
-                <label for="appointment_type">Type:</label>
-                <input type="text" id="edit_appointment_type" name="appointment_type" required>
-                <label for="edit_chief_complaints">Chief Complaints:</label>
-                <input type="text" id="edit_chief_complaints" name="chief_complaints" required>
-                <label for="edit_procedures">Procedures:</label>
-                <input type="text" id="edit_procedures" name="procedures" required>
-                <label for="edit_dentist_id">Dentist:</label>
-                <select id="edit_dentist_id" name="dentist_id" required>
-                    {% for dentist in dentists %}
-                    <option value="{{ dentist.dentist_id }}">{{ dentist.first_name }} {{ dentist.last_name }}</option>
-                    {% endfor %}
-                </select>
-<label for="edit_status_id">Status:</label>
-<select id="edit_status_id" name="status" required>
-    {% for status in statuses %}
-    <option value="{{ status.status_id }}">{{ status.status_name }}</option>
-    {% endfor %}
-</select>
-<button type="submit">Update</button>
-</form>
-</div>
+<!-- Success Modal -->
+<div id="successModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeSuccessModal()">&times;</span>
+        <p class="modal-message"></p>
+    </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const sidebar = document.getElementById('sidebar');
-    const sidebarTab = document.getElementById('sidebarTab');
-    const mainContent = document.querySelector('.main-content');
+<!-- Error Modal -->
+<div id="errorModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeErrorModal()">&times;</span>
+        <p class="modal-message"></p>
+    </div>
+</div>
 
-    sidebarTab.addEventListener('click', function () {
-        sidebar.classList.toggle('show');
-        mainContent.classList.toggle('shifted');
-        sidebarTab.style.display = 'none';
-    });
+<!-- Edit Appointment Modal -->
+<div id="editAppointmentModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditAppointmentModal()">&times;</span>
+        <h2>Edit Appointment</h2>
+        <form id="edit-appointment-form" onsubmit="event.preventDefault(); updateAppointment();">
+            <input type="hidden" id="edit_appointment_id" name="appointment_id">
+            <label for="appointment_date">Date:</label>
+            <input type="date" id="edit_appointment_date" name="appointment_date" required>
+            <label for="start_time">Start Time:</label>
+            <input type="time" id="edit_start_time" name="start_time" required>
+            <label for="end_time">End Time:</label>
+            <input type="time" id="edit_end_time" name="end_time" required>
+            <label for="appointment_type">Type:</label>
+            <input type="text" id="edit_appointment_type" name="appointment_type" required>
+            <label for="edit_chief_complaints">Chief Complaints:</label>
+            <input type="text" id="edit_chief_complaints" name="chief_complaints" required>
+            <label for="edit_procedures">Procedures:</label>
+            <input type="text" id="edit_procedures" name="procedures" required>
+            <label for="edit_dentist_id">Dentist:</label>
+            <select id="edit_dentist_id" name="dentist_id" required>
+                {% for dentist in dentists %}
+                <option value="{{ dentist.dentist_id }}">{{ dentist.first_name }} {{ dentist.last_name }}</option>
+                {% endfor %}
+            </select>
+            <label for="edit_status_id">Status:</label>
+            <select id="edit_status_id" name="status_id" required>
+                {% for status in statuses %}
+                <option value="{{ status.status_id }}">{{ status.status_name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Update</button>
+        </form>
+    </div>
+</div>
 
-    document.addEventListener('click', function (event) {
-        if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
-            sidebar.classList.remove('show');
-            mainContent.classList.remove('shifted');
-            sidebarTab.style.display = 'block';
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarTab = document.getElementById('sidebarTab');
+            const mainContent = document.querySelector('.main-content');
+
+            sidebarTab.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                mainContent.classList.toggle('shifted');
+                sidebarTab.style.display = 'none';
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    mainContent.classList.remove('shifted');
+                    sidebarTab.style.display = 'block';
+                }
+            });
+
+            $.getJSON('{{ url_for("get_appointments") }}', function (data) {
+                $('#calendar').fullCalendar({
+                    header: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'month,agendaWeek,agendaDay'
+                    },
+                    navLinks: true,
+                    editable: true,
+                    eventLimit: true,
+                    events: data,
+                    eventRender: function(event, element) {
+                        switch (event.status) {
+                            case 'Scheduled':
+                                element.css('background-color', '#1E90FF');
+                                break;
+                            case 'Confirmed':
+                                element.css('background-color', '#32CD32');
+                                break;
+                            case 'Checked in':
+                                element.css('background-color', '#87CEFA');
+                                break;
+                            case 'In Progress':
+                                element.css('background-color', '#FFA500');
+                                break;
+                            case 'Completed':
+                                element.css('background-color', '#006400');
+                                break;
+                            case 'Canceled':
+                                element.css('background-color', '#FF0000');
+                                break;
+                            case 'No show':
+                                element.css('background-color', '#8B0000');
+                                break;
+                            case 'Rescheduled':
+                                element.css('background-color', '#800080');
+                                break;
+                            case 'Pending':
+                                element.css('background-color', '#FFFF00');
+                                break;
+                            case 'Follow-up Needed':
+                                element.css('background-color', '#008080');
+                                break;
+                            case 'Emergency':
+                                element.css('background-color', '#FF8C00');
+                                break;
+                            case 'Waitlisted':
+                                element.css('background-color', '#D3D3D3');
+                                break;
+                        }
+                    },
+                    eventClick: function (event) {
+                        viewAppointment(event.id);
+                    }
+                });
+            });
+        });
+
+        function openCreateAppointmentModal() {
+            document.getElementById('createAppointmentModal').style.display = 'block';
+        }
+
+        function closeCreateAppointmentModal() {
+            document.getElementById('createAppointmentModal').style.display = 'none';
+        }
+
+        function viewAppointment(appointmentId) {
+            $.getJSON('{{ url_for("view_appointment") }}', { id: appointmentId }, function (data) {
+                const details = document.getElementById('appointment-details');
+                details.innerHTML = `
+                    <p>Patient: ${data.patient_name}</p>
+                    <p>Date: ${data.appointment_date}</p>
+                    <p>Start Time: ${data.start_time}</p>
+                    <p>End Time: ${data.end_time}</p>
+                    <p>Type: ${data.appointment_type}</p>
+                    <p>Chief Complaints: ${data.chief_complaints}</p>
+                    <p>Procedures: ${data.procedures}</p>
+                    <p>Dentist: ${data.dentist_name}</p>
+                    <p>Status: ${data.status}</p>
+                `;
+                document.getElementById('viewAppointmentModal').style.display = 'block';
+                document.getElementById('edit_appointment_id').value = appointmentId;
+            });
+        }
+
+        function openEditAppointmentModal() {
+            const appointmentId = document.getElementById('edit_appointment_id').value;
+            $.getJSON('{{ url_for("view_appointment") }}', { id: appointmentId }, function (data) {
+                document.getElementById('edit_appointment_date').value = data.appointment_date;
+                document.getElementById('edit_start_time').value = data.start_time;
+                document.getElementById('edit_end_time').value = data.end_time;
+                document.getElementById('edit_appointment_type').value = data.appointment_type;
+                document.getElementById('edit_chief_complaints').value = data.chief_complaints;
+                document.getElementById('edit_procedures').value = data.procedures;
+                document.getElementById('edit_dentist_id').value = data.dentist_id;
+                document.getElementById('edit_status_id').value = data.status_id;
+                document.getElementById('viewAppointmentModal').style.display = 'none';
+                document.getElementById('editAppointmentModal').style.display = 'block';
+            });
+        }
+
+        function closeEditAppointmentModal() {
+            document.getElementById('editAppointmentModal').style.display = 'none';
+        }
+
+        function closeViewAppointmentModal() {
+            document.getElementById('viewAppointmentModal').style.display = 'none';
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').style.display = 'none';
+        }
+
+        function closeConflictModal() {
+            document.getElementById('conflictModal').style.display = 'none';
+        }
+
+        function completeAppointment() {
+            const appointmentId = document.getElementById('edit_appointment_id').value;
+            if (confirm('Are you sure you want to mark this appointment as completed?')) {
+                $.post('{{ url_for("complete_appointment") }}', { id: appointmentId }, function (data) {
+                    if (data.success) {
+                        $('#calendar').fullCalendar('refetchEvents');
+                        closeViewAppointmentModal();
+                    } else {
+                        alert('Failed to complete appointment.');
+                    }
+                });
+            }
+        }
+
+        function cancelAppointment() {
+            const appointmentId = document.getElementById('edit_appointment_id').value;
+            if (confirm('Are you sure you want to cancel this appointment?')) {
+                $.post('{{ url_for("cancel_appointment") }}', { id: appointmentId }, function (data) {
+                    if (data.success) {
+                        $('#calendar').fullCalendar('refetchEvents');
+                        closeViewAppointmentModal();
+                    } else {
+                        alert('Failed to cancel appointment.');
+                    }
+                });
+            }
+        }
+
+function updateAppointment() {
+    const formData = {
+        appointment_id: document.getElementById('edit_appointment_id').value,
+        appointment_date: document.getElementById('edit_appointment_date').value,
+        start_time: document.getElementById('edit_start_time').value,
+        end_time: document.getElementById('edit_end_time').value,
+        appointment_type: document.getElementById('edit_appointment_type').value,
+        chief_complaints: document.getElementById('edit_chief_complaints').value,
+        procedures: document.getElementById('edit_procedures').value,
+        dentist_id: document.getElementById('edit_dentist_id').value,
+        status_id: document.getElementById('edit_status_id').value
+    };
+
+    $.ajax({
+        url: '{{ url_for("update_appointment") }}',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function (data) {
+            if (data.success) {
+                $('#calendar').fullCalendar('refetchEvents');
+                closeEditAppointmentModal();
+                showModal('successModal', 'Appointment updated successfully.');
+            } else {
+                showModal('errorModal', 'Failed to update appointment: ' + data.message);
+            }
+        },
+        error: function (xhr, status, error) {
+            showModal('errorModal', 'Failed to update appointment: ' + error);
         }
     });
-
-    $.getJSON('{{ url_for("get_appointments") }}', function (data) {
-        $('#calendar').fullCalendar({
-            header: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'month,agendaWeek,agendaDay'
-            },
-            navLinks: true,
-            editable: true,
-            eventLimit: true,
-            events: data,
-            eventRender: function(event, element) {
-                if (event.status === 'completed' || moment(event.end).isBefore(moment())) {
-                    element.css('background-color', 'gray');
-                }
-            },
-            eventClick: function (event) {
-                viewAppointment(event.id);
-            }
-        });
-    });
-});
-
-function openCreateAppointmentModal() {
-    document.getElementById('createAppointmentModal').style.display = 'block';
 }
 
-function closeCreateAppointmentModal() {
-    document.getElementById('createAppointmentModal').style.display = 'none';
-}
-
-function viewAppointment(appointmentId) {
-    $.getJSON('{{ url_for("view_appointment") }}', { id: appointmentId }, function (data) {
-        const details = document.getElementById('appointment-details');
-        details.innerHTML = `
-            <p>Patient: ${data.patient_name}</p>
-            <p>Date: ${data.appointment_date}</p>
-            <p>Start Time: ${data.start_time}</p>
-            <p>End Time: ${data.end_time}</p>
-            <p>Type: ${data.appointment_type}</p>
-            <p>Chief Complaints: ${data.chief_complaints}</p>
-            <p>Procedures: ${data.procedures}</p>
-            <p>Dentist: ${data.dentist_name}</p>
-            <p>Status: ${data.status}</p>
-        `;
-        document.getElementById('viewAppointmentModal').style.display = 'block';
-        document.getElementById('edit_appointment_id').value = appointmentId;
-    });
-}
-
-function openEditAppointmentModal() {
-    const appointmentId = document.getElementById('edit_appointment_id').value;
-    $.getJSON('{{ url_for("view_appointment") }}', { id: appointmentId }, function (data) {
-        document.getElementById('edit_appointment_date').value = data.appointment_date;
-        document.getElementById('edit_start_time').value = data.start_time;
-        document.getElementById('edit_end_time').value = data.end_time;
-        document.getElementById('edit_appointment_type').value = data.appointment_type;
-        document.getElementById('edit_chief_complaints').value = data.chief_complaints;
-        document.getElementById('edit_procedures').value = data.procedures;
-        document.getElementById('edit_dentist_id').value = data.dentist_id;
-        document.getElementById('edit_status_id').value = data.status_id;
-        document.getElementById('viewAppointmentModal').style.display = 'none';
-        document.getElementById('editAppointmentModal').style.display = 'block';
-    });
-}
-
-function closeEditAppointmentModal() {
-    document.getElementById('editAppointmentModal').style.display = 'none';
-}
-
-function closeViewAppointmentModal() {
-    document.getElementById('viewAppointmentModal').style.display = 'none';
+function showModal(modalId, message) {
+    const modal = document.getElementById(modalId);
+    const modalMessage = modal.querySelector('.modal-message');
+    modalMessage.textContent = message;
+    modal.style.display = 'block';
 }
 
 function closeSuccessModal() {
     document.getElementById('successModal').style.display = 'none';
 }
 
-function closeConflictModal() {
-    document.getElementById('conflictModal').style.display = 'none';
+function closeErrorModal() {
+    document.getElementById('errorModal').style.display = 'none';
 }
-
-function completeAppointment() {
-    const appointmentId = document.getElementById('edit_appointment_id').value;
-    if (confirm('Are you sure you want to mark this appointment as completed?')) {
-        $.post('{{ url_for("complete_appointment") }}', { id: appointmentId }, function (data) {
-            if (data.success) {
-                $('#calendar').fullCalendar('refetchEvents');
-                closeViewAppointmentModal();
-            } else {
-                alert('Failed to complete appointment.');
-            }
-        });
-    }
-}
-
-function cancelAppointment() {
-    const appointmentId = document.getElementById('edit_appointment_id').value;
-    if (confirm('Are you sure you want to cancel this appointment?')) {
-        $.post('{{ url_for("cancel_appointment") }}', { id: appointmentId }, function (data) {
-            if (data.success) {
-                $('#calendar').fullCalendar('refetchEvents');
-                closeViewAppointmentModal();
-            } else {
-                alert('Failed to cancel appointment.');
-            }
-        });
-    }
-}
-</script>
-
+    </script>
 </body>
 </html>
+
 
