@@ -1,9 +1,13 @@
-import sqlite3
+import os
+import pymysql
 import smtplib
 import random
 import string
 from datetime import datetime, timedelta, timezone
+
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from pymysql.constants import CLIENT
 from werkzeug.security import generate_password_hash, check_password_hash
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -17,6 +21,13 @@ app.secret_key = 'supersecretkey'
 # Email configuration
 EMAIL_ADDRESS = 'dentaluserfr@gmail.com'
 EMAIL_PASSWORD = 'hvcw gyiy bvyq zwlf'
+
+# MySQL configuration
+app.config['MYSQL_HOST'] = '34.124.192.210'
+app.config['MYSQL_USER'] = 'bayagbetlog'
+app.config['MYSQL_PASSWORD'] = 'betlogbayag'
+app.config['MYSQL_DB'] = 'DMSDB'
+
 
 
 def role_required(roles):
@@ -39,9 +50,15 @@ def role_required(roles):
     return decorator
 
 def get_db_connection():
-    conn = sqlite3.connect(app.config['DATABASE'], timeout=30)
-    conn.execute('PRAGMA journal_mode=WAL')
-    conn.row_factory = sqlite3.Row
+    conn = pymysql.connect(
+        host=app.config['MYSQL_HOST'],
+        user=app.config['MYSQL_USER'],
+        password=app.config['MYSQL_PASSWORD'],
+        db=app.config['MYSQL_DB'],
+        charset='utf8mb4',
+        cursorclass=pymysql.cursors.DictCursor,
+        client_flag=CLIENT.MULTI_STATEMENTS
+    )
     return conn
 
 def generate_otp():
@@ -78,7 +95,9 @@ def do_login():
     password = request.form.get('password')
 
     conn = get_db_connection()
-    user = conn.execute('SELECT * FROM users WHERE email = ? OR username = ?', (login, login)).fetchone()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT * FROM users WHERE email = %s OR username = %s', (login, login))
+        user = cursor.fetchone()
 
     if user:
         if user['is_locked']:
@@ -87,8 +106,9 @@ def do_login():
 
         if check_password_hash(user['password_hash'], password):
             # Reset failed attempts after successful login
-            conn.execute('UPDATE users SET failed_attempts = 0, is_locked = 0 WHERE user_id = ?', (user['user_id'],))
-            conn.commit()
+            with conn.cursor() as cursor:
+                cursor.execute('UPDATE users SET failed_attempts = 0, is_locked = 0 WHERE user_id = %s', (user['user_id'],))
+                conn.commit()
             conn.close()
 
             session['user_id'] = user['user_id']
@@ -101,11 +121,12 @@ def do_login():
             is_locked = 0
             if failed_attempts >= 5:
                 is_locked = 1
-                conn.execute('UPDATE users SET failed_attempts = ?, is_locked = ?, userstat_id = 6 WHERE user_id = ?',
-                             (failed_attempts, is_locked, user['user_id']))
+                with conn.cursor() as cursor:
+                    cursor.execute('UPDATE users SET failed_attempts = %s, is_locked = %s, userstat_id = 6 WHERE user_id = %s',
+                                   (failed_attempts, is_locked, user['user_id']))
             else:
-                conn.execute('UPDATE users SET failed_attempts = ? WHERE user_id = ?',
-                             (failed_attempts, user['user_id']))
+                with conn.cursor() as cursor:
+                    cursor.execute('UPDATE users SET failed_attempts = %s WHERE user_id = %s', (failed_attempts, user['user_id']))
 
             conn.commit()
             conn.close()
@@ -119,13 +140,19 @@ def do_login():
         return jsonify({'success': False, 'message': 'Invalid credentials. Please try again.'})
 
 
+
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         email = request.form['email']
-
         conn = get_db_connection()
-        user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+                user = cursor.fetchone()
+            conn.commit()
+        finally:
+            conn.close()
 
         if user:
             otp = generate_otp()
@@ -139,9 +166,10 @@ def forgot_password():
         else:
             flash('Email address not found.')
 
-        conn.close()
         return redirect(url_for('forgot_password'))
-    return render_template('forgot_password.html')
+    else:
+        return render_template('forgot_password.html')
+
 
 
 
@@ -237,23 +265,43 @@ def dashboard():
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    appointments = conn.execute('SELECT p.first_name || " " || p.last_name AS patient_name, a.appointment_date, a.start_time, a.end_time FROM appointments a JOIN patients p ON a.patient_id = p.patient_id').fetchall()
-    patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
-    dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
-    statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
+    with conn.cursor() as cursor:
+        cursor.execute('''
+            SELECT CONCAT(p.first_name, " ", p.last_name) AS patient_name, 
+                   a.appointment_date, a.start_time, a.end_time 
+            FROM appointments a 
+            JOIN patients p ON a.patient_id = p.patient_id
+        ''')
+        appointments = cursor.fetchall()
+
+        cursor.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients')
+        patients = cursor.fetchall()
+
+        cursor.execute('SELECT dentist_id, first_name, last_name FROM dentists')
+        dentists = cursor.fetchall()
+
+        cursor.execute('SELECT status_id, status_name FROM appointmentstatus')
+        statuses = cursor.fetchall()
+
     conn.close()
 
     first_name = session.get('first_name')
     return render_template('dashboard.html', first_name=first_name, appointments=appointments, patients=patients, dentists=dentists, statuses=statuses)
 
 
-
 @app.route('/create_appointment')
 def create_appointment():
     conn = get_db_connection()
-    patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
-    dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
-    statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients')
+        patients = cursor.fetchall()
+
+        cursor.execute('SELECT dentist_id, first_name, last_name FROM dentists')
+        dentists = cursor.fetchall()
+
+        cursor.execute('SELECT status_id, status_name FROM appointmentstatus')
+        statuses = cursor.fetchall()
+
     conn.close()
     return render_template('dashboard.html', patients=patients, dentists=dentists, statuses=statuses)
 
@@ -268,37 +316,42 @@ def submit_appointment():
     chief_complaints = request.form['chief_complaints']
     procedures = request.form['procedures']
     dentist_id = request.form['dentist_id']
+    status_id = request.form['status']
 
     conn = get_db_connection()
+    with conn.cursor() as cursor:
+        # Check for conflicts
+        cursor.execute('''
+            SELECT a.*, 
+                   CONCAT(p.first_name, " ", p.middle_name, " ", p.last_name) AS patient_name,
+                   CONCAT(d.first_name, " ", d.last_name) AS dentist_name
+            FROM appointments a
+            JOIN patients p ON a.patient_id = p.patient_id
+            JOIN dentists d ON a.dentist_id = d.dentist_id
+            WHERE a.dentist_id = %s AND a.appointment_date = %s AND (
+                (a.start_time <= %s AND a.end_time > %s) OR
+                (a.start_time < %s AND a.end_time >= %s) OR
+                (a.start_time >= %s AND a.end_time <= %s)
+            )
+        ''', (dentist_id, appointment_date, start_time, start_time, end_time, end_time, start_time, end_time))
+        conflict = cursor.fetchone()
 
-    # Check for conflicts
-    conflict = conn.execute('''
-        SELECT a.*, 
-               p.first_name || " " || p.middle_name || " " || p.last_name AS patient_name,
-               d.first_name || " " || d.last_name AS dentist_name
-        FROM appointments a
-        JOIN patients p ON a.patient_id = p.patient_id
-        JOIN dentists d ON a.dentist_id = d.dentist_id
-        WHERE a.dentist_id = ? AND a.appointment_date = ? AND (
-            (a.start_time <= ? AND a.end_time > ?) OR
-            (a.start_time < ? AND a.end_time >= ?) OR
-            (a.start_time >= ? AND a.end_time <= ?)
-        )
-    ''', (dentist_id, appointment_date, start_time, start_time, end_time, end_time, start_time, end_time)).fetchone()
+        if conflict:
+            conn.close()
+            return jsonify({'success': False, 'conflict': dict(conflict)})
 
-    if conflict:
-        conn.close()
-        return jsonify({'success': False, 'conflict': dict(conflict)})
+        cursor.execute('''
+            INSERT INTO appointments (patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (
+        patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id,
+        status_id))
 
-    conn.execute('''
-        INSERT INTO appointments (patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (
-        patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id))
+        # Update the patient's next appointment
+        cursor.execute('UPDATE patients SET next_appointment = %s WHERE patient_id = %s',
+                       (appointment_date, patient_id))
 
-    # Update the patient's next appointment
-    conn.execute('UPDATE patients SET next_appointment = ? WHERE patient_id = ?', (appointment_date, patient_id))
-    conn.commit()
+        conn.commit()
     conn.close()
 
     return jsonify({'success': True})
@@ -307,15 +360,17 @@ def submit_appointment():
 def view_appointment():
     appointment_id = request.args.get('id')
     conn = get_db_connection()
-    appointment = conn.execute('''
-        SELECT a.*, 
-               p.first_name || " " || p.middle_name || " " || p.last_name AS patient_name,
-               d.first_name || " " || d.last_name AS dentist_name
-        FROM appointments a
-        JOIN patients p ON a.patient_id = p.patient_id
-        JOIN dentists d ON a.dentist_id = d.dentist_id
-        WHERE a.appointment_id = ?
-    ''', (appointment_id,)).fetchone()
+    with conn.cursor() as cursor:
+        cursor.execute('''
+            SELECT a.*, 
+                   CONCAT(p.first_name, " ", p.middle_name, " ", p.last_name) AS patient_name,
+                   CONCAT(d.first_name, " ", d.last_name) AS dentist_name
+            FROM appointments a
+            JOIN patients p ON a.patient_id = p.patient_id
+            JOIN dentists d ON a.dentist_id = d.dentist_id
+            WHERE a.appointment_id = %s
+        ''', (appointment_id,))
+        appointment = cursor.fetchone()
     conn.close()
 
     if appointment:
@@ -337,32 +392,33 @@ def update_appointment():
     status_id = data.get('status_id')
 
     conn = get_db_connection()
+    with conn.cursor() as cursor:
+        # Check for conflicts with other appointments
+        cursor.execute('''
+            SELECT * FROM appointments 
+            WHERE appointment_date = %s 
+            AND dentist_id = %s 
+            AND appointment_id != %s 
+            AND (
+                (start_time < %s AND end_time > %s) OR
+                (start_time < %s AND end_time > %s) OR
+                (%s < start_time AND %s > end_time)
+            )
+        ''', (appointment_date, dentist_id, appointment_id, start_time, start_time, end_time, end_time, start_time, end_time))
+        conflict = cursor.fetchone()
 
-    # Check for conflicts with other appointments
-    conflict = conn.execute('''
-        SELECT * FROM appointments 
-        WHERE appointment_date = ? 
-        AND dentist_id = ? 
-        AND appointment_id != ? 
-        AND (
-            (start_time < ? AND end_time > ?) OR
-            (start_time < ? AND end_time > ?) OR
-            (? < start_time AND ? > end_time)
-        )
-    ''', (appointment_date, dentist_id, appointment_id, start_time, start_time, end_time, end_time, start_time, end_time)).fetchone()
+        if conflict:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Conflict detected with another appointment.'})
 
-    if conflict:
-        conn.close()
-        return jsonify({'success': False, 'message': 'Conflict detected with another appointment.'})
+        # Update the appointment details
+        cursor.execute('''
+            UPDATE appointments 
+            SET appointment_date = %s, start_time = %s, end_time = %s, appointment_type = %s, chief_complaints = %s, procedures = %s, dentist_id = %s, status_id = %s
+            WHERE appointment_id = %s
+        ''', (appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id, appointment_id))
 
-    # Update the appointment details
-    conn.execute('''
-        UPDATE appointments 
-        SET appointment_date = ?, start_time = ?, end_time = ?, appointment_type = ?, chief_complaints = ?, procedures = ?, dentist_id = ?, status_id = ?
-        WHERE appointment_id = ?
-    ''', (appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id, appointment_id))
-
-    conn.commit()
+        conn.commit()
     conn.close()
 
     return jsonify({'success': True, 'message': 'Appointment updated successfully.'})
@@ -372,51 +428,53 @@ def update_appointment():
 def cancel_appointment():
     appointment_id = request.form['id']
     conn = get_db_connection()
-    conn.execute('DELETE FROM appointments WHERE appointment_id = ?', (appointment_id,))
-    conn.commit()
+    with conn.cursor() as cursor:
+        cursor.execute('DELETE FROM appointments WHERE appointment_id = %s', (appointment_id,))
+        conn.commit()
     conn.close()
     return jsonify({'success': True})
-
-# Other imports and configurations remain the same
 
 @app.route('/complete_appointment', methods=['POST'])
 def complete_appointment():
     appointment_id = request.form['id']
     conn = get_db_connection()
-    appointment = conn.execute('SELECT patient_id, appointment_date FROM appointments WHERE appointment_id = ?', (appointment_id,)).fetchone()
-    if appointment:
-        patient_id = appointment['patient_id']
-        appointment_date = appointment['appointment_date']
-        conn.execute('UPDATE patients SET last_appointment = ? WHERE patient_id = ?', (appointment_date, patient_id))
-        conn.execute('DELETE FROM appointments WHERE appointment_id = ?', (appointment_id,))
-        conn.commit()
-        conn.close()
-        return jsonify({'success': True})
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT patient_id, appointment_date FROM appointments WHERE appointment_id = %s', (appointment_id,))
+        appointment = cursor.fetchone()
+        if appointment:
+            patient_id = appointment['patient_id']
+            appointment_date = appointment['appointment_date']
+            cursor.execute('UPDATE patients SET last_appointment = %s WHERE patient_id = %s', (appointment_date, patient_id))
+            cursor.execute('DELETE FROM appointments WHERE appointment_id = %s', (appointment_id,))
+            conn.commit()
+            conn.close()
+            return jsonify({'success': True})
     conn.close()
     return jsonify({'success': False, 'message': 'Appointment not found'})
 
 @app.route('/get_appointments')
 def get_appointments():
     conn = get_db_connection()
-    appointments = conn.execute('''
-        SELECT 
-            a.appointment_id AS id,
-            p.first_name || " " || p.last_name AS title,
-            a.appointment_date || "T" || a.start_time AS start,
-            a.appointment_date || "T" || a.end_time AS end,
-            a.appointment_type,
-            a.chief_complaints,
-            a.procedures,
-            d.first_name || " " || d.last_name AS dentist_name
-        FROM appointments a
-        JOIN patients p ON a.patient_id = p.patient_id
-        JOIN dentists d ON a.dentist_id = d.dentist_id
-    ''').fetchall()
+    with conn.cursor() as cursor:
+        cursor.execute('''
+            SELECT 
+                a.appointment_id AS id,
+                CONCAT(p.first_name, " ", p.last_name) AS title,
+                CONCAT(a.appointment_date, "T", a.start_time) AS start,
+                CONCAT(a.appointment_date, "T", a.end_time) AS end,
+                a.appointment_type,
+                a.chief_complaints,
+                a.procedures,
+                CONCAT(d.first_name, " ", d.last_name) AS dentist_name
+            FROM appointments a
+            JOIN patients p ON a.patient_id = p.patient_id
+            JOIN dentists d ON a.dentist_id = d.dentist_id
+        ''')
+        appointments = cursor.fetchall()
     conn.close()
 
     events = [dict(row) for row in appointments]
     return jsonify(events)
-
 
 @app.route('/search', methods=['GET'])
 def search():
@@ -427,32 +485,41 @@ def search():
 @role_required([1])  # Only admin can access
 def users():
     conn = get_db_connection()
-    users = conn.execute('''
-        SELECT u.user_id, u.first_name || " " || u.last_name AS name, u.date_created, r.role_name AS role, us.userStatus AS status
-        FROM users u
-        JOIN roles r ON u.role_id = r.role_id
-        JOIN userStatus us ON u.userstat_id = us.userstat_id
-    ''').fetchall()
-    total_users = conn.execute('SELECT COUNT(*) as count FROM users').fetchone()['count']
+    with conn.cursor() as cursor:
+        cursor.execute('''
+            SELECT u.user_id, CONCAT(u.first_name, " ", u.last_name) AS name, u.date_created, r.role_name AS role, us.userStatus AS status
+            FROM users u
+            JOIN roles r ON u.role_id = r.role_id
+            JOIN userStatus us ON u.userstat_id = us.userstat_id
+        ''')
+        users = cursor.fetchall()
+        cursor.execute('SELECT COUNT(*) as count FROM users')
+        total_users = cursor.fetchone()['count']
 
-    roles = conn.execute('SELECT role_id, role_name FROM roles').fetchall()
-    statuses = conn.execute('SELECT userstat_id, userStatus FROM userStatus').fetchall()
+        cursor.execute('SELECT role_id, role_name FROM roles')
+        roles = cursor.fetchall()
+        cursor.execute('SELECT userstat_id, userStatus FROM userStatus')
+        statuses = cursor.fetchall()
 
     conn.close()
 
     return render_template('users.html', users=users, total_users=total_users, roles=roles, statuses=statuses)
 
+
 @app.route('/get_user_details')
 def get_user_details():
     user_id = request.args.get('user_id')
     conn = get_db_connection()
-    user = conn.execute('''
-        SELECT u.user_id, u.first_name, u.last_name, u.username, u.email, u.role_id, u.userstat_id, r.role_name, us.userStatus, u.date_created
-        FROM users u
-        JOIN roles r ON u.role_id = r.role_id
-        JOIN userStatus us ON u.userstat_id = us.userstat_id
-        WHERE u.user_id = ?
-    ''', (user_id,)).fetchone()
+    with conn.cursor() as cursor:
+        cursor.execute('''
+            SELECT u.user_id, u.first_name, u.last_name, u.username, u.email, u.role_id, u.userstat_id, r.role_name, us.userStatus, u.date_created
+            FROM users u
+            JOIN roles r ON u.role_id = r.role_id
+            JOIN userStatus us ON u.userstat_id = us.userstat_id
+            WHERE u.user_id = %s
+        ''', (user_id,))
+        user = cursor.fetchone()
+
     conn.close()
 
     if user:
@@ -473,19 +540,18 @@ def get_user_details():
         return jsonify({'error': 'User not found'}), 404
 
 
-
 @app.route('/disable_user', methods=['POST'])
 def disable_user():
     data = request.get_json()
     user_id = data['user_id']
 
     conn = get_db_connection()
-    conn.execute('UPDATE users SET userstat_id = ? WHERE user_id = ?', (7, user_id))
+    with conn.cursor() as cursor:
+        cursor.execute('UPDATE users SET userstat_id = %s WHERE user_id = %s', (7, user_id))
     conn.commit()
     conn.close()
 
     return jsonify({'success': True})
-
 
 
 @app.route('/update_user', methods=['POST'])
@@ -500,40 +566,43 @@ def update_user():
     userstat_id = data.get('userstat_id')
 
     conn = get_db_connection()
-    conn.execute('''
-        UPDATE users 
-        SET first_name = ?, last_name = ?, username = ?, email = ?, role_id = ?, userstat_id = ?
-        WHERE user_id = ?
-    ''', (first_name, last_name, username, email, role_id, userstat_id, user_id))
+    with conn.cursor() as cursor:
+        cursor.execute('''
+            UPDATE users 
+            SET first_name = %s, last_name = %s, username = %s, email = %s, role_id = %s, userstat_id = %s
+            WHERE user_id = %s
+        ''', (first_name, last_name, username, email, role_id, userstat_id, user_id))
     conn.commit()
     conn.close()
 
     return jsonify({'success': True})
 
-
-
 def get_user_status(userstat_id):
     conn = get_db_connection()
-    status = conn.execute('SELECT userStatus FROM userStatus WHERE userstat_id = ?', (userstat_id,)).fetchone()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT userStatus FROM userStatus WHERE userstat_id = %s', (userstat_id,))
+        status = cursor.fetchone()
     conn.close()
     return status['userStatus'] if status else 'Unknown'
 
 def get_role_name(role_id):
     conn = get_db_connection()
-    role = conn.execute('SELECT role_name FROM roles WHERE role_id = ?', (role_id,)).fetchone()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT role_name FROM roles WHERE role_id = %s', (role_id,))
+        role = cursor.fetchone()
     conn.close()
     return role['role_name'] if role else 'Unknown'
-
-
 
 @app.route('/register_user')
 def register_user():
     conn = get_db_connection()
-    roles = conn.execute('SELECT role_id, role_name FROM roles').fetchall()
-    statuses = conn.execute('SELECT userstat_id, userStatus FROM userStatus').fetchall()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT role_id, role_name FROM roles')
+        roles = cursor.fetchall()
+        cursor.execute('SELECT userstat_id, userStatus FROM userStatus')
+        statuses = cursor.fetchall()
     conn.close()
     return render_template('register_user.html', roles=roles, statuses=statuses)
-
 
 @app.route('/submit_register_user', methods=['POST'])
 def submit_register_user():
@@ -550,10 +619,11 @@ def submit_register_user():
 
     # Save user to the database
     conn = get_db_connection()
-    conn.execute('''
-        INSERT INTO users (first_name, last_name, username, email, password_hash, role_id, userstat_id, date_created)
-        VALUES (?, ?, ?, ?, ?, ?, ?, DATE('now'))
-    ''', (first_name, last_name, username, email, hashed_password, role_id, userstat_id))
+    with conn.cursor() as cursor:
+        cursor.execute('''
+            INSERT INTO users (first_name, last_name, username, email, password_hash, role_id, userstat_id, date_created)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+        ''', (first_name, last_name, username, email, hashed_password, role_id, userstat_id))
     conn.commit()
     conn.close()
 
@@ -563,69 +633,34 @@ def submit_register_user():
     flash('User registered successfully. The password has been sent to the user\'s email.')
     return redirect(url_for('users'))
 
-
 @app.route('/patients')
 @role_required([1, 2])  # Both admin and user can access
 def patients():
     conn = get_db_connection()
-    patients = conn.execute('''
-        SELECT p.patient_id, p.first_name || ' ' || p.middle_name || ' ' || p.last_name AS name, p.phone AS phone_number, p.address, p.city, p.next_appointment, p.last_appointment, p.register_date, p.email
-        FROM patients p
-    ''').fetchall()
-    total_patients = conn.execute('SELECT COUNT(*) as count FROM patients').fetchone()['count']
+    with conn.cursor() as cursor:
+        cursor.execute('''
+            SELECT p.patient_id, CONCAT(p.first_name, ' ', p.middle_name, ' ', p.last_name) AS name, p.phone AS phone_number, p.address, p.city, p.next_appointment, p.last_appointment, p.register_date, p.email
+            FROM patients p
+        ''')
+        patients = cursor.fetchall()
+        cursor.execute('SELECT COUNT(*) as count FROM patients')
+        total_patients = cursor.fetchone()['count']
     conn.close()
 
     return render_template('patients.html', patients=patients, total_patients=total_patients)
-
-@app.route('/view_patient/<int:patient_id>')
-def view_patient(patient_id):
-    conn = get_db_connection()
-    patient = conn.execute('''
-        SELECT 
-            patient_id, 
-            first_name, 
-            middle_name, 
-            last_name, 
-            dob, 
-            phone, 
-            email, 
-            address, 
-            city, 
-            next_appointment, 
-            last_appointment, 
-            register_date,
-            medical_conditions,
-            current_medication,
-            employment_status,
-            other_employment_detail,
-            occupation
-        FROM patients WHERE patient_id = ?
-    ''', (patient_id,)).fetchone()
-
-    emergency_contacts = conn.execute('''
-        SELECT contact_name, relationship, contact_phone 
-        FROM emergency_contacts WHERE patient_id = ?
-    ''', (patient_id,)).fetchall()
-
-    conn.close()
-
-    if not patient:
-        flash('Patient not found.')
-        return redirect(url_for('patients'))
-
-    return render_template('view_patient.html', patient=patient, emergency_contacts=emergency_contacts)
 
 @app.route('/get_patient_details', methods=['GET'])
 def get_patient_details():
     patient_id = request.args.get('patient_id')
     conn = get_db_connection()
-    patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT * FROM patients WHERE patient_id = %s', (patient_id,))
+        patient = cursor.fetchone()
     conn.close()
 
     if patient:
-        return jsonify(dict(patient))
+        return jsonify(patient)
     return jsonify({'error': 'Patient not found'}), 404
-
 
 @app.route('/add_patient', methods=['POST'])
 def add_patient():
@@ -649,28 +684,27 @@ def add_patient():
     occupation = request.form['occupation']
 
     conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('''
-        INSERT INTO patients 
-        (first_name, middle_name, last_name, dob, phone, email, address, city, next_appointment, last_appointment, medical_conditions, current_medication, employment_status, other_employment_detail, occupation, register_date) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE('now'))
-    ''', (first_name, middle_name, last_name, dob, phone, email, address, city, next_appointment, last_appointment,
-          medical_conditions, current_medication, employment_status, other_employment_detail, occupation))
-    patient_id = cur.lastrowid
+    with conn.cursor() as cursor:
+        cursor.execute('''
+            INSERT INTO patients 
+            (first_name, middle_name, last_name, dob, phone, email, address, city, next_appointment, last_appointment, 
+             medical_conditions, current_medication, employment_status, other_employment_detail, occupation, register_date) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURDATE())
+        ''', (first_name, middle_name, last_name, dob, phone, email, address, city, next_appointment, last_appointment,
+              medical_conditions, current_medication, employment_status, other_employment_detail, occupation))
+        patient_id = cursor.lastrowid
 
-    for name, relationship, phone in zip(emergency_contact_names, emergency_contact_relationships,
-                                         emergency_contact_phones):
-        cur.execute('''
-            INSERT INTO emergency_contacts (patient_id, contact_name, relationship, contact_phone) 
-            VALUES (?, ?, ?, ?)
-        ''', (patient_id, name, relationship, phone))
+        for name, relationship, phone in zip(emergency_contact_names, emergency_contact_relationships, emergency_contact_phones):
+            cursor.execute('''
+                INSERT INTO emergency_contacts (patient_id, contact_name, relationship, contact_phone) 
+                VALUES (%s, %s, %s, %s)
+            ''', (patient_id, name, relationship, phone))
 
     conn.commit()
     conn.close()
 
     flash('Patient added successfully.')
     return redirect(url_for('patients'))
-
 
 @app.route('/submit_add_patient', methods=['POST'])
 def submit_add_patient():
@@ -686,11 +720,11 @@ def submit_add_patient():
     last_appointment = request.form['last_appointment']
 
     conn = get_db_connection()
-    conn.execute('''
-        INSERT INTO patients (first_name, middle_name, last_name, dob, phone, email, address, city, next_appointment, last_appointment, register_date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE('now'))
-    ''', (
-    first_name, middle_name, last_name, dob, phone_number, email, address, city, next_appointment, last_appointment))
+    with conn.cursor() as cursor:
+        cursor.execute('''
+            INSERT INTO patients (first_name, middle_name, last_name, dob, phone, email, address, city, next_appointment, last_appointment, register_date)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURDATE())
+        ''', (first_name, middle_name, last_name, dob, phone_number, email, address, city, next_appointment, last_appointment))
     conn.commit()
     conn.close()
 
@@ -712,11 +746,13 @@ def update_patient():
     register_date = data.get('register_date')
 
     conn = get_db_connection()
-    conn.execute('''
-        UPDATE patients
-        SET first_name = ?, last_name = ?, phone = ?, email = ?, address = ?, city = ?, next_appointment = ?, last_appointment = ?, register_date = ?
-        WHERE patient_id = ?
-    ''', (first_name, last_name, phone, email, address, city, next_appointment, last_appointment, register_date, patient_id))
+    with conn.cursor() as cursor:
+        cursor.execute('''
+            UPDATE patients
+            SET first_name = %s, last_name = %s, phone = %s, email = %s, address = %s, city = %s, next_appointment = %s, 
+                last_appointment = %s, register_date = %s
+            WHERE patient_id = %s
+        ''', (first_name, last_name, phone, email, address, city, next_appointment, last_appointment, register_date, patient_id))
     conn.commit()
     conn.close()
 
@@ -726,7 +762,8 @@ def update_patient():
 def disable_patient():
     patient_id = request.form['patient_id']
     conn = get_db_connection()
-    conn.execute('UPDATE patients SET is_active = 0 WHERE patient_id = ?', (patient_id,))
+    with conn.cursor() as cursor:
+        cursor.execute('UPDATE patients SET is_active = 0 WHERE patient_id = %s', (patient_id,))
     conn.commit()
     conn.close()
 
@@ -735,14 +772,18 @@ def disable_patient():
 @app.route('/patient_records')
 def patient_records():
     conn = get_db_connection()
-    patient_records = conn.execute('SELECT * FROM patients').fetchall()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT * FROM patients')
+        patient_records = cursor.fetchall()
     conn.close()
     return render_template('patient_records.html', records=patient_records)
 
 @app.route('/appointment_records')
 def appointment_records():
     conn = get_db_connection()
-    appointment_records = conn.execute('SELECT * FROM appointments').fetchall()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT * FROM appointments')
+        appointment_records = cursor.fetchall()
     conn.close()
     return render_template('appointment_records.html', records=appointment_records)
 
@@ -751,22 +792,23 @@ def appointment_records():
 def records():
     return render_template('records.html')
 
-
 @app.route('/get_records/<record_type>')
 def get_records(record_type):
     conn = get_db_connection()
-    if record_type == 'appointments':
-        data = conn.execute('SELECT * FROM appointments').fetchall()
-    elif record_type == 'financial':
-        data = conn.execute('SELECT * FROM financial_records').fetchall()
-    elif record_type == 'operational':
-        data = conn.execute('SELECT * FROM operational_records').fetchall()
-    elif record_type == 'communication':
-        data = conn.execute('SELECT * FROM communication_records').fetchall()
-    else:
-        conn.close()
-        return jsonify([])
-
+    data = []
+    with conn.cursor() as cursor:
+        if record_type == 'appointments':
+            cursor.execute('SELECT * FROM appointments')
+            data = cursor.fetchall()
+        elif record_type == 'financial':
+            cursor.execute('SELECT * FROM financial_records')
+            data = cursor.fetchall()
+        elif record_type == 'operational':
+            cursor.execute('SELECT * FROM operational_records')
+            data = cursor.fetchall()
+        elif record_type == 'communication':
+            cursor.execute('SELECT * FROM communication_records')
+            data = cursor.fetchall()
     conn.close()
     return jsonify([dict(row) for row in data])
 
@@ -775,12 +817,10 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-
 @app.route('/reports')
 @role_required([1, 2])  # Both admin and user can access
 def reports():
     return render_template('reports.html')
-
 
 @app.route('/generate_report', methods=['POST'])
 def generate_report():
@@ -791,63 +831,67 @@ def generate_report():
 
     conn = get_db_connection()
 
-    if report_type == 'appointments':
-        data = conn.execute('''
-            SELECT * FROM appointments
-            WHERE appointment_date BETWEEN ? AND ?
-        ''', (start_date, end_date)).fetchall()
-        report_details = json.dumps([dict(row) for row in data])
+    report_details = []
+    with conn.cursor() as cursor:
+        if report_type == 'appointments':
+            cursor.execute('''
+                SELECT * FROM appointments
+                WHERE appointment_date BETWEEN %s AND %s
+            ''', (start_date, end_date))
+            report_details = cursor.fetchall()
+        elif report_type == 'payments':
+            cursor.execute('''
+                SELECT * FROM payments
+                WHERE payment_date BETWEEN %s AND %s
+            ''', (start_date, end_date))
+            report_details = cursor.fetchall()
+        elif report_type == 'patients':
+            cursor.execute('''
+                SELECT * FROM patients
+                WHERE register_date BETWEEN %s AND %s
+            ''', (start_date, end_date))
+            report_details = cursor.fetchall()
+        else:
+            conn.close()
+            return 'Invalid report type', 400
 
-    elif report_type == 'payments':
-        data = conn.execute('''
-            SELECT * FROM payments
-            WHERE payment_date BETWEEN ? AND ?
-        ''', (start_date, end_date)).fetchall()
-        report_details = json.dumps([dict(row) for row in data])
-
-    elif report_type == 'patients':
-        data = conn.execute('''
-            SELECT * FROM patients
-            WHERE register_date BETWEEN ? AND ?
-        ''', (start_date, end_date)).fetchall()
-        report_details = json.dumps([dict(row) for row in data])
-
-    else:
-        conn.close()
-        return 'Invalid report type', 400
-
-    # Insert the report details into the reports table
-    conn.execute('''
-        INSERT INTO reports (report_type, date_generated, start_date, end_date, generated_by, details)
-        VALUES (?, DATE('now'), ?, ?, ?, ?)
-    ''', (report_type, start_date, end_date, user_id, report_details))
+        cursor.execute('''
+            INSERT INTO reports (report_type, date_generated, start_date, end_date, generated_by, details)
+            VALUES (%s, CURDATE(), %s, %s, %s, %s)
+        ''', (report_type, start_date, end_date, user_id, json.dumps(report_details)))
     conn.commit()
     conn.close()
 
-    return render_template('report_result.html', report_type=report_type, data=json.loads(report_details))
+    return render_template('report_result.html', report_type=report_type, data=report_details)
+
 
 @app.route('/get_report/<report_type>')
 def get_report(report_type):
     conn = get_db_connection()
-    if report_type == 'appointments':
-        data = conn.execute('SELECT * FROM appointments').fetchall()
-        conn.close()
-        return jsonify([dict(row) for row in data])
-    elif report_type == 'payments':
-        data = conn.execute('SELECT * FROM payments').fetchall()
-        conn.close()
-        return jsonify([dict(row) for row in data])
-    elif report_type == 'patients':
-        data = conn.execute('SELECT * FROM patients').fetchall()
-        conn.close()
-        return jsonify([dict(row) for row in data])
+    data = []
+    with conn.cursor() as cursor:
+        if report_type == 'appointments':
+            cursor.execute('SELECT * FROM appointments')
+            data = cursor.fetchall()
+        elif report_type == 'payments':
+            cursor.execute('SELECT * FROM payments')
+            data = cursor.fetchall()
+        elif report_type == 'patients':
+            cursor.execute('SELECT * FROM patients')
+            data = cursor.fetchall()
+        else:
+            conn.close()
+            return 'Invalid report type', 400
     conn.close()
-    return 'Invalid report type', 400
+    return jsonify([dict(row) for row in data])
 
 @app.route('/download_report/<report_id>')
 def download_report(report_id):
     conn = get_db_connection()
-    report = conn.execute('SELECT * FROM reports WHERE report_id = ?', (report_id,)).fetchone()
+    report = None
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT * FROM reports WHERE report_id = %s', (report_id,))
+        report = cursor.fetchone()
     conn.close()
 
     if not report:
@@ -858,7 +902,5 @@ def download_report(report_id):
 
     return render_template('report_result.html', report_type=report_type, data=report_details)
 
-
 if __name__ == '__main__':
     app.run(debug=True)
-
