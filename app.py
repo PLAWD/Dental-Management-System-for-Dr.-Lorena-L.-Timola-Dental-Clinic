@@ -4,8 +4,6 @@ import smtplib
 import random
 import string
 from datetime import datetime, timedelta, timezone
-
-from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from pymysql.constants import CLIENT
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -597,7 +595,7 @@ def get_role_name(role_id):
 def register_user():
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        cursor.execute('SELECT role_id, role_name FROM roles')
+        cursor.execute('SELECT role_id, role_name FROM Roles')
         roles = cursor.fetchall()
         cursor.execute('SELECT userstat_id, userStatus FROM userStatus')
         statuses = cursor.fetchall()

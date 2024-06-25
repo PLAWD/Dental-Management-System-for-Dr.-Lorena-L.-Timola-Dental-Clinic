@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register User</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="center-content">
+        <div class="register-container">
+            <h2 class="register-title">Register User</h2>
+            <form id="registerForm" action="{{ url_for('submit_register_user') }}" method="post">
+                <label for="first_name">First Name:</label>
+                <input type="text" id="first_name" name="first_name" required>
+                <label for="last_name">Last Name:</label>
+                <input type="text" id="last_name" name="last_name" required>
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <input type="hidden" id="role_id" name="role_id" value="1"> <!-- Automatically assigning admin role -->
+                <input type="hidden" id="userstat_id" name="userstat_id" value="1"> <!-- Automatically setting status to active -->
+                <button type="submit">Register</button>
+            </form>
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <ul>
+                  {% for message in messages %}
+                    <li>{{ message }}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</body>
+</html>
