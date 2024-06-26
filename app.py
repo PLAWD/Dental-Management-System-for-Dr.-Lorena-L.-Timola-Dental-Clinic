@@ -110,7 +110,7 @@ def do_login():
             conn.close()
 
             session['user_id'] = user['user_id']
-            session['role_id'] = user['role_id']
+            session['role_id'] = user['fk_role_id']
             session['first_name'] = user['first_name']
             session['user_email'] = user['email']
             return jsonify({'success': True, 'redirect_url': url_for('dashboard')})
@@ -278,7 +278,7 @@ def dashboard():
         cursor.execute('SELECT dentist_id, first_name, last_name FROM dentists')
         dentists = cursor.fetchall()
 
-        cursor.execute('SELECT status_id, status_name FROM appointmentstatus')
+        cursor.execute('SELECT status_id, status_name FROM AppointmentStatus')
         statuses = cursor.fetchall()
 
     conn.close()
@@ -297,7 +297,7 @@ def create_appointment():
         cursor.execute('SELECT dentist_id, first_name, last_name FROM dentists')
         dentists = cursor.fetchall()
 
-        cursor.execute('SELECT status_id, status_name FROM appointmentstatus')
+        cursor.execute('SELECT status_id, status_name FROM AppointmentStatus')
         statuses = cursor.fetchall()
 
     conn.close()

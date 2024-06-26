@@ -165,8 +165,12 @@
             <form action="{{ url_for('submit_add_patient') }}" method="POST">
                 <label for="first_name">First Name:</label>
                 <input type="text" id="first_name" name="first_name" required>
+                <label for="middle_name">Middle Name:</label>
+                <input type="text" id="middle_name" name="middle_name">
                 <label for="last_name">Last Name:</label>
                 <input type="text" id="last_name" name="last_name" required>
+                <label for="dob">Date of Birth:</label>
+                <input type="date" id="dob" name="dob" required>
                 <label for="phone">Phone:</label>
                 <input type="text" id="phone" name="phone" required>
                 <label for="email">Email:</label>
@@ -179,6 +183,16 @@
                 <input type="date" id="next_appointment" name="next_appointment">
                 <label for="last_appointment">Last Appointment:</label>
                 <input type="date" id="last_appointment" name="last_appointment">
+                <label for="medical_conditions">Medical Conditions:</label>
+                <input type="text" id="medical_conditions" name="medical_conditions">
+                <label for="current_medication">Current Medication:</label>
+                <input type="text" id="current_medication" name="current_medication">
+                <label for="employment_status">Employment Status:</label>
+                <input type="text" id="employment_status" name="employment_status">
+                <label for="other_employment_detail">Other Employment Detail:</label>
+                <input type="text" id="other_employment_detail" name="other_employment_detail">
+                <label for="occupation">Occupation:</label>
+                <input type="text" id="occupation" name="occupation">
                 <button type="submit">Add</button>
             </form>
         </div>
@@ -202,8 +216,12 @@
                 <input type="hidden" id="edit_patient_id" name="patient_id">
                 <label for="edit_first_name">First Name:</label>
                 <input type="text" id="edit_first_name" name="first_name" required>
+                <label for="edit_middle_name">Middle Name:</label>
+                <input type="text" id="edit_middle_name" name="middle_name">
                 <label for="edit_last_name">Last Name:</label>
                 <input type="text" id="edit_last_name" name="last_name" required>
+                <label for="edit_dob">Date of Birth:</label>
+                <input type="date" id="edit_dob" name="dob" required>
                 <label for="edit_phone">Phone:</label>
                 <input type="text" id="edit_phone" name="phone" required>
                 <label for="edit_email">Email:</label>
@@ -216,6 +234,16 @@
                 <input type="date" id="edit_next_appointment" name="next_appointment">
                 <label for="edit_last_appointment">Last Appointment:</label>
                 <input type="date" id="edit_last_appointment" name="last_appointment">
+                <label for="edit_medical_conditions">Medical Conditions:</label>
+                <input type="text" id="edit_medical_conditions" name="medical_conditions">
+                <label for="edit_current_medication">Current Medication:</label>
+                <input type="text" id="edit_current_medication" name="current_medication">
+                <label for="edit_employment_status">Employment Status:</label>
+                <input type="text" id="edit_employment_status" name="employment_status">
+                <label for="edit_other_employment_detail">Other Employment Detail:</label>
+                <input type="text" id="edit_other_employment_detail" name="other_employment_detail">
+                <label for="edit_occupation">Occupation:</label>
+                <input type="text" id="edit_occupation" name="occupation">
                 <button type="submit">Update</button>
             </form>
         </div>
@@ -281,13 +309,20 @@
                     const patientDetails = document.getElementById('patientDetails');
                     patientDetails.innerHTML = `
                         <p><strong>First Name:</strong> ${data.first_name}</p>
+                        <p><strong>Middle Name:</strong> ${data.middle_name}</p>
                         <p><strong>Last Name:</strong> ${data.last_name}</p>
+                        <p><strong>Date of Birth:</strong> ${data.dob}</p>
                         <p><strong>Phone:</strong> ${data.phone}</p>
                         <p><strong>Email:</strong> ${data.email}</p>
                         <p><strong>Address:</strong> ${data.address}</p>
                         <p><strong>City:</strong> ${data.city}</p>
                         <p><strong>Next Appointment:</strong> ${data.next_appointment}</p>
                         <p><strong>Last Appointment:</strong> ${data.last_appointment}</p>
+                        <p><strong>Medical Conditions:</strong> ${data.medical_conditions}</p>
+                        <p><strong>Current Medication:</strong> ${data.current_medication}</p>
+                        <p><strong>Employment Status:</strong> ${data.employment_status}</p>
+                        <p><strong>Other Employment Detail:</strong> ${data.other_employment_detail}</p>
+                        <p><strong>Occupation:</strong> ${data.occupation}</p>
                     `;
                     document.getElementById('viewPatientModal').style.display = 'block';
                 });
@@ -299,13 +334,20 @@
                 .then(data => {
                     document.getElementById('edit_patient_id').value = data.patient_id;
                     document.getElementById('edit_first_name').value = data.first_name;
+                    document.getElementById('edit_middle_name').value = data.middle_name;
                     document.getElementById('edit_last_name').value = data.last_name;
+                    document.getElementById('edit_dob').value = data.dob;
                     document.getElementById('edit_phone').value = data.phone;
                     document.getElementById('edit_email').value = data.email;
                     document.getElementById('edit_address').value = data.address;
                     document.getElementById('edit_city').value = data.city;
                     document.getElementById('edit_next_appointment').value = data.next_appointment;
                     document.getElementById('edit_last_appointment').value = data.last_appointment;
+                    document.getElementById('edit_medical_conditions').value = data.medical_conditions;
+                    document.getElementById('edit_current_medication').value = data.current_medication;
+                    document.getElementById('edit_employment_status').value = data.employment_status;
+                    document.getElementById('edit_other_employment_detail').value = data.other_employment_detail;
+                    document.getElementById('edit_occupation').value = data.occupation;
                     document.getElementById('editPatientModal').style.display = 'block';
                 });
         }
@@ -361,4 +403,3 @@
     </script>
 </body>
 </html>
-
