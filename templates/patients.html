@@ -6,48 +6,64 @@
     <title>Patients</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <style>
-        .filter-container {
+        .patients-page .filter-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
 
-        .filter-container .search-form {
+        .patients-page .search-form {
             display: flex;
             justify-content: flex-end;
             width: 50%;
         }
 
-        .filter-container .controls {
+        .patients-page .controls {
             display: flex;
             gap: 10px;
         }
 
-        .filter-container select,
-        .filter-container button {
+        .patients-page select,
+        .patients-page button {
             padding: 8px 12px;
             font-size: 14px;
         }
 
-        .search-form {
+        .patients-page .search-form {
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .search-form input[type="text"] {
+        .patients-page .search-form input[type="text"] {
             padding: 8px 12px;
             font-size: 14px;
         }
 
-        .search-form button {
+        .patients-page .search-form button {
             padding: 8px 12px;
             font-size: 14px;
         }
+
+        .patients-page .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .patients-page .user-table {
+            width: 80%;
+            margin-top: 20px;
+        }
+
+        .patients-page .user-table th, .patients-page .user-table td {
+            text-align: left;
+            padding: 10px;
+        }
     </style>
 </head>
-<body class="dashboard">
+<body class="patients-page">
 <div class="sidebar-tab" id="sidebarTab">☰</div>
 <div id="sidebar" class="sidebar">
     <ul>
@@ -207,7 +223,7 @@
                 <label for="edit_phone">Phone:</label>
                 <input type="text" id="edit_phone" name="phone" required>
                 <label for="edit_email">Email:</label>
-                                <input type="email" id="edit_email" name="email" required>
+                <input type="email" id="edit_email" name="email" required>
                 <label for="edit_address">Address:</label>
                 <input type="text" id="edit_address" name="address" required>
                 <label for="edit_city">City:</label>
@@ -361,4 +377,3 @@
     </script>
 </body>
 </html>
-

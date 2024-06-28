@@ -583,7 +583,7 @@ def overview(patient_id):
     conn = get_db_connection()
     patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
     if patient is None:
-        flash('Patient not found!')
+        flash('Patient not found!', 'danger')
         return redirect(url_for('dashboard'))
 
     # Calculate age
@@ -600,8 +600,12 @@ def overview(patient_id):
     medical_history = conn.execute('SELECT * FROM medical_history WHERE patient_id = ?', (patient_id,)).fetchone()
     conn.close()
 
-    return render_template('overview.html', patient=patient, appointments=appointments, treatment=treatment,
-                           examination=examination, medical_history=medical_history)
+    return render_template('overview.html', 
+                           patient=patient, 
+                           appointments=appointments, 
+                           treatment=treatment or {}, 
+                           examination=examination or {}, 
+                           medical_history=medical_history or {})
 
 @app.route('/view_patient/<int:patient_id>')
 def view_patient(patient_id):
@@ -762,7 +766,7 @@ def patient_records():
     conn = get_db_connection()
     patient_records = conn.execute('SELECT * FROM patients').fetchall()
     conn.close()
-    return render_template('patient_records.html', records=patient_records)
+    return render_template('patients.html', records=patient_records)
 
 @app.route('/appointment_records')
 def appointment_records():

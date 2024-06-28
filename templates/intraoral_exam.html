@@ -3,196 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Intraoral Exam</title>
+    <title>Patient Overview</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body>
-    <div class="container">
-        <div class="sidebar-tab" id="sidebarTab">☰</div>
-        <div id="sidebar" class="sidebar">
-            <ul>
-                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                <li><a href="#">Profile</a></li>
-                <li><a href="{{ url_for('users') }}">Users</a></li>
-                <li><a href="#">Treatment</a></li>
-                <li class="dropdown">
-                    <a href="#">Records</a>
-                    <div class="dropdown-content">
-                        <a href="{{ url_for('patients') }}">Patient Records</a>
-                        <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                        <a href="#">Treatment Records</a>
-                    </div>
-                </li>
-                <li><a href="#">Maintenance</a></li>
-                <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
-                <li><a href="{{ url_for('reports') }}">Reports</a></li>
-                <li><a href="#">Payments</a></li>
-                <br>
-                <br>
-                <br>
-                <br>
-                <br>
-                <br>
-                <li><a href="#">Help</a></li>
-                <li><a href="#">About</a></li>
-                <li><a href="{{ url_for('logout') }}">Logout</a></li>
-            </ul>
-        </div>
-        <div class="main-content">
-            <div class="tabs">
-                <div class="tab-link active" data-tab="tab-enter-diagnosis">Enter Diagnosis</div>
-                <div class="tab-link" data-tab="tab-overview">Overview</div>
-                <div class="tab-link" data-tab="tab-medical-history">Medical History</div>
-                <div class="tab-link" data-tab="tab-consent-form">Consent Form</div>
+<body class="overview-page">
+    <div class="sidebar-tab" id="sidebarTab">☰</div>
+    <div id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+            <li><a href="#">Treatment</a></li>
+            <li class="dropdown">
+                <a href="#">Records</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('patients') }}">Patient Records</a>
+                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                    <a href="#">Treatment Records</a>
+                </div>
+            </li>
+            <li><a href="#">Maintenance</a></li>
+            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+            <li><a href="{{ url_for('reports') }}">Reports</a></li>
+            <li><a href="#">Payments</a></li>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <li><a href="#">Help</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <div class="container">
+            <div class="tab-container">
+                <a href="enter_diagnosis.html" class="tab">Enter diagnosis</a>
+                <a href="#" class="tab active">Overview</a>
+                <a href="#" class="tab">Medical History</a>
+                <a href="#" class="tab">Consent Form</a>
             </div>
-            <div class="teeth-chart">
-                <div class="teeth-title">Permanent</div>
-                <div class="teeth-row">
-                    <div class="tooth" data-tooth="18" onclick="showToothModal(18)">18</div>
-                    <div class="tooth" data-tooth="17" onclick="showToothModal(17)">17</div>
-                    <div class="tooth" data-tooth="16" onclick="showToothModal(16)">16</div>
-                    <div class="tooth" data-tooth="15" onclick="showToothModal(15)">15</div>
-                    <div class="tooth" data-tooth="14" onclick="showToothModal(14)">14</div>
-                    <div class="tooth" data-tooth="13" onclick="showToothModal(13)">13</div>
-                    <div class="tooth" data-tooth="12" onclick="showToothModal(12)">12</div>
-                    <div class="tooth" data-tooth="11" onclick="showToothModal(11)">11</div>
-                    <div class="tooth" data-tooth="21" onclick="showToothModal(21)">21</div>
-                    <div class="tooth" data-tooth="22" onclick="showToothModal(22)">22</div>
-                    <div class="tooth" data-tooth="23" onclick="showToothModal(23)">23</div>
-                    <div class="tooth" data-tooth="24" onclick="showToothModal(24)">24</div>
-                    <div class="tooth" data-tooth="25" onclick="showToothModal(25)">25</div>
-                    <div class="tooth" data-tooth="26" onclick="showToothModal(26)">26</div>
-                    <div class="tooth" data-tooth="27" onclick="showToothModal(27)">27</div>
-                    <div class="tooth" data-tooth="28" onclick="showToothModal(28)">28</div>
-                </div>
-                <div class="teeth-row">
-                    <div class="tooth" data-tooth="48" onclick="showToothModal(48)">48</div>
-                    <div class="tooth" data-tooth="47" onclick="showToothModal(47)">47</div>
-                    <div class="tooth" data-tooth="46" onclick="showToothModal(46)">46</div>
-                    <div class="tooth" data-tooth="45" onclick="showToothModal(45)">45</div>
-                    <div class="tooth" data-tooth="44" onclick="showToothModal(44)">44</div>
-                    <div class="tooth" data-tooth="43" onclick="showToothModal(43)">43</div>
-                    <div class="tooth" data-tooth="42" onclick="showToothModal(42)">42</div>
-                    <div class="tooth" data-tooth="41" onclick="showToothModal(41)">41</div>
-                    <div class="tooth" data-tooth="31" onclick="showToothModal(31)">31</div>
-                    <div class="tooth" data-tooth="32" onclick="showToothModal(32)">32</div>
-                    <div class="tooth" data-tooth="33" onclick="showToothModal(33)">33</div>
-                    <div class="tooth" data-tooth="34" onclick="showToothModal(34)">34</div>
-                    <div class="tooth" data-tooth="35" onclick="showToothModal(35)">35</div>
-                    <div class="tooth" data-tooth="36" onclick="showToothModal(36)">36</div>
-                    <div class="tooth" data-tooth="37" onclick="showToothModal(37)">37</div>
-                    <div class="tooth" data-tooth="38" onclick="showToothModal(38)">38</div>
-                </div>
-                <div class="teeth-title">Temporary</div>
-                <div class="teeth-row">
-                    <div class="tooth" data-tooth="55" onclick="showToothModal(55)">55</div>
-                    <div class="tooth" data-tooth="54" onclick="showToothModal(54)">54</div>
-                    <div class="tooth" data-tooth="53" onclick="showToothModal(53)">53</div>
-                    <div class="tooth" data-tooth="52" onclick="showToothModal(52)">52</div>
-                    <div class="tooth" data-tooth="51" onclick="showToothModal(51)">51</div>
-                    <div class="tooth" data-tooth="61" onclick="showToothModal(61)">61</div>
-                    <div class="tooth" data-tooth="62" onclick="showToothModal(62)">62</div>
-                    <div class="tooth" data-tooth="63" onclick="showToothModal(63)">63</div>
-                    <div class="tooth" data-tooth="64" onclick="showToothModal(64)">64</div>
-                    <div class="tooth" data-tooth="65" onclick="showToothModal(65)">65</div>
-                </div>
-                <div class="teeth-row">
-                    <div class="tooth" data-tooth="85" onclick="showToothModal(85)">85</div>
-                    <div class="tooth" data-tooth="84" onclick="showToothModal(84)">84</div>
-                    <div class="tooth" data-tooth="83" onclick="showToothModal(83)">83</div>
-                    <div class="tooth" data-tooth="82" onclick="showToothModal(82)">82</div>
-                    <div class="tooth" data-tooth="81" onclick="showToothModal(81)">81</div>
-                    <div class="tooth" data-tooth="71" onclick="showToothModal(71)">71</div>
-                    <div class="tooth" data-tooth="72" onclick="showToothModal(72)">72</div>
-                    <div class="tooth" data-tooth="73" onclick="showToothModal(73)">73</div>
-                    <div class="tooth" data-tooth="74" onclick="showToothModal(74)">74</div>
-                    <div class="tooth" data-tooth="75" onclick="showToothModal(75)">75</div>
-                </div>
-            </div>
-            <div class="content">
-                                <div id="tab-enter-diagnosis" class="tab-content active">
-                    <div class="diagnosis-details">
-                        <fieldset>
-                            <legend>Periodontal Screening</legend>
-                            <label><input type="checkbox" name="periodontal_screening" value="gingivitis"> Gingivitis</label>
-                            <label><input type="checkbox" name="periodontal_screening" value="early_periodontist"> Early Periodontist</label>
-                            <label><input type="checkbox" name="periodontal_screening" value="moderate_periodontist"> Moderate Periodontist</label>
-                            <label><input type="checkbox" name="periodontal_screening" value="advanced_periodontist"> Advanced Periodontist</label>
-                        </fieldset>
-                        <fieldset>
-                            <legend>Occlusion</legend>
-                            <label for="class_molar">Class (Molar):</label>
-                            <select name="class_molar" id="class_molar">
-                                <option value="normal">Normal</option>
-                                <option value="class_1">Class 1</option>
-                                <option value="class_2">Class 2</option>
-                                <option value="class_3">Class 3</option>
-                            </select>
-                            <label><input type="checkbox" name="occlusion" value="overjet"> Overjet</label>
-                            <label><input type="checkbox" name="occlusion" value="overbite"> Overbite</label>
-                            <label><input type="checkbox" name="occlusion" value="midline_deviation"> Midline Deviation</label>
-                            <label><input type="checkbox" name="occlusion" value="crossbite"> Crossbite</label>
-                        </fieldset>
-                        <fieldset>
-                            <legend>Appliances</legend>
-                            <label><input type="checkbox" name="appliances" value="orthodontic"> Orthodontic</label>
-                            <label><input type="checkbox" name="appliances" value="stayplate"> Stayplate</label>
-                            <label for="appliances_others">Others:</label>
-                            <input type="text" name="appliances_others" id="appliances_others">
-                        </fieldset>
-                        <fieldset>
-                            <legend>TMD</legend>
-                            <label><input type="checkbox" name="tmd" value="clenching"> Clenching</label>
-                            <label><input type="checkbox" name="tmd" value="clicking"> Clicking</label>
-                            <label><input type="checkbox" name="tmd" value="trismus"> Trismus</label>
-                            <label><input type="checkbox" name="tmd" value="muscle_spasm"> Muscle Spasm</label>
-                        </fieldset>
-                        <fieldset>
-                            <legend>X-Ray Taken</legend>
-                            <label><input type="checkbox" name="xray_taken" value="periapical"> Periapical</label>
-                            <label for="periapical_tth_no">Tth. No.:</label>
-                            <select name="periapical_tth_no" id="periapical_tth_no">
-                                <!-- Add tooth numbers as options -->
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <!-- Continue for all teeth -->
-                            </select>
-                            <label><input type="checkbox" name="xray_taken" value="panoramic"> Panoramic</label>
-                            <label><input type="checkbox" name="xray_taken" value="cephalometric"> Cephalometric</label>
-                            <label><input type="checkbox" name="xray_taken" value="occlusal"> Occlusal</label>
-                            <input type="text" name="xray_occlusal" id="xray_occlusal">
-                            <label for="xray_others">Others:</label>
-                            <input type="text" name="xray_others" id="xray_others">
-                        </fieldset>
+            <div class="exam-form">
+                <div class="teeth-diagram">
+                    <div class="teeth-section">
+                        <div class="teeth-header">Upper Temporary Teeth</div>
+                        <div class="teeth-row">
+                            <!-- Upper temporary teeth row -->
+                            <div class="tooth">55</div>
+                            <div class="tooth">54</div>
+                            <div class="tooth">53</div>
+                            <div class="tooth">52</div>
+                            <div class="tooth">51</div>
+                            <div class="tooth">61</div>
+                            <div class="tooth">62</div>
+                            <div class="tooth">63</div>
+                            <div class="tooth">64</div>
+                            <div class="tooth">65</div>
+                        </div>
+                    </div>
+                    <div class="teeth-section">
+                        <div class="teeth-header">Permanent Teeth</div>
+                        <div class="teeth-row">
+                            <!-- Permanent teeth upper row -->
+                            <div class="tooth">18</div>
+                            <div class="tooth">17</div>
+                            <div class="tooth">16</div>
+                            <div class="tooth">15</div>
+                            <div class="tooth">14</div>
+                            <div class="tooth">13</div>
+                            <div class="tooth">12</div>
+                            <div class="tooth">11</div>
+                            <div class="tooth">21</div>
+                            <div class="tooth">22</div>
+                            <div class="tooth">23</div>
+                            <div class="tooth">24</div>
+                            <div class="tooth">25</div>
+                            <div class="tooth">26</div>
+                            <div class="tooth">27</div>
+                            <div class="tooth">28</div>
+                        </div>
+                        <div class="teeth-row">
+                            <!-- Permanent teeth lower row -->
+                            <div class="tooth">48</div>
+                            <div class="tooth">47</div>
+                            <div class="tooth">46</div>
+                            <div class="tooth">45</div>
+                            <div class="tooth">44</div>
+                            <div class="tooth">43</div>
+                            <div class="tooth">42</div>
+                            <div class="tooth">41</div>
+                            <div class="tooth">31</div>
+                            <div class="tooth">32</div>
+                            <div class="tooth">33</div>
+                            <div class="tooth">34</div>
+                            <div class="tooth">35</div>
+                            <div class="tooth">36</div>
+                            <div class="tooth">37</div>
+                            <div class="tooth">38</div>
+                        </div>
+                    </div>
+                    <div class="teeth-section">
+                        <div class="teeth-header">Lower Temporary Teeth</div>
+                        <div class="teeth-row">
+                            <!-- Lower temporary teeth row -->
+                            <div class="tooth">85</div>
+                            <div class="tooth">84</div>
+                            <div class="tooth">83</div>
+                            <div class="tooth">82</div>
+                            <div class="tooth">81</div>
+                            <div class="tooth">71</div>
+                            <div class="tooth">72</div>
+                            <div class="tooth">73</div>
+                            <div class="tooth">74</div>
+                            <div class="tooth">75</div>
+                        </div>
                     </div>
                 </div>
-                <div id="tab-overview" class="tab-content">
-                    <div class="profile">
-                        <h2>Profile</h2>
-                        <p><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</p>
-                        <p><strong>Email:</strong> {{ patient.email }}</p>
-                        <p><strong>Mobile Number:</strong> {{ patient.mobile_number }}</p>
-                        <p><strong>Address:</strong> {{ patient.address }}</p>
-                        <p><strong>City:</strong> {{ patient.city }}</p>
-                        <p><strong>Patient ID:</strong> {{ patient.patient_id }}</p>
-                        <p><strong>Patient since:</strong> {{ patient.patient_since }}</p>
-                        <p><strong>Age:</strong> {{ patient.age }}</p>
-                        <p><strong>Birth date:</strong> {{ patient.birth_date }}</p>
-                        <p><strong>Status:</strong> {{ patient.status }}</p>
-                    </div>
-                </div>
-                <div id="tab-medical-history" class="tab-content">
-                    <h2>Medical History</h2>
-                    <!-- Add medical history content here -->
-                </div>
-                <div id="tab-consent-form" class="tab-content">
-                    <h2>Consent Form</h2>
-                    <!-- Add consent form content here -->
+                <div class="exam-details">
+                    <h3>Profile</h3>
+                    <p><strong>Name:</strong> Gloie Taho El Gatto A. Santos</p>
+                    <p><strong>Email:</strong> gloie.gatto@gmail.com</p>
+                    <p><strong>Mobile Number:</strong> +63 9574795839</p>
+                    <p><strong>Address:</strong> 20 B. Chowking, Daily</p>
+                    <p><strong>City:</strong> Quezon City</p>
+                    <p><strong>Patient ID:</strong> 37283</p>
+                    <p><strong>Age:</strong> 1</p>
+                    <p><strong>Birth Date:</strong> 2023-12-19</p>
+                    <p><strong>Status:</strong> Single</p>
+                    <p><strong>Patient Since:</strong> 2024-12-02</p>
                 </div>
             </div>
             <div class="treatment-record">
-                <h2>Treatment Record</h2>
-                <table>
+                <h3>Treatment Record</h3>
+                <table class="treatment-table">
                     <thead>
                         <tr>
                             <th>Date</th>
@@ -204,15 +149,22 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
+                        <tr onclick="window.location.href='treatment_detail.html'">
                             <td>2024-12-01</td>
+                            <td>55, 54</td>
                             <td>Clinical note</td>
-                            <td>In-Dup pano and bws for?</td>
+                            <td>500.00</td>
                             <td>0.00</td>
-                            <td>0.00</td>
-                            <td>2024-24-06</td>
+                            <td>2024-12-08</td>
                         </tr>
-                        <!-- Add more rows as needed -->
+                        <tr onclick="window.location.href='treatment_detail.html'">
+                            <td>2024-12-01</td>
+                            <td>55, 54</td>
+                            <td>In-Dup pano and bws for?</td>
+                            <td>500.00</td>
+                            <td>0.00</td>
+                            <td>2024-12-08</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -220,90 +172,40 @@
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const tabs = document.querySelectorAll('.tab-link');
-            const tabContents = document.querySelectorAll('.tab-content');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarTab = document.getElementById('sidebarTab');
+            const mainContent = document.querySelector('.main-content');
 
-            tabs.forEach(tab => {
-                tab.addEventListener('click', function () {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tabContents.forEach(tc => tc.classList.remove('active'));
-
-                    tab.classList.add('active');
-                    document.getElementById(tab.dataset.tab).classList.add('active');
-                });
+            sidebarTab.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                mainContent.classList.toggle('shifted');
+                sidebarTab.style.display = 'none';
             });
 
-            document.querySelectorAll('.tooth').forEach(tooth => {
-                tooth.addEventListener('click', function () {
-                    showToothModal(this.dataset.tooth);
-                });
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    mainContent.classList.remove('shifted');
+                    sidebarTab.style.display = 'block';
+                }
             });
 
-            document.querySelectorAll('.legend input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', function () {
-                    const checkedBoxes = document.querySelectorAll('.legend input[type="checkbox"]:checked');
-                    const preview = document.getElementById('preview');
+            // Dropdown functionality
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                const btn = dropdown.querySelector('.ellipsis-btn');
+                const content = dropdown.querySelector('.dropdown-content');
 
-                    if (checkedBoxes.length > 4) {
-                        this.checked = false;
-                        return;
-                    }
+                btn.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    content.classList.toggle('show');
+                });
 
-                    const values = Array.from(checkedBoxes).map(cb => cb.value);
-                    preview.textContent = values.join(', ');
+                document.addEventListener('click', function () {
+                    content.classList.remove('show');
                 });
             });
         });
-
-        function showToothModal(toothNumber) {
-            document.getElementById('toothModal').style.display = 'block';
-        }
-
-        function closeToothModal() {
-            document.getElementById('toothModal').style.display = 'none';
-        }
     </script>
-
-    <!-- Modal structure -->
-    <div id="toothModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeToothModal()">&times;</span>
-            <h2>Legend</h2>
-            <div class="legend">
-                <div>
-                    <h3>Conditions:</h3>
-                    <label><input type="checkbox" name="condition" value="Present Teeth"> - Present Teeth</label><br>
-                    <label><input type="checkbox" name="condition" value="D"> D - Decayed (Caries indicated for filling)</label><br>
-                    <label><input type="checkbox" name="condition" value="M"> M - Missing due to caries</label><br>
-                    <label><input type="checkbox" name="condition" value="MO"> MO - Missing due to other causes</label><br>
-                    <label><input type="checkbox" name="condition" value="Sp"> Sp - Supernumerary Tooth</label><br>
-                    <label><input type="checkbox" name="condition" value="Rf"> Rf - Roof Fragment</label><br>
-                    <label><input type="checkbox" name="condition" value="Un"> Un - Unerupted</label><br>
-                </div>
-                <div>
-                    <h3>Surgery:</h3>
-                    <label><input type="checkbox" name="surgery" value="X"> X - Extraction due to caries</label><br>
-                                        <label><input type="checkbox" name="surgery" value="XO"> XO - Extraction due to other causes</label><br>
-                </div>
-                <div>
-                    <h3>Restoration & Prosthetics</h3>
-                    <label><input type="checkbox" name="restoration" value="Am"> Am - Amalgam Filling</label><br>
-                    <label><input type="checkbox" name="restoration" value="Co"> Co - Composite Filling</label><br>
-                    <label><input type="checkbox" name="restoration" value="JC"> JC - Jacket Crown</label><br>
-                    <label><input type="checkbox" name="restoration" value="Ab"> Ab - Abutment</label><br>
-                    <label><input type="checkbox" name="restoration" value="Att"> Att - Attachment</label><br>
-                    <label><input type="checkbox" name="restoration" value="P"> P - Pontic</label><br>
-                    <label><input type="checkbox" name="restoration" value="In"> In - Inlay</label><br>
-                    <label><input type="checkbox" name="restoration" value="Imp"> Imp - Implant</label><br>
-                    <label><input type="checkbox" name="restoration" value="S"> S - Sealants</label><br>
-                    <label><input type="checkbox" name="restoration" value="Rm"> Rm - Removable dentures</label><br>
-                </div>
-            </div>
-            <h3>Preview: <span id="preview"></span></h3>
-            <button onclick="closeToothModal()">Close</button>
-        </div>
-    </div>
 </body>
 </html>
-
-
