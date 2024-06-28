@@ -577,6 +577,32 @@ def patients():
 
     return render_template('patients.html', patients=patients, total_patients=total_patients)
 
+
+@app.route('/overview/<int:patient_id>')
+def overview(patient_id):
+    conn = get_db_connection()
+    patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
+    if patient is None:
+        flash('Patient not found!')
+        return redirect(url_for('dashboard'))
+
+    # Calculate age
+    birth_date = datetime.strptime(patient['dob'], '%Y-%m-%d')
+    today = datetime.today()
+    age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+
+    patient = dict(patient)
+    patient['age'] = age
+
+    appointments = conn.execute('SELECT * FROM appointments WHERE patient_id = ?', (patient_id,)).fetchall()
+    treatment = conn.execute('SELECT * FROM treatments WHERE patient_id = ?', (patient_id,)).fetchone()
+    examination = conn.execute('SELECT * FROM examinations WHERE patient_id = ?', (patient_id,)).fetchone()
+    medical_history = conn.execute('SELECT * FROM medical_history WHERE patient_id = ?', (patient_id,)).fetchone()
+    conn.close()
+
+    return render_template('overview.html', patient=patient, appointments=appointments, treatment=treatment,
+                           examination=examination, medical_history=medical_history)
+
 @app.route('/view_patient/<int:patient_id>')
 def view_patient(patient_id):
     conn = get_db_connection()
@@ -671,7 +697,6 @@ def add_patient():
     flash('Patient added successfully.')
     return redirect(url_for('patients'))
 
-
 @app.route('/submit_add_patient', methods=['POST'])
 def submit_add_patient():
     first_name = request.form['first_name']
@@ -751,7 +776,6 @@ def appointment_records():
 def records():
     return render_template('records.html')
 
-
 @app.route('/get_records/<record_type>')
 def get_records(record_type):
     conn = get_db_connection()
@@ -770,11 +794,96 @@ def get_records(record_type):
     conn.close()
     return jsonify([dict(row) for row in data])
 
+@app.route('/intraoral_exam/<int:patient_id>')
+def intraoral_exam(patient_id):
+    conn = get_db_connection()
+    patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
+    conn.close()
+    if patient is None:
+        flash('Patient not found!')
+        return redirect(url_for('patients'))
+    return render_template('intraoral_exam.html', patient=patient)
+
+
+
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
+
+@app.route('/inventory')
+@role_required([1, 2])  # Both admin and user can access
+def inventory():
+    conn = get_db_connection()
+    inventory_items = conn.execute('SELECT * FROM inventory').fetchall()
+    conn.close()
+    return render_template('inventory.html', inventory_items=inventory_items)
+
+
+@app.route('/register_item', methods=['GET', 'POST'])
+def register_item():
+    if request.method == 'POST':
+        name = request.form['name']
+        category = request.form['category']
+        price = request.form['price']
+        stock = request.form['stock']
+        variations = request.form['variations']
+        seller = request.form['seller']
+
+        conn = get_db_connection()
+        conn.execute('''
+            INSERT INTO inventory (name, category, price, stock, variations, seller)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (name, category, price, stock, variations, seller))
+        conn.commit()
+        conn.close()
+
+        flash('Item registered successfully.')
+        return redirect(url_for('inventory'))
+    return render_template('register_item.html')
+
+
+@app.route('/item/<int:item_id>')
+def view_item(item_id):
+    conn = get_db_connection()
+    item = conn.execute('SELECT * FROM inventory WHERE id = ?', (item_id,)).fetchone()
+    conn.close()
+    if item is None:
+        flash('Item not found!')
+        return redirect(url_for('inventory'))
+    return render_template('view_item.html', item=item)
+
+
+@app.route('/edit_item/<int:item_id>', methods=['GET', 'POST'])
+def edit_item(item_id):
+    conn = get_db_connection()
+    item = conn.execute('SELECT * FROM inventory WHERE id = ?', (item_id,)).fetchone()
+
+    if request.method == 'POST':
+        name = request.form['name']
+        category = request.form['category']
+        price = request.form['price']
+        stock = request.form['stock']
+        variations = request.form['variations']
+        seller = request.form['seller']
+
+        conn.execute('''
+            UPDATE inventory
+            SET name = ?, category = ?, price = ?, stock = ?, variations = ?, seller = ?
+            WHERE id = ?
+        ''', (name, category, price, stock, variations, seller, item_id))
+        conn.commit()
+        conn.close()
+
+        flash('Item updated successfully.')
+        return redirect(url_for('inventory'))
+
+    conn.close()
+    if item is None:
+        flash('Item not found!')
+        return redirect(url_for('inventory'))
+    return render_template('edit_item.html', item=item)
 
 @app.route('/reports')
 @role_required([1, 2])  # Both admin and user can access

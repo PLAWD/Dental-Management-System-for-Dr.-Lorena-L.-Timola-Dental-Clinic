@@ -1449,3 +1449,336 @@ header h1 {
 .sidebar::-webkit-scrollbar {
     display: none;
 }
+
+/* Inventory Styles */
+.container {
+    padding: 20px;
+    display: flex;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 200px; /* Adjust as needed to fit your sidebar width */
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header input {
+    width: 300px;
+    padding: 10px;
+    font-size: 16px;
+}
+
+.header button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.categories {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.categories button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #f0f0f0;
+    border: none;
+    cursor: pointer;
+}
+
+.categories button.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.inventory-list .item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+}
+
+.inventory-list .item img {
+    width: 50px;
+    height: 50px;
+    margin-right: 20px;
+}
+
+.inventory-list .item .item-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.inventory-list .item .item-details {
+    margin-left: 20px;
+}
+
+.inventory-list .item .item-details h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.inventory-list .item .item-details p {
+    margin: 0;
+    color: #666;
+}
+
+.inventory-list .item .low-stock .item-details p {
+    color: red;
+}
+
+.inventory-list .item .options-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    position: relative;
+}
+
+.inventory-list .item .options-btn:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #f9f9f9;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+}
+
+/* Teeth Chart */
+.teeth-chart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.teeth-title {
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.teeth-row {
+    display: flex;
+}
+
+.tooth {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5px;
+    cursor: pointer;
+}
+
+.tooth:hover {
+    background-color: #ddd;
+}
+
+/* Diagnosis Details */
+.diagnosis-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+fieldset {
+    border: 1px solid #ddd;
+    padding: 10px;
+    width: 200px;
+}
+
+legend {
+    font-weight: bold;
+}
+
+/* Treatment Record */
+.treatment-record {
+    margin-top: 20px;
+}
+
+.treatment-record table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.treatment-record th, .treatment-record td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 200px;
+    background-color: #f4f4f4;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: -200px;
+    transition: 0.3s;
+}
+
+.sidebar.show {
+    left: 0;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    padding: 15px;
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: #333;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.tab-link {
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: #f4f4f4;
+    border: 1px solid #ddd;
+    margin-right: 5px;
+}
+
+.tab-link.active {
+    background-color: #ddd;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/*JAKOL */
+.teeth-chart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.teeth-title {
+    font-weight: bold;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.teeth-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.tooth {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #000;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 5px;
+    cursor: pointer;
+}
+
+.tabs {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.tab-link {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    transition: background-color 0.3s;
+}
+
+.tab-link.active {
+    background-color: #ddd;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.diagnosis-details fieldset {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.diagnosis-details legend {
+    font-weight: bold;
+}
+
+.diagnosis-details label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.treatment-record {
+    margin-top: 20px;
+}
+
+.treatment-record table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.treatment-record th, .treatment-record td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+

@@ -13,11 +13,11 @@
         <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
         <li><a href="#">Profile</a></li>
         <li><a href="{{ url_for('users') }}">Users</a></li>
-        <li><a href="{{ url_for('patients') }}">Patients</a></li>
+        <li><a href="#">Treatment</a></li>
         <li class="dropdown">
             <a href="#">Records</a>
             <div class="dropdown-content">
-                <a href="{{ url_for('patient_records') }}">Patient Records</a>
+                <a href="{{ url_for('patients') }}">Patient Records</a>
                 <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
                 <a href="#">Treatment Records</a>
             </div>

@@ -54,11 +54,11 @@
         <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
         <li><a href="#">Profile</a></li>
         <li><a href="{{ url_for('users') }}">Users</a></li>
-        <li><a href="{{ url_for('patients') }}">Patients</a></li>
+        <li><a href="#">Treatment</a></li>
         <li class="dropdown">
             <a href="#">Records</a>
             <div class="dropdown-content">
-                <a href="{{ url_for('patient_records') }}">Patient Records</a>
+                <a href="{{ url_for('patients') }}">Patient Records</a>
                 <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
                 <a href="#">Treatment Records</a>
             </div>
@@ -123,7 +123,7 @@
                     {% for patient in patients %}
                     <tr>
                         <td class="user-info">
-                            <a href="#" class="name" onclick="viewPatient({{ patient.patient_id }})">{{ patient.name }}</a>
+                            <a href="{{ url_for('overview', patient_id=patient.patient_id) }}" class="name">{{ patient.name }}</a>
                             <span class="email">{{ patient.email }}</span>
                         </td>
                         <td>{{ patient.phone_number }}</td>
@@ -207,7 +207,7 @@
                 <label for="edit_phone">Phone:</label>
                 <input type="text" id="edit_phone" name="phone" required>
                 <label for="edit_email">Email:</label>
-                <input type="email" id="edit_email" name="email" required>
+                                <input type="email" id="edit_email" name="email" required>
                 <label for="edit_address">Address:</label>
                 <input type="text" id="edit_address" name="address" required>
                 <label for="edit_city">City:</label>

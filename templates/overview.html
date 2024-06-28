@@ -18,8 +18,8 @@
                 <li class="dropdown">
                     <a href="#">Records</a>
                     <div class="dropdown-content">
-                        <a href="#">Patient Records</a>
-                        <a href="#">Appointment Records</a>
+                        <a href="{{ url_for('patient_records') }}">Patient Records</a>
+                        <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
                         <a href="#">Treatment Records</a>
                     </div>
                 </li>
@@ -43,18 +43,18 @@
         </div>
         <div class="patient-info">
             <div>
-                <h2>Gloie El Gatto A. Santos <span class="status-badge">Active</span></h2>
-                <p>Email: Gloie.Gatto@gmail.com</p>
-                <p>Mobile number: +63 9574795839</p>
-                <p>Address: 20 B. Chowking, Daily</p>
-                <p>City: Quezon City</p>
-                <p>Patient ID: 37283</p>
-                <p>Patient since: 2023-12-19</p>
+                <h2>{{ patient['first_name'] }} {{ patient['middle_name'] }} {{ patient['last_name'] }} <span class="status-badge">{{ 'Active' if patient['is_active'] else 'Inactive' }}</span></h2>
+                <p>Email: {{ patient['email'] }}</p>
+                <p>Mobile number: {{ patient['phone'] }}</p>
+                <p>Address: {{ patient['address'] }}</p>
+                <p>City: {{ patient['city'] }}</p>
+                <p>Patient ID: {{ patient['patient_id'] }}</p>
+                <p>Patient since: {{ patient['register_date'] }}</p>
             </div>
             <div>
-                <p>Age: 1</p>
-                <p>Birth date: 2023-12-19</p>
-                <p>Status: Single</p>
+                <p>Age: {{ patient['age'] }}</p>
+                <p>Birth date: {{ patient['dob'] }}</p>
+                <p>Status: {{ patient['status'] }}</p>
             </div>
         </div>
         <div class="section">
@@ -70,53 +70,43 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for appointment in appointments %}
                         <tr>
-                            <td>2024-06-21</td>
-                            <td>Braces</td>
-                            <td><span class="appointment-status" style="background-color: #FFA500;">Pending</span></td>
-                            <td>-</td>
+                            <td>{{ appointment['appointment_date'] }}</td>
+                            <td>{{ appointment['visit_type'] }}</td>
+                            <td><span class="appointment-status" style="background-color: {{ appointment['status_color'] }};">{{ appointment['status'] }}</span></td>
+                            <td>{{ appointment['reason'] }}</td>
                         </tr>
-                        <tr>
-                            <td>2024-01-12</td>
-                            <td>binigg</td>
-                            <td><span class="appointment-status" style="background-color: #1E90FF;">Scheduled</span></td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td>2024-01-10</td>
-                            <td>Braces</td>
-                            <td><span class="appointment-status" style="background-color: #006400;">Completed</span></td>
-                            <td>-</td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
                 <a href="#" class="view-all-btn">View All</a>
             </div>
             <div class="box">
                 <h3>Treatment</h3>
-                <p>Procedures: Root canal treatment</p>
-                <p>Medications Prescribed: Fluconazole, ...</p>
-                <p>Materials used: Resin Sealers, ...</p>
-                <p>Duration of treatment: 10:30 am - 2:20pm</p>
-                <p>Follow-up instruction: Drink medicine 2 times a day for etc etc etc,....</p>
+                <p>Procedures: {{ treatment['procedures'] }}</p>
+                <p>Medications Prescribed: {{ treatment['medications'] }}</p>
+                <p>Materials used: {{ treatment['materials'] }}</p>
+                <p>Duration of treatment: {{ treatment['duration'] }}</p>
+                <p>Follow-up instruction: {{ treatment['follow_up'] }}</p>
                 <a href="#" class="view-all-btn">View All</a>
             </div>
         </div>
         <div class="section">
             <div class="box">
-                <h3>Notes</h3>
-                <p>Notes: Lorem ipsum dolor sit amet, consectetur adipiscing elit. ...</p>
-                <p>Observations: Lorem ipsum dolor sit amet, consectetur adipiscing elit. ...</p>
-                <p>Treatment progress: Lorem ipsum dolor sit amet, consectetur adipiscing elit. ...</p>
-                <p>Patient feedback: Lorem ipsum dolor sit amet, consectetur adipiscing elit. ...</p>
+                <h3>Examination</h3>
+                <p>Notes: {{ examination['notes'] }}</p>
+                <p>Observations: {{ examination['observations'] }}</p>
+                <p>Treatment progress: {{ examination['progress'] }}</p>
+                <p>Patient feedback: {{ examination['feedback'] }}</p>
                 <a href="#" class="view-all-btn">View All</a>
             </div>
             <div class="box">
-                <h3>Plan</h3>
-                <p>Proposed treatment: Lorem ipsum dolor sit amet, consectetur adipiscing elit. ...</p>
-                <p>Expected outcome: Lorem ipsum dolor sit amet, consectetur adipiscing elit. ...</p>
-                <p>Alternative treatments: Lorem ipsum dolor sit ...</p>
-                <p>Consent form: Image</p>
+                <h3>Medical History</h3>
+                <p>Proposed treatment: {{ medical_history['proposed_treatment'] }}</p>
+                <p>Expected outcome: {{ medical_history['expected_outcome'] }}</p>
+                <p>Alternative treatments: {{ medical_history['alternative_treatments'] }}</p>
+                <p>Consent form: {{ medical_history['consent_form'] }}</p>
                 <a href="#" class="view-all-btn">View All</a>
             </div>
         </div>
