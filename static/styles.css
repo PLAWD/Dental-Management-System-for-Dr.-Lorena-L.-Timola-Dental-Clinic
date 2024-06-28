@@ -1639,34 +1639,6 @@ legend {
     text-align: left;
 }
 
-/* Sidebar */
-.sidebar {
-    width: 200px;
-    background-color: #f4f4f4;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: -200px;
-    transition: 0.3s;
-}
-
-.sidebar.show {
-    left: 0;
-}
-
-.sidebar ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.sidebar ul li {
-    padding: 15px;
-}
-
-.sidebar ul li a {
-    text-decoration: none;
-    color: #333;
-}
 
 /* Tabs */
 .tabs {
