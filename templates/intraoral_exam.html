@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Overview</title>
+    <title>Intraoral Examination</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body class="overview-page">
+<body class="intraoral-page">
     <div class="sidebar-tab" id="sidebarTab">☰</div>
     <div id="sidebar" class="sidebar">
         <ul>
@@ -40,138 +40,586 @@
     <div class="main-content">
         <div class="container">
             <div class="tab-container">
-                <a href="enter_diagnosis.html" class="tab">Enter diagnosis</a>
-                <a href="#" class="tab active">Overview</a>
-                <a href="#" class="tab">Medical History</a>
-                <a href="#" class="tab">Consent Form</a>
+                <button class="tab active" onclick="openTab(event, 'enter-diagnosis')">Enter diagnosis</button>
+                <button class="tab" onclick="openTab(event, 'overview')">Overview</button>
+                <button class="tab" onclick="openTab(event, 'medical-history')">Medical History</button>
+                <button class="tab" onclick="openTab(event, 'consent-form')">Consent Form</button>
             </div>
-            <div class="exam-form">
-                <div class="teeth-diagram">
-                    <div class="teeth-section">
-                        <div class="teeth-header">Upper Temporary Teeth</div>
-                        <div class="teeth-row">
-                            <!-- Upper temporary teeth row -->
-                            <div class="tooth">55</div>
-                            <div class="tooth">54</div>
-                            <div class="tooth">53</div>
-                            <div class="tooth">52</div>
-                            <div class="tooth">51</div>
-                            <div class="tooth">61</div>
-                            <div class="tooth">62</div>
-                            <div class="tooth">63</div>
-                            <div class="tooth">64</div>
-                            <div class="tooth">65</div>
+
+            <div id="enter-diagnosis" class="tab-content">
+                <!-- Enter diagnosis content -->
+                <div class="exam-form">
+                    <div class="teeth-diagram">
+                        <div class="teeth-section">
+                            <div class="teeth-header">Upper Temporary Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Upper temporary teeth row -->
+                                {% for number in [55, 54, 53, 52, 51, 61, 62, 63, 64, 65] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="teeth-section">
+                            <div class="teeth-header">Permanent Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Permanent teeth upper row -->
+                                {% for number in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="teeth-row">
+                                <!-- Permanent teeth lower row -->
+                                {% for number in [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="teeth-section">
+                            <div class="teeth-header">Lower Temporary Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Lower temporary teeth row -->
+                                {% for number in [85, 84, 83, 82, 81, 71, 72, 73, 74, 75] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
-                    <div class="teeth-section">
-                        <div class="teeth-header">Permanent Teeth</div>
-                        <div class="teeth-row">
-                            <!-- Permanent teeth upper row -->
-                            <div class="tooth">18</div>
-                            <div class="tooth">17</div>
-                            <div class="tooth">16</div>
-                            <div class="tooth">15</div>
-                            <div class="tooth">14</div>
-                            <div class="tooth">13</div>
-                            <div class="tooth">12</div>
-                            <div class="tooth">11</div>
-                            <div class="tooth">21</div>
-                            <div class="tooth">22</div>
-                            <div class="tooth">23</div>
-                            <div class="tooth">24</div>
-                            <div class="tooth">25</div>
-                            <div class="tooth">26</div>
-                            <div class="tooth">27</div>
-                            <div class="tooth">28</div>
-                        </div>
-                        <div class="teeth-row">
-                            <!-- Permanent teeth lower row -->
-                            <div class="tooth">48</div>
-                            <div class="tooth">47</div>
-                            <div class="tooth">46</div>
-                            <div class="tooth">45</div>
-                            <div class="tooth">44</div>
-                            <div class="tooth">43</div>
-                            <div class="tooth">42</div>
-                            <div class="tooth">41</div>
-                            <div class="tooth">31</div>
-                            <div class="tooth">32</div>
-                            <div class="tooth">33</div>
-                            <div class="tooth">34</div>
-                            <div class="tooth">35</div>
-                            <div class="tooth">36</div>
-                            <div class="tooth">37</div>
-                            <div class="tooth">38</div>
-                        </div>
-                    </div>
-                    <div class="teeth-section">
-                        <div class="teeth-header">Lower Temporary Teeth</div>
-                        <div class="teeth-row">
-                            <!-- Lower temporary teeth row -->
-                            <div class="tooth">85</div>
-                            <div class="tooth">84</div>
-                            <div class="tooth">83</div>
-                            <div class="tooth">82</div>
-                            <div class="tooth">81</div>
-                            <div class="tooth">71</div>
-                            <div class="tooth">72</div>
-                            <div class="tooth">73</div>
-                            <div class="tooth">74</div>
-                            <div class="tooth">75</div>
-                        </div>
+                    <div class="exam-details">
+                        <h3>Enter Diagnosis</h3>
+                        <form>
+                            <div class="form-group">
+                                <label>Periodontal Screening</label>
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="G"> Gingivitis
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="EP"> Early Periodontitis
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="MP"> Moderate Periodontitis
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="AP"> Advanced Periodontitis
+                            </div>
+                            <div class="form-group">
+                                <label>Occlusion</label>
+                                <select>
+                                    <option>Class I</option>
+                                    <option>Class II</option>
+                                    <option>Class III</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Appliances</label>
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="O"> Orthodontic
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="S"> Stayplate
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="OT"> Others <input type="text">
+                            </div>
+                            <div class="form-group">
+                                <label>TMD</label>
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="C"> Clenching
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="CL"> Clicking
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="T"> Trismus
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="MS"> Muscle spasm
+                            </div>
+                            <div class="form-group">
+                                <label>X-ray Taken</label>
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="P"> Panoramic
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="C"> Cephalometric
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="PT"> Periapical Tth. No. <input type="text">
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="O"> Occlusal <input type="text">
+                            </div>
+                        </form>
                     </div>
                 </div>
+            </div>
+
+            <div id="overview" class="tab-content" style="display:none;">
+                <!-- Overview content -->
+                <div class="exam-form">
+                    <div class="teeth-diagram">
+                        <div class="teeth-section">
+                            <div class="teeth-header">Upper Temporary Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Upper temporary teeth row -->
+                                {% for number in [55, 54, 53, 52, 51, 61, 62, 63, 64, 65] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="teeth-section">
+                            <div class="teeth-header">Permanent Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Permanent teeth upper row -->
+                                {% for number in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="teeth-row">
+                                <!-- Permanent teeth lower row -->
+                                {% for number in [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="teeth-section">
+                            <div class="teeth-header">Lower Temporary Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Lower temporary teeth row -->
+                                {% for number in [85, 84, 83, 82, 81, 71, 72, 73, 74, 75] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="exam-details">
+                        <h3>Enter Diagnosis</h3>
+                        <form>
+                            <div class="form-group">
+                                <label>Periodontal Screening</label>
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="G"> Gingivitis
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="EP"> Early Periodontitis
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="MP"> Moderate Periodontitis
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="AP"> Advanced Periodontitis
+                            </div>
+                            <div class="form-group">
+                                <label>Occlusion</label>
+                                <select>
+                                    <option>Class I</option>
+                                    <option>Class II</option>
+                                    <option>Class III</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Appliances</label>
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="O"> Orthodontic
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="S"> Stayplate
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="OT"> Others <input type="text">
+                            </div>
+                            <div class="form-group">
+                                <label>TMD</label>
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="C"> Clenching
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="CL"> Clicking
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="T"> Trismus
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="MS"> Muscle spasm
+                            </div>
+                            <div class="form-group">
+                                <label>X-ray Taken</label>
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="P"> Panoramic
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="C"> Cephalometric
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="PT"> Periapical Tth. No. <input type="text">
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="O"> Occlusal <input type="text">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="overview" class="tab-content" style="display:none;">
+                <!-- Overview content -->
+                <div class="exam-form">
+                    <div class="teeth-diagram">
+                        <div class="teeth-section">
+                            <div class="teeth-header">Upper Temporary Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Upper temporary teeth row -->
+                                {% for number in [55, 54, 53, 52, 51, 61, 62, 63, 64, 65] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="teeth-section">
+                            <div class="teeth-header">Permanent Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Permanent teeth upper row -->
+                                {% for number in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="teeth-row">
+                                <!-- Permanent teeth lower row -->
+                                {% for number in [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="teeth-section">
+                            <div class="teeth-header">Lower Temporary Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Lower temporary teeth row -->
+                                {% for number in [85, 84, 83, 82, 81, 71, 72, 73, 74, 75] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth-box" onclick="openModal(this)"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="exam-details">
+                        <h3>Enter Diagnosis</h3>
+                        <form>
+                            <div class="form-group">
+                                <label>Periodontal Screening</label>
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="G"> Gingivitis
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="EP"> Early Periodontitis
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="MP"> Moderate Periodontitis
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="AP"> Advanced Periodontitis
+                            </div>
+                            <div class="form-group">
+                                <label>Occlusion</label>
+                                <select>
+                                    <option>Class I</option>
+                                    <option>Class II</option>
+                                    <option>Class III</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Appliances</label>
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="O"> Orthodontic
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="S"> Stayplate
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="OT"> Others <input type="text">
+                            </div>
+                            <div class="form-group">
+                                <label>TMD</label>
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="C"> Clenching
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="CL"> Clicking
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="T"> Trismus
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="MS"> Muscle spasm
+                            </div>
+                            <div class="form-group">
+                                <label>X-ray Taken</label>
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="P"> Panoramic
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="C"> Cephalometric
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="PT"> Periapical Tth. No. <input type="text">
+                                <input type="checkbox" class="diagnosis-checkbox" data-code="O"> Occlusal <input type="text">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="medical-history" class="tab-content" style="display:none;">
+                <!-- Medical history content -->
                 <div class="exam-details">
-                    <h3>Profile</h3>
-                    <p><strong>Name:</strong> Gloie Taho El Gatto A. Santos</p>
-                    <p><strong>Email:</strong> gloie.gatto@gmail.com</p>
-                    <p><strong>Mobile Number:</strong> +63 9574795839</p>
-                    <p><strong>Address:</strong> 20 B. Chowking, Daily</p>
-                    <p><strong>City:</strong> Quezon City</p>
-                    <p><strong>Patient ID:</strong> 37283</p>
-                    <p><strong>Age:</strong> 1</p>
-                    <p><strong>Birth Date:</strong> 2023-12-19</p>
-                    <p><strong>Status:</strong> Single</p>
-                    <p><strong>Patient Since:</strong> 2024-12-02</p>
+                    <h3>Medical History</h3>
+                    <form>
+                        <div class="form-group">
+                            <label>Blood Type</label>
+                            <input type="text"><br>
+                        </div>
+                        <div class="form-group">
+                            <label>Blood Pressure</label>
+                            <input type="text"><br>
+                        </div>
+                        <div class="form-group">
+                            <label>Serious Illness/Surgical Operation</label>
+                            <input type="text"><br>
+                        </div>
+                        <div class="form-group">
+                            <label>Bleeding Time</label>
+                            <input type="text"><br>
+                        </div>
+                        <div class="form-group">
+                            <label>In good health</label>
+                            <input type="checkbox"><br>
+                        </div>
+                        <div class="form-group">
+                            <label>High blood pressure</label>
+                            <input type="checkbox"><br>
+                        </div>
+                        <div class="form-group">
+                            <label>Low blood pressure</label>
+                            <input type="checkbox"><br>
+                        </div>
+                        <div class="form-group">
+                            <label>Epilepsy/Convulsion</label>
+                            <input type="checkbox"><br>
+                        </div>
+                        <div class="form-group">
+                            <label>AIDS or HIV infection</label>
+                            <input type="checkbox"><br>
+                        </div>
+                    </form>
                 </div>
             </div>
-            <div class="treatment-record">
-                <h3>Treatment Record</h3>
-                <table class="treatment-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Tooth No./s</th>
-                            <th>Procedure</th>
-                            <th>Amount</th>
-                            <th>Balance</th>
-                            <th>Next Appt.</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr onclick="window.location.href='treatment_detail.html'">
-                            <td>2024-12-01</td>
-                            <td>55, 54</td>
-                            <td>Clinical note</td>
-                            <td>500.00</td>
-                            <td>0.00</td>
-                            <td>2024-12-08</td>
-                        </tr>
-                        <tr onclick="window.location.href='treatment_detail.html'">
-                            <td>2024-12-01</td>
-                            <td>55, 54</td>
-                            <td>In-Dup pano and bws for?</td>
-                            <td>500.00</td>
-                            <td>0.00</td>
-                            <td>2024-12-08</td>
-                        </tr>
-                    </tbody>
-                </table>
+
+            <div id="consent-form" class="tab-content" style="display:none;">
+                <!-- Consent form content -->
+                <div class="exam-details">
+                    <h3>Consent Form</h3>
+                    <form>
+                        <div class="form-group">
+                            <label>Patient's Signature</label>
+                            <input type="text"><br>
+                        </div>
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date"><br>
+                        </div>
+                        <div class="form-group">
+                            <label>Consent</label>
+                            <textarea rows="5"></textarea><br>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Modal for teeth conditions -->
+    <div id="conditionModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Select Conditions</h2>
+            <div class="legend">
+                <div>
+                    <h3>Conditions:</h3>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="◻"> Present Teeth</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="D"> Decayed</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="M"> Missing due to caries</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="MO"> Missing due to other causes</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="Sp"> Supernumerary Tooth</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="Rf"> Roof Fragment</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="Un"> Unerupted</label><br>
+                </div>
+                <div>
+                    <h3>Surgery:</h3>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="X"> Extraction due to caries</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="XO"> Extraction due to other causes</label><br>
+                </div>
+                <div>
+                    <h3>Restoration & Prosthetics:</h3>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="Am"> Amalgam Filling</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="Co"> Composite Filling</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="JC"> Jacket Crown</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="Ab"> Abutment</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="Att"> Attachment</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="P"> Pontic</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="In"> Inlay</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="Imp"> Implant</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="S"> Sealants</label><br>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="Rm"> Removable dentures</label><br>
+                </div>
+            </div>
+            <h3>Preview</h3>
+            <div id="preview">
+                <svg viewBox="0 0 100 100" class="interactive-circle">
+                    <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                    <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                    <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                    <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                    <circle cx="50" cy="50" r="20"></circle>
+                    <text id="previewText" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
+                </svg>
+            </div>
+            <button onclick="saveConditions()">Save</button>
+        </div>
+    </div>
+
     <script>
+        let currentTooth = null;
+
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tab");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        function openModal(toothElement) {
+            currentTooth = toothElement;
+            document.getElementById('conditionModal').style.display = 'block';
+            updatePreview();
+        }
+
+        function closeModal() {
+            document.getElementById('conditionModal').style.display = 'none';
+        }
+
+        function saveConditions() {
+            const checkboxes = document.querySelectorAll('.condition-checkbox');
+            let selectedCodes = [];
+            checkboxes.forEach((checkbox) => {
+                if (checkbox.checked) {
+                    selectedCodes.push(checkbox.getAttribute('data-code'));
+                }
+            });
+            if (selectedCodes.length > 4) {
+                alert('You can only select up to 4 conditions.');
+                return;
+            }
+            const previewText = currentTooth.querySelector('circle');
+            previewText.setAttribute('data-conditions', selectedCodes.join(' '));
+            previewText.textContent = selectedCodes.join(' ');
+            closeModal();
+        }
+
+        function updatePreview() {
+            const checkboxes = document.querySelectorAll('.condition-checkbox:checked');
+            let selectedCodes = [];
+            checkboxes.forEach((checkbox) => {
+                selectedCodes.push(checkbox.getAttribute('data-code'));
+            });
+            const previewText = document.getElementById('previewText');
+            previewText.textContent = selectedCodes.join(' ');
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('enter-diagnosis').style.display = 'block';
             const sidebar = document.getElementById('sidebar');
             const sidebarTab = document.getElementById('sidebarTab');
             const mainContent = document.querySelector('.main-content');
@@ -203,6 +651,19 @@
 
                 document.addEventListener('click', function () {
                     content.classList.remove('show');
+                });
+            });
+
+            // Real-time update of the preview and limit checkboxes to 4
+            document.querySelectorAll('.condition-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    const checkboxes = document.querySelectorAll('.condition-checkbox:checked');
+                    if (checkboxes.length > 4) {
+                        this.checked = false;
+                        alert('You can only select up to 4 conditions.');
+                    } else {
+                        updatePreview();
+                    }
                 });
             });
         });

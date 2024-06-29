@@ -6,40 +6,40 @@
     <title>Users</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body class="dashboard">
-<div class="sidebar-tab" id="sidebarTab">☰</div>
-<div id="sidebar" class="sidebar">
-    <ul>
-        <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-        <li><a href="#">Profile</a></li>
-        <li><a href="{{ url_for('users') }}">Users</a></li>
-        <li><a href="#">Treatment</a></li>
-        <li class="dropdown">
-            <a href="#">Records</a>
-            <div class="dropdown-content">
-                <a href="{{ url_for('patients') }}">Patient Records</a>
-                <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                <a href="#">Treatment Records</a>
-            </div>
-        </li>
-        <li><a href="#">Maintenance</a></li>
-        <li><a href="#">Inventory</a></li>
-        <li><a href="{{ url_for('reports') }}">Reports</a></li>
-        <li><a href="#">Payments</a></li>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <li><a href="#">Help</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="{{ url_for('logout') }}">Logout</a></li>
-    </ul>
-</div>
+<body class="users-page">
+    <div class="sidebar-tab" id="sidebarTab">☰</div>
+    <div id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+            <li><a href="#">Treatment</a></li>
+            <li class="dropdown">
+                <a href="#">Records</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('patients') }}">Patient Records</a>
+                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                    <a href="#">Treatment Records</a>
+                </div>
+            </li>
+            <li><a href="#">Maintenance</a></li>
+            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+            <li><a href="{{ url_for('reports') }}">Reports</a></li>
+            <li><a href="#">Payments</a></li>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <li><a href="#">Help</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
     <header>
         <div class="header-left">
-            <h1>‎ ‎ ‎ ‎ ‎ ‎ ‎Users</h1>
+            <h1>Total Users: {{ total_users }}</h1>
         </div>
         <div class="header-center">
             <form class="search-form" action="{{ url_for('search') }}" method="get">
@@ -51,55 +51,56 @@
     <div class="main-content">
         <div class="container">
             <button class="add-user-btn" onclick="openModal()">Add User</button>
-            <h2>Total Users: {{ total_users }}</h2>
-            <table class="user-table">
-                <thead>
-                    <tr>
-                        <th>Basic Info</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td class="user-info">
-                            <a href="#" class="name" onclick="viewUser({{ user.user_id }})">{{ user.name }}</a>
-                            <span class="email">{{ user.email }}</span>
-                        </td>
-                        <td>{{ user.role }}</td>
-                        <td class="status
-                            {% if user.status == 'Active' %}status-active
-                            {% elif user.status == 'Inactive' %}status-inactive
-                            {% elif user.status == 'Suspended' %}status-suspended
-                            {% elif user.status == 'Banned' %}status-banned
-                            {% elif user.status == 'Password Reset Required' %}status-password-reset-required
-                            {% elif user.status == 'Locked' %}status-locked
-                            {% endif %}
-                        ">{{ user.status }}</td>
-                        <td class="dropdown">
-                            <button class="ellipsis-btn">⋮</button>
-                            <div class="dropdown-content">
-                                <a href="#" onclick="editUser({{ user.user_id }})">Edit User</a>
-                                <a href="#" onclick="disableUser({{ user.user_id }})">Disable User</a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <div class="pagination">
-                <div class="entries">
-                    Showing {{ users|length }} out of {{ total_users }} entries
+            <div class="table-container">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>Basic Info</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td class="user-info">
+                                <a href="#" class="name" onclick="viewUser({{ user.user_id }})">{{ user.name }}</a>
+                                <span class="email">{{ user.email }}</span>
+                            </td>
+                            <td>{{ user.role }}</td>
+                            <td class="status
+                                {% if user.status == 'Active' %}status-active
+                                {% elif user.status == 'Inactive' %}status-inactive
+                                {% elif user.status == 'Suspended' %}status-suspended
+                                {% elif user.status == 'Banned' %}status-banned
+                                {% elif user.status == 'Password Reset Required' %}status-password-reset-required
+                                {% elif user.status == 'Locked' %}status-locked
+                                {% endif %}
+                            ">{{ user.status }}</td>
+                            <td class="dropdown">
+                                <button class="ellipsis-btn">⋮</button>
+                                <div class="dropdown-content">
+                                    <a href="#" onclick="editUser({{ user.user_id }})">Edit User</a>
+                                    <a href="#" onclick="disableUser({{ user.user_id }})">Disable User</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <div class="entries">
+                        Showing {{ users|length }} out of {{ total_users }} entries
+                    </div>
+                    <ul class="page-numbers">
+                        <li><a href="#">&laquo; Previous</a></li>
+                        <li><a href="#">1</a></li>
+                        <li><a href="#">2</a></li>
+                        <li><a href="#">3</a></li>
+                        <li><a href="#">Next &raquo;</a></li>
+                    </ul>
                 </div>
-                <ul class="page-numbers">
-                    <li><a href="#">&laquo; Previous</a></li>
-                    <li><a href="#">1</a></li>
-                    <li><a href="#">2</a></li>
-                    <li><a href="#">3</a></li>
-                    <li><a href="#">Next &raquo;</a></li>
-                </ul>
             </div>
         </div>
     </div>
@@ -319,4 +320,3 @@
     </script>
 </body>
 </html>
-

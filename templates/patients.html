@@ -61,6 +61,118 @@
             text-align: left;
             padding: 10px;
         }
+
+        /* Specific styles for Add Patient modal */
+        .add-patient-container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .add-patient-container .left-column,
+        .add-patient-container .right-column {
+            width: 48%;
+        }
+
+        .add-patient-container .form-group {
+            margin-bottom: 10px;
+        }
+
+        .add-patient-container .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+
+        .add-patient-container .form-group input[type="text"],
+        .add-patient-container .form-group input[type="number"],
+        .add-patient-container .form-group input[type="date"],
+        .add-patient-container .form-group input[type="email"],
+        .add-patient-container .form-group input[type="checkbox"] {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .add-patient-container .form-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .add-patient-conditions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .add-patient-conditions .form-group {
+            width: 23%;
+        }
+
+        .add-patient-conditions .form-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .add-patient-conditions .form-group input[type="text"] {
+            width: auto;
+            margin-left: 5px;
+        }
+
+        .submit-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .submit-group button {
+            padding: 10px 20px;
+            background-color: #8B4513;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .submit-group button:hover {
+            background-color: #D2691E;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 10px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="patients-page">
@@ -179,23 +291,119 @@
             <span class="close" onclick="closeModal()">&times;</span>
             <h2 class="register-user-title">Add Patient</h2>
             <form action="{{ url_for('submit_add_patient') }}" method="POST">
-                <label for="first_name">First Name:</label>
-                <input type="text" id="first_name" name="first_name" required>
-                <label for="last_name">Last Name:</label>
-                <input type="text" id="last_name" name="last_name" required>
-                <label for="phone">Phone:</label>
-                <input type="text" id="phone" name="phone" required>
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
-                <label for="address">Address:</label>
-                <input type="text" id="address" name="address" required>
-                <label for="city">City:</label>
-                <input type="text" id="city" name="city" required>
-                <label for="next_appointment">Next Appointment:</label>
-                <input type="date" id="next_appointment" name="next_appointment">
-                <label for="last_appointment">Last Appointment:</label>
-                <input type="date" id="last_appointment" name="last_appointment">
-                <button type="submit">Add</button>
+                <div class="add-patient-container">
+                    <div class="left-column">
+                        <div class="form-group">
+                            <label for="name">Name:</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="birth_date">Birth Date:</label>
+                            <input type="date" id="birth_date" name="birth_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="age">Age:</label>
+                            <input type="number" id="age" name="age" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status:</label>
+                            <input type="text" id="status" name="status">
+                        </div>
+                        <div class="form-group">
+                            <label for="mobile_number">Mobile Number:</label>
+                            <input type="text" id="mobile_number" name="mobile_number" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Address:</label>
+                            <input type="text" id="address" name="address" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="city">City:</label>
+                            <input type="text" id="city" name="city" required>
+                        </div>
+                    </div>
+                    <div class="right-column">
+                        <div class="form-group">
+                            <label for="blood_type">Blood Type:</label>
+                            <input type="text" id="blood_type" name="blood_type">
+                        </div>
+                        <div class="form-group">
+                            <label for="blood_pressure">Blood Pressure:</label>
+                            <input type="text" id="blood_pressure" name="blood_pressure">
+                        </div>
+                        <div class="form-group">
+                            <label for="bleeding_time">Bleeding Time:</label>
+                            <input type="text" id="bleeding_time" name="bleeding_time">
+                        </div>
+                        <div class="form-group">
+                            <label for="medications">Taking any prescription/ non-prescription medication</label>
+                            <input type="checkbox" id="medications" name="medications">
+                        </div>
+                        <div class="form-group">
+                            <label for="allergies">Allergies:</label>
+                            <input type="text" id="allergies" name="allergies">
+                        </div>
+                        <div class="form-group">
+                            <label for="medical_condition">Under medical condition:</label>
+                            <input type="text" id="medical_condition" name="medical_condition">
+                        </div>
+                        <div class="form-group">
+                            <label for="serious_illness">Serious Illness/Surgical Operation:</label>
+                            <input type="text" id="serious_illness" name="serious_illness">
+                        </div>
+                        <div class="form-group">
+                            <label for="hospitalized">Been hospitalized:</label>
+                            <input type="checkbox" id="hospitalized" name="hospitalized">
+                        </div>
+                        <div class="form-group">
+                            <label for="for_woman_only">For woman only:</label>
+                            <input type="text" id="for_woman_only" name="for_woman_only">
+                        </div>
+                    </div>
+                </div>
+                <div class="add-patient-conditions">
+                    <div class="form-group">
+                        <label><input type="checkbox" name="conditions[]" value="high_blood_pressure"> High blood pressure</label>
+                        <label><input type="checkbox" name="conditions[]" value="low_blood_pressure"> Low blood pressure</label>
+                        <label><input type="checkbox" name="conditions[]" value="epilepsy"> Epilepsy/Convulsion</label>
+                        <label><input type="checkbox" name="conditions[]" value="aids"> AIDS or HIV infection</label>
+                        <label><input type="checkbox" name="conditions[]" value="stomach_troubles"> Stomach troubles/Ulcer</label>
+                        <label><input type="checkbox" name="conditions[]" value="fainting_seizure"> Fainting seizure</label>
+                        <label><input type="checkbox" name="conditions[]" value="rapid_weight_loss"> Rapid weight loss</label>
+                        <label><input type="checkbox" name="conditions[]" value="radiation_therapy"> Radiation Therapy</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="conditions[]" value="joint_replacement"> Joint replacement/ Implant</label>
+                        <label><input type="checkbox" name="conditions[]" value="heart_surgery"> Heart Surgery</label>
+                        <label><input type="checkbox" name="conditions[]" value="heart_attack"> Heart attack</label>
+                        <label><input type="checkbox" name="conditions[]" value="thyroid_problem"> Thyroid problem</label>
+                        <label><input type="checkbox" name="conditions[]" value="heart_disease"> Heart disease</label>
+                        <label><input type="checkbox" name="conditions[]" value="heart_murmur"> Heart murmur</label>
+                        <label><input type="checkbox" name="conditions[]" value="hepatitis"> Hepatitis/ Liver Disease</label>
+                        <label><input type="checkbox" name="conditions[]" value="rheumatic_fever"> Rheumatic fever</label>
+                        <label><input type="checkbox" name="conditions[]" value="hay_fever"> Hay fever/ Allergies</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="conditions[]" value="respiratory_problems"> Respiratory problems</label>
+                        <label><input type="checkbox" name="conditions[]" value="anemia"> Anemia</label>
+                        <label><input type="checkbox" name="conditions[]" value="angina"> Angina</label>
+                        <label><input type="checkbox" name="conditions[]" value="asthma"> Asthma</label>
+                        <label><input type="checkbox" name="conditions[]" value="emphysema"> Emphysema</label>
+                        <label><input type="checkbox" name="conditions[]" value="bleeding_problems"> Bleeding problems</label>
+                        <label><input type="checkbox" name="conditions[]" value="blood_diseases"> Blood diseases</label>
+                        <label><input type="checkbox" name="conditions[]" value="head_injury"> Head injury</label>
+                        <label><input type="checkbox" name="conditions[]" value="arthritis"> Arthritis/ Rheumatism</label>
+                        <label><input type="checkbox" name="conditions[]" value="other"> Other:</label>
+                        <input type="text" name="other_condition">
+                    </div>
+                </div>
+                <div class="form-group submit-group">
+                    <button type="submit">Submit</button>
+                </div>
             </form>
         </div>
     </div>

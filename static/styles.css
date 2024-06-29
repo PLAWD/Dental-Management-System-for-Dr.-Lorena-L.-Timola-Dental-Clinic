@@ -1695,8 +1695,8 @@ header h1 {
     border: 1px solid #ccc;
 }
 
-/* Specific styles for overview page */
-.overview-page .container {
+/* Specific styles for intraoral page */
+.intraoral-page .container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1704,33 +1704,39 @@ header h1 {
     background-color: #f9f9f9;
 }
 
-.overview-page .tab-container {
+.intraoral-page .tab-container {
     display: flex;
     justify-content: space-around;
     width: 100%;
     margin-bottom: 20px;
 }
 
-.overview-page .tab {
+.intraoral-page .tab {
     padding: 10px 20px;
     background-color: #8B4513;
     color: #fff;
+    border: none;
     border-radius: 5px;
-    text-decoration: none;
+    cursor: pointer;
 }
 
-.overview-page .tab.active {
+.intraoral-page .tab.active {
     background-color: #D2691E;
 }
 
-.overview-page .exam-form {
+.intraoral-page .tab-content {
+    display: none;
+    width: 100%;
+}
+
+.intraoral-page .exam-form {
     display: flex;
     justify-content: space-between;
     width: 100%;
     margin-bottom: 20px;
 }
 
-.overview-page .teeth-diagram {
+.intraoral-page .teeth-diagram {
     width: 60%;
     background-color: #fff;
     padding: 20px;
@@ -1739,21 +1745,37 @@ header h1 {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.overview-page .teeth-section {
+.intraoral-page .teeth-section {
     margin-bottom: 20px;
 }
 
-.overview-page .teeth-header {
+.intraoral-page .teeth-header {
     margin-bottom: 10px;
     font-weight: bold;
 }
 
-.overview-page .teeth-row {
+.intraoral-page .teeth-row {
     display: flex;
     justify-content: space-between;
 }
 
-.overview-page .tooth {
+.intraoral-page .tooth-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.intraoral-page .tooth-box {
+    width: 30px;
+    height: 20px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+.intraoral-page .tooth {
     width: 30px;
     height: 30px;
     display: flex;
@@ -1764,10 +1786,9 @@ header h1 {
     background-color: #f9f9f9;
     font-size: 14px;
     margin: 5px;
-    cursor: pointer;
 }
 
-.overview-page .exam-details {
+.intraoral-page .exam-details {
     width: 35%;
     background-color: #fff;
     padding: 20px;
@@ -1776,17 +1797,11 @@ header h1 {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.overview-page .form-group {
-    margin-bottom: 20px;
+.intraoral-page .exam-details p {
+    margin: 5px 0;
 }
 
-.overview-page .form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.overview-page .treatment-record {
+.intraoral-page .treatment-record {
     width: 100%;
     background-color: #fff;
     padding: 20px;
@@ -1795,21 +1810,504 @@ header h1 {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.overview-page .treatment-table {
+.intraoral-page .treatment-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.overview-page .treatment-table th, .overview-page .treatment-table td {
+.intraoral-page .treatment-table th, .intraoral-page .treatment-table td {
     padding: 10px;
     border: 1px solid #ccc;
     text-align: left;
 }
 
-.overview-page .treatment-table tr {
+.intraoral-page .treatment-table tr {
     cursor: pointer;
 }
 
-.overview-page .treatment-table tr:hover {
+.intraoral-page .treatment-table tr:hover {
     background-color: #f1f1f1;
 }
+
+/* Specific styles for interactive circle */
+.interactive-circle {
+    width: 50px;
+    height: 50px;
+    fill: #FFFFFF;
+    stroke: #8B4513;
+}
+
+.segment {
+    fill: #FFFFFF;
+    stroke: #8B4513;
+    stroke-width: 1;
+}
+
+text {
+    font-size: 25px;
+    fill: #000;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 10px;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.legend-content {
+    display: flex;
+    justify-content: space-between;
+}
+
+.preview {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.preview-circle {
+    display: inline-block;
+    position: relative;
+}
+
+.legend-preview-text {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    text-align: center;
+    width: 80%;
+    height: 80%;
+}
+
+/* Specific styles for users page */
+.users-page .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #f9f9f9;
+}
+
+.users-page .header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.users-page .header h1 {
+    color: #b22222;
+}
+
+.users-page .add-user-btn {
+    padding: 10px 20px;
+    background-color: #8B4513;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.users-page .table-container {
+    width: 100%;
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.users-page .user-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-page .user-table th, .users-page .user-table td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+}
+
+.users-page .user-table th {
+    background-color: #00BFFF;
+    color: #fff;
+}
+
+.users-page .user-table td {
+    background-color: #f9f9f9;
+}
+
+.users-page .status-active {
+    color: green;
+}
+
+.users-page .status-inactive {
+    color: red;
+}
+
+.users-page .status-suspended {
+    color: orange;
+}
+
+.users-page .status-banned {
+    color: darkred;
+}
+
+.users-page .status-password-reset-required {
+    color: darkorange;
+}
+
+.users-page .status-locked {
+    color: blue;
+}
+
+.users-page .dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.users-page .dropdown .ellipsis-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.users-page .dropdown .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.users-page .dropdown .dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.users-page .dropdown .dropdown-content a:hover {
+    background-color: #f1f1f1;
+}
+
+.users-page .dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.users-page .pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.users-page .pagination .entries {
+    font-size: 14px;
+}
+
+.users-page .pagination .page-numbers {
+    list-style: none;
+    display: flex;
+    padding: 0;
+}
+
+.users-page .pagination .page-numbers li {
+    margin: 0 5px;
+}
+
+.users-page .pagination .page-numbers a {
+    padding: 5px 10px;
+    background-color: #8B4513;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    margin: 0 5px;
+    cursor: pointer;
+}
+
+.users-page .pagination .page-numbers a:hover {
+    background-color: #D2691E;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.register-user-title {
+    margin-top: 0;
+}
+
+.register-user-title, form label, form input, form select, form button {
+    display: block;
+    margin: 10px 0;
+    width: 100%;
+}
+
+form button {
+    background-color: #8B4513;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+form button:hover {
+    background-color: #D2691E;
+}
+
+/* Patients page specific styles */
+.patients-page .filter-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.patients-page .search-form {
+    display: flex;
+    justify-content: flex-end;
+    width: 50%;
+}
+
+.patients-page .controls {
+    display: flex;
+    gap: 10px;
+}
+
+.patients-page select,
+.patients-page button {
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.patients-page .search-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.patients-page .search-form input[type="text"] {
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.patients-page .search-form button {
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.patients-page .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.patients-page .user-table {
+    width: 80%;
+    margin-top: 20px;
+}
+
+.patients-page .user-table th, .patients-page .user-table td {
+    text-align: left;
+    padding: 10px;
+}
+
+/* Specific styles for the Add Patient modal */
+.add-patient-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.left-column, .right-column {
+    width: 48%;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group input[type="email"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.add-patient-conditions {
+    margin-top: 20px;
+}
+
+.add-patient-conditions .form-group {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.add-patient-conditions .form-group label {
+    width: 48%;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.add-patient-conditions .form-group input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.submit-group {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.submit-group button {
+    padding: 10px 20px;
+    background-color: #8B4513;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.submit-group button:hover {
+    background-color: #D2691E;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 800px;
+    border-radius: 10px;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Checklist specific styles */
+.checklist-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.checklist-item {
+    width: 45%;
+    display: flex;
+    align-items: center;
+}
+
+.checklist-item label {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.checklist-item input[type="checkbox"] {
+    margin-right: 5px;
+}
+
