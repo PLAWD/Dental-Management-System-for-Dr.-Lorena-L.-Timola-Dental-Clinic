@@ -3,174 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Patient</title>
+    <title>Inventory</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <div id="addPatientModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2>Add Patient</h2>
-            <form>
-                <div class="add-patient-container">
-                    <div class="left-column">
-                        <div class="form-group">
-                            <label>Name: (Last Name, First Name Middle Name)</label>
-                            <input type="text" name="name">
-                        </div>
-                        <div class="form-group">
-                            <label>Birth date:</label>
-                            <input type="date" name="birth_date">
-                        </div>
-                        <div class="form-group">
-                            <label>Age:</label>
-                            <input type="number" name="age">
-                        </div>
-                        <div class="form-group">
-                            <label>Status:</label>
-                            <input type="text" name="status">
-                        </div>
-                        <div class="form-group">
-                            <label>Mobile number:</label>
-                            <input type="text" name="mobile_number">
-                        </div>
-                        <div class="form-group">
-                            <label>Email:</label>
-                            <input type="email" name="email">
-                        </div>
-                        <div class="form-group">
-                            <label>Address:</label>
-                            <input type="text" name="address">
-                        </div>
-                        <div class="form-group">
-                            <label>City:</label>
-                            <input type="text" name="city">
-                        </div>
-                        <div class="form-group">
-                            <input type="checkbox" name="is_minor" id="is_minor">
-                            <label for="is_minor">If minor:</label>
-                            <input type="text" name="guardian_name" placeholder="Parent/Guardian's name">
-                        </div>
+    <div class="container">
+        <div class="sidebar-tab" id="sidebarTab">☰</div>
+        <div id="sidebar" class="sidebar">
+            <ul>
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="#">Profile</a></li>
+                <li><a href="{{ url_for('users') }}">Users</a></li>
+                <li><a href="#">Treatment</a></li>
+                <li class="dropdown">
+                    <a href="#">Records</a>
+                    <div class="dropdown-content">
+                        <a href="{{ url_for('patients') }}">Patient Records</a>
+                        <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                        <a href="#">Treatment Records</a>
                     </div>
-                    <div class="right-column">
-                        <div class="form-group">
-                            <label>Blood Type:</label>
-                            <input type="text" name="blood_type">
-                        </div>
-                        <div class="form-group">
-                            <label>Blood Pressure:</label>
-                            <input type="text" name="blood_pressure">
-                        </div>
-                        <div class="form-group">
-                            <label>Bleeding Time:</label>
-                            <input type="text" name="bleeding_time">
-                        </div>
-                        <div class="form-group">
-                            <input type="checkbox" name="in_good_health" id="in_good_health">
-                            <label for="in_good_health">In good health</label>
-                        </div>
-                        <div class="form-group">
-                            <input type="checkbox" name="use_tobacco" id="use_tobacco">
-                            <label for="use_tobacco">Use of tobacco</label>
-                        </div>
-                        <div class="form-group">
-                            <input type="checkbox" name="use_alcohol_drugs" id="use_alcohol_drugs">
-                            <label for="use_alcohol_drugs">Use of alcohol, cocaine or other drugs</label>
-                        </div>
-                        <div class="form-group">
-                            <input type="checkbox" name="prescription_medication" id="prescription_medication">
-                            <label for="prescription_medication">Taking any prescription/ non-prescription medication</label>
-                        </div>
-                        <div class="form-group">
-                            <label>Allergies:</label>
-                            <input type="text" name="allergies">
-                        </div>
-                        <div class="form-group">
-                            <label>If others:</label>
-                            <input type="text" name="if_others">
-                        </div>
-                        <div class="form-group">
-                            <input type="checkbox" name="hospitalized" id="hospitalized">
-                            <label for="hospitalized">Been hospitalized:</label>
-                            <input type="text" name="hospitalized_details">
-                        </div>
-                        <div class="form-group">
-                            <input type="checkbox" name="medical_condition" id="medical_condition">
-                            <label for="medical_condition">Under medical condition:</label>
-                            <input type="text" name="medical_condition_details">
-                        </div>
-                        <div class="form-group">
-                            <input type="checkbox" name="serious_illness" id="serious_illness">
-                            <label for="serious_illness">Serious Illness/Surgical Operation:</label>
-                            <input type="text" name="serious_illness_details">
-                        </div>
-                        <div class="form-group">
-                            <input type="checkbox" name="for_woman" id="for_woman">
-                            <label for="for_woman">For woman only:</label>
-                            <input type="text" name="for_woman_details">
-                        </div>
-                    </div>
+                </li>
+                <li><a href="#">Maintenance</a></li>
+                <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+                <li><a href="{{ url_for('reports') }}">Reports</a></li>
+                <li><a href="#">Payments</a></li>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <li><a href="#">Help</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="header">
+                <h1>Inventory</h1>
+            </div>
+            <div class="filter-container">
+                <div class="search-form">
+                    <input type="text" placeholder="Type here to search by name, seller, date, or category">
+                    <button class="register-item-btn">Register Item</button>
                 </div>
-                <div class="add-patient-conditions">
-                    <div class="form-group">
-                        <label><input type="checkbox" name="conditions[]" value="high_blood_pressure"> High blood pressure</label>
-                        <label><input type="checkbox" name="conditions[]" value="low_blood_pressure"> Low blood pressure</label>
-                        <label><input type="checkbox" name="conditions[]" value="epilepsy"> Epilepsy/Convulsion</label>
-                        <label><input type="checkbox" name="conditions[]" value="aids"> AIDS or HIV infection</label>
-                        <label><input type="checkbox" name="conditions[]" value="stomach_troubles"> Stomach troubles/ Ulcer</label>
-                        <label><input type="checkbox" name="conditions[]" value="fainting"> Fainting seizure</label>
-                        <label><input type="checkbox" name="conditions[]" value="rapid_weight_loss"> Rapid weight loss</label>
-                        <label><input type="checkbox" name="conditions[]" value="radiation_therapy"> Radiation Therapy</label>
+            </div>
+            <div class="categories">
+                <button class="category-btn">All</button>
+                <button class="category-btn">Uncategorized</button>
+                <button class="category-btn">Prosthodinthics</button>
+                <button class="category-btn">Orthodontic</button>
+            </div>
+            <div class="inventory-list">
+                <div class="item">
+                    <div class="item-info">
+                        <img src="dental_stone_image.png" alt="Dental Stone">
+                        <div class="item-details">
+                            <h2>Dental Stone</h2>
+                            <p>6 variations • Prosthodinthics • Stocked product: 6</p>
+                            <p>Seller: Idk what seller this is</p>
+                            <p>Price: ₱470 ~ ₱580</p>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label><input type="checkbox" name="conditions[]" value="joint_replacement"> Joint replacement/ Implant</label>
-                        <label><input type="checkbox" name="conditions[]" value="heart_surgery"> Heart Surgery</label>
-                        <label><input type="checkbox" name="conditions[]" value="heart_attack"> Heart attack</label>
-                        <label><input type="checkbox" name="conditions[]" value="thyroid_problem"> Thyroid problem</label>
-                        <label><input type="checkbox" name="conditions[]" value="heart_disease"> Heart disease</label>
-                        <label><input type="checkbox" name="conditions[]" value="heart_murmur"> Heart murmur</label>
-                        <label><input type="checkbox" name="conditions[]" value="hepatitis"> Hepatitis/ Liver Disease</label>
-                        <label><input type="checkbox" name="conditions[]" value="rheumatic_fever"> Rheumatic fever</label>
-                        <label><input type="checkbox" name="conditions[]" value="hay_fever"> Hay fever/ Allergies</label>
-                    </div>
-                    <div class="form-group">
-                        <label><input type="checkbox" name="conditions[]" value="respiratory_problems"> Respiratory problems</label>
-                        <label><input type="checkbox" name="conditions[]" value="hepatitis_jaundice"> Hepatitis/ Jaundice</label>
-                        <label><input type="checkbox" name="conditions[]" value="tuberculosis"> Tuberculosis</label>
-                        <label><input type="checkbox" name="conditions[]" value="swollen_ankles"> Swollen ankles</label>
-                        <label><input type="checkbox" name="conditions[]" value="kidney_disease"> Kidney disease</label>
-                        <label><input type="checkbox" name="conditions[]" value="diabetes"> Diabetes</label>
-                        <label><input type="checkbox" name="conditions[]" value="chest_pain"> Chest pain</label>
-                        <label><input type="checkbox" name="conditions[]" value="stroke"> Stroke</label>
-                        <label><input type="checkbox" name="conditions[]" value="cancer"> Cancer/ Tumors</label>
-                    </div>
-                    <div class="form-group">
-                        <label><input type="checkbox" name="conditions[]" value="anemia"> Anemia</label>
-                        <label><input type="checkbox" name="conditions[]" value="angina"> Angina</label>
-                        <label><input type="checkbox" name="conditions[]" value="asthma"> Asthma</label>
-                        <label><input type="checkbox" name="conditions[]" value="emphysema"> Emphysema</label>
-                        <label><input type="checkbox" name="conditions[]" value="bleeding_problems"> Bleeding problems</label>
-                        <label><input type="checkbox" name="conditions[]" value="blood_diseases"> Blood diseases</label>
-                        <label><input type="checkbox" name="conditions[]" value="head_injury"> Head injury</label>
-                        <label><input type="checkbox" name="conditions[]" value="arthritis"> Arthritis/ Rheumatism</label>
-                        <label><input type="checkbox" name="conditions[]" value="other"> Other:</label>
-                        <input type="text" name="other_condition">
-                    </div>
+                    <button class="options-btn">⋮</button>
                 </div>
-                <div class="form-group submit-group">
-                    <button type="submit">Submit</button>
+                <div class="item low-stock">
+                    <div class="item-info">
+                        <img src="elastics_image.png" alt="Elastics">
+                        <div class="item-details">
+                            <h2>Elastics</h2>
+                            <p>8 variations • Orthodontic • Stocked product: 2 <span class="low-stock-badge">Low stock</span></p>
+                            <p>Seller: Idk what seller this is</p>
+                            <p>Price: ₱470 ~ ₱580</p>
+                        </div>
+                    </div>
+                    <button class="options-btn">⋮</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <script>
-        function closeModal() {
-            document.getElementById('addPatientModal').style.display = 'none';
-        }
-        // To open the modal (for testing)
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('addPatientModal').style.display = 'block';
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarTab = document.getElementById('sidebarTab');
+            const mainContent = document.querySelector('.main-content');
+
+            sidebarTab.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                mainContent.classList.toggle('shifted');
+                sidebarTab.style.display = 'none';
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    mainContent.classList.remove('shifted');
+                    sidebarTab.style.display = 'block';
+                }
+            });
+
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                const btn = dropdown.querySelector('a');
+                const content = dropdown.querySelector('.dropdown-content');
+
+                btn.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    content.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function () {
+                    content.classList.remove('show');
+                });
+            });
         });
     </script>
 </body>
