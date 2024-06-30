@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5ede3;
+            color: #5b2c1e;
+            margin: 0;
+            padding: 0;
+            
+           
+        }
+
+        .header {
+            position: relative;
+            text-align: center;
+            color: white;
+        }
+
+        .header img {
+            width: 100%;
+            height: auto;
+            filter: brightness(50%);
+        }
+
+        .header h1 {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin: 0;
+            font-size: 3em;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .text-content {
+            flex: 3;
+            padding-right: 20px;
+        }
+
+        .text-content p {
+            margin-bottom: 20px;
+        }
+
+        .map-container {
+            flex: 1;
+            text-align: right;
+        }
+
+        .map-container img {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            border: 2px solid #5b2c1e;
+            border-radius: 10px;
+            cursor: pointer;
+            
+        }
+        .sidebar-tab {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #3a3f51;
+            color: #fff;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+    </style>
+    <script>
+        function showAnswer(question, answer) {
+            document.getElementById('question').value = question;
+            document.getElementById('answer').value = answer;
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const toggleSidebar = document.getElementById('toggleSidebar');
+            const contentContainer = document.querySelector('.content-container');
+
+            toggleSidebar.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                contentContainer.classList.toggle('shifted');
+                toggleSidebar.style.display = 'none';
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    contentContainer.classList.remove('shifted');
+                    toggleSidebar.style.display = 'block';
+                }
+            });
+        });
+        let currentImage = 1;
+        function changeImage() {
+            currentImage = (currentImage % 6) + 1; // Cycle through images 1 to 6
+            document.getElementById('mapImage').src = `/static/images/image${currentImage}.png`;
+        }
+    </script>
+</head>
+<body>
+    <div class="sidebar-tab" id="toggleSidebar">☰</div>
+    <div id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+            <li><a href="#">Treatment</a></li>
+            <li class="dropdown">
+                <a href="#">Records</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('patients') }}">Patient Records</a>
+                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                    <a href="#">Treatment Records</a>
+                </div>
+            </li>
+            <li><a href="#">Maintenance</a></li>
+            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+            <li><a href="{{ url_for('reports') }}">Reports</a></li>
+            <li><a href="#">Payments</a></li>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <li><a href="{{ url_for('help') }}">Help</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+    <div class="header">
+        <img src="/static/images/image6.png" alt="Dr. Lorena L. Timola Dental Clinic">
+        <h1>About Us</h1>
+    </div>
+    <div class="content">
+        <div class="text-content">
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa.</p>
+            
+            <p>Vestibulum lacinia arcu eget nulla. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur sodales ligula in libero. Sed dignissim lacinia nunc. Curabitur tortor. Pellentesque nibh. Aenean quam. In scelerisque sem at dolor. Maecenas mattis.</p>
+            
+            <p>Sed convallis tristique sem. Proin ut ligula vel nunc egestas porttitor. Morbi lectus risus, iaculis vel, suscipit quis, luctus non, massa. Fusce ac turpis quis ligula lacinia aliquet. Mauris ipsum. Nulla metus metus, ullamcorper vel, tincidunt sed, euismod in, nibh. Quisque volutpat condimentum velit.</p>
+            
+            <p>Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nam nec ante. Sed lacinia, urna non tincidunt mattis, tortor neque adipiscing diam, a cursus ipsum ante quis turpis. Nulla facilisi. Ut fringilla. Suspendisse potenti. Nunc feugiat mi a tellus consequat imperdiet.</p>
+            
+            <p>Vestibulum sapien. Proin quam. Etiam ultrices. Suspendisse in justo eu magna luctus suscipit. Sed lectus. Integer euismod lacus luctus magna. Quisque cursus, metus vitae pharetra auctor, sem massa mattis sem, at interdum magna augue eget diam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae.</p>
+            
+            <p>Morbi lacinia molestie dui. Praesent blandit dolor. Sed non quam. In vel mi sit amet augue congue elementum. Morbi in ipsum sit amet pede facilisis laoreet. Donec lacus nunc, viverra nec, blandit vel, egestas et, augue. Vestibulum tincidunt malesuada tellus. Ut ultrices ultrices enim. Curabitur sit amet mauris.</p>
+            
+            <p>Morbi in dui quis est pulvinar ullamcorper. Nulla facilisi. Integer lacinia sollicitudin massa. Cras metus. Sed aliquet risus a tortor. Integer id quam. Morbi mi. Quisque nisl felis, venenatis tristique, dignissim in, ultrices sit amet, augue. Proin sodales libero eget ante.</p>
+        </div>
+        <div class="map-container">
+            <img id="mapImage" src="/static/images/image2.png" alt="Map to Dr. Lorena T. Beltran's Dental Clinic" onclick="changeImage()">
+        </div>
+    </div>
+</body>
+</html>
+<!-- 
+In an era marked by rapid digital advancements, the healthcare sector continually seeks innovative solutions to address long-standing challenges. Dental care, a critical component of this sector, benefits significantly from these innovations. Dr. Lorena T. Beltran, a leader in orthodontics and cosmetic dentistry, has not only demonstrated unwavering commitment throughout her professional journey but has also faced and overcome numerous challenges with resilience and dedication.
+
+Dr. Lorena T. Beltran embarked on her entrepreneurial journey in 2005, establishing her dental clinic with a vision of excellence in dental services. Specializing in orthodontics and cosmetic dentistry, Dr. Beltran's clinic has been a beacon of high standards and patient-centered care. Even during the global pandemic, Dr. Beltran's decision to personally manage the clinic underscored her deep commitment to patient welfare and quality care.
+Originally situated at Gate 2, Cainta, the clinic faced significant challenges, particularly due to flooding. This prompted a strategic relocation to Brookside Hills Gate 1. Dr. Beltran's proactive approach involved thorough risk assessments to identify potential hazards and vulnerabilities. She implemented preventive measures, such as elevating critical patient documents to safeguard them from flooding, showcasing her dedication to maintaining the integrity and safety of patient records.
+
+The clinic’s patient onboarding process is meticulously designed to ensure a smooth and comprehensive patient experience. It begins with a telephonic scheduling system that regulates patient flow. Upon arrival, patients complete a preliminary assessment using a detailed questionnaire, crafted with evidence-based practices to capture essential health indicators. Dr. Beltran then reviews each patient’s medical history through a checklist-based method, ensuring no detail is overlooked. Treatment plans are tailored to each patient, utilizing advanced equipment and techniques to ensure precision and comfort.
+
+Despite the high standards of care, Dr. Beltran's practice faces challenges related to manual record-keeping. The loss of records due to flooding and reliance on paper-based systems highlight the need for a digital transformation. The introduction of a Computer-Based Information System (CBIS) is proposed to enhance data management, ensure rapid data retrieval, and improve overall efficiency. A CBIS will streamline operations, bolster data security, provide real-time insights, and enhance resilience against physical disasters, ultimately safeguarding critical patient data.
+
+Dr. Lorena T. Beltran’s Dental Clinic is dedicated to setting new benchmarks in dental care by embracing digital solutions that enhance patient experience and operational efficiency. The proposed shift to a digital platform aims to ensure ease of access for staff, improve patient experiences, and protect invaluable patient records from potential adversities.
+
+With a steadfast commitment to excellence and patient care, Dr. Lorena T. Beltran's Dental Clinic continues to evolve, leveraging modern technology to overcome challenges and set new standards in the dental healthcare sector. Through the implementation of a Computer-Based Information System, the clinic aims to enhance its operational standards, ensuring a future-ready approach to dental healthcare management.
+
+-->

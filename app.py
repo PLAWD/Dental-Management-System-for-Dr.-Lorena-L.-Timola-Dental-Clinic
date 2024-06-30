@@ -863,5 +863,17 @@ def help():
     return render_template('help.html')
 
 
+
+@app.route('/inventory')
+def inventory():
+    return render_template('inventory.html')
+
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
