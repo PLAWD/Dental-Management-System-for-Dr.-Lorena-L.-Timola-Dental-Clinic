@@ -41,16 +41,15 @@
         <div class="header-left">
             <h1>Total Users: {{ total_users }}</h1>
         </div>
-        <div class="header-center">
-            <form class="search-form" action="{{ url_for('search') }}" method="get">
-                <input type="text" name="query" placeholder="Search...">
-                <button type="submit" class="search-btn">🔍</button>
-            </form>
-        </div>
     </header>
     <div class="main-content">
         <div class="container">
-            <button class="add-user-btn" onclick="openModal()">Add User</button>
+            <div class="header-actions">
+                <button class="add-user-btn" onclick="openModal()">Add User</button>
+                <form class="search-form" action="{{ url_for('search') }}" method="get">
+                    <input type="text" name="query" placeholder="Search...">
+                </form>
+            </div>
             <div class="table-container">
                 <table class="user-table">
                     <thead>
@@ -69,15 +68,7 @@
                                 <span class="email">{{ user.email }}</span>
                             </td>
                             <td>{{ user.role }}</td>
-                            <td class="status
-                                {% if user.status == 'Active' %}status-active
-                                {% elif user.status == 'Inactive' %}status-inactive
-                                {% elif user.status == 'Suspended' %}status-suspended
-                                {% elif user.status == 'Banned' %}status-banned
-                                {% elif user.status == 'Password Reset Required' %}status-password-reset-required
-                                {% elif user.status == 'Locked' %}status-locked
-                                {% endif %}
-                            ">{{ user.status }}</td>
+                            <td class="status {% if user.status == 'Active' %}status-active{% elif user.status == 'Inactive' %}status-inactive{% elif user.status == 'Suspended' %}status-suspended{% elif user.status == 'Banned' %}status-banned{% elif user.status == 'Password Reset Required' %}status-password-reset{% elif user.status == 'Locked' %}status-locked{% endif %}">{{ user.status }}</td>
                             <td class="dropdown">
                                 <button class="ellipsis-btn">⋮</button>
                                 <div class="dropdown-content">

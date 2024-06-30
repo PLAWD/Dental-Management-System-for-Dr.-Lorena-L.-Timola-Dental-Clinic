@@ -6,138 +6,7 @@
     <title>Patients</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <style>
-        .patients-page .filter-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .patients-page .search-form {
-            display: flex;
-            justify-content: flex-end;
-            width: 50%;
-        }
-
-        .patients-page .controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        .patients-page select,
-        .patients-page button {
-            padding: 8px 12px;
-            font-size: 14px;
-        }
-
-        .patients-page .search-form {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .patients-page .search-form input[type="text"] {
-            padding: 8px 12px;
-            font-size: 14px;
-        }
-
-        .patients-page .search-form button {
-            padding: 8px 12px;
-            font-size: 14px;
-        }
-
-        .patients-page .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .patients-page .user-table {
-            width: 80%;
-            margin-top: 20px;
-        }
-
-        .patients-page .user-table th, .patients-page .user-table td {
-            text-align: left;
-            padding: 10px;
-        }
-
         /* Specific styles for Add Patient modal */
-        .add-patient-container {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .add-patient-container .left-column,
-        .add-patient-container .right-column {
-            width: 48%;
-        }
-
-        .add-patient-container .form-group {
-            margin-bottom: 10px;
-        }
-
-        .add-patient-container .form-group label {
-            display: block;
-            font-weight: bold;
-        }
-
-        .add-patient-container .form-group input[type="text"],
-        .add-patient-container .form-group input[type="number"],
-        .add-patient-container .form-group input[type="date"],
-        .add-patient-container .form-group input[type="email"],
-        .add-patient-container .form-group input[type="checkbox"] {
-            width: 100%;
-            padding: 5px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        .add-patient-container .form-group input[type="checkbox"] {
-            width: auto;
-        }
-
-        .add-patient-conditions {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-
-        .add-patient-conditions .form-group {
-            width: 23%;
-        }
-
-        .add-patient-conditions .form-group label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-
-        .add-patient-conditions .form-group input[type="text"] {
-            width: auto;
-            margin-left: 5px;
-        }
-
-        .submit-group {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .submit-group button {
-            padding: 10px 20px;
-            background-color: #8B4513;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .submit-group button:hover {
-            background-color: #D2691E;
-        }
-
-        /* Modal styles */
         .modal {
             display: none;
             position: fixed;
@@ -156,7 +25,7 @@
             padding: 20px;
             border: 1px solid #888;
             width: 80%;
-            max-width: 800px;
+            max-width: 600px;
             border-radius: 10px;
         }
 
@@ -173,39 +42,81 @@
             text-decoration: none;
             cursor: pointer;
         }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="date"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-group input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .submit-group {
+            text-align: center;
+        }
+
+        .submit-group button {
+            padding: 10px 20px;
+            background-color: #8B4513;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .submit-group button:hover {
+            background-color: #D2691E;
+        }
     </style>
 </head>
 <body class="patients-page">
-<div class="sidebar-tab" id="sidebarTab">☰</div>
-<div id="sidebar" class="sidebar">
-    <ul>
-        <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-        <li><a href="#">Profile</a></li>
-        <li><a href="{{ url_for('users') }}">Users</a></li>
-        <li><a href="#">Treatment</a></li>
-        <li class="dropdown">
-            <a href="#">Records</a>
-            <div class="dropdown-content">
-                <a href="{{ url_for('patients') }}">Patient Records</a>
-                <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                <a href="#">Treatment Records</a>
-            </div>
-        </li>
-        <li><a href="#">Maintenance</a></li>
-        <li><a href="#">Inventory</a></li>
-        <li><a href="{{ url_for('reports') }}">Reports</a></li>
-        <li><a href="#">Payments</a></li>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <li><a href="#">Help</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="{{ url_for('logout') }}">Logout</a></li>
-    </ul>
-</div>
+    <div class="sidebar-tab" id="sidebarTab">☰</div>
+    <div id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+            <li><a href="#">Treatment</a></li>
+            <li class="dropdown">
+                <a href="#">Records</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('patients') }}">Patient Records</a>
+                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                    <a href="#">Treatment Records</a>
+                </div>
+            </li>
+            <li><a href="#">Maintenance</a></li>
+            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+            <li><a href="{{ url_for('reports') }}">Reports</a></li>
+            <li><a href="#">Payments</a></li>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <li><a href="#">Help</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
     <header>
         <div class="header-left">
             <h1>‎ ‎ ‎ ‎ ‎ ‎ ‎Total Patients: {{ total_patients }}</h1>
@@ -217,7 +128,7 @@
         <div class="container">
             <div class="filter-container">
                 <div class="controls">
-                    <button class="add-user-btn" onclick="openModal()">Add Patient</button>
+                    <button class="add-user-btn" onclick="openModal('addPatientModal')">Add Patient</button>
                     <select id="filterPatients" onchange="filterPatients()">
                         <option value="">Filter Patients</option>
                         <!-- Add options for filtering patients -->
@@ -286,161 +197,53 @@
     </div>
 
     <!-- Add Patient Modal -->
-    <div id="userModal" class="modal">
+    <div id="addPatientModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
+            <span class="close" onclick="closeModal('addPatientModal')">&times;</span>
             <h2 class="register-user-title">Add Patient</h2>
-            <form action="{{ url_for('submit_add_patient') }}" method="POST">
-                <div class="add-patient-container">
-                    <div class="left-column">
-                        <div class="form-group">
-                            <label for="name">Name:</label>
-                            <input type="text" id="name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="birth_date">Birth Date:</label>
-                            <input type="date" id="birth_date" name="birth_date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="age">Age:</label>
-                            <input type="number" id="age" name="age" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="status">Status:</label>
-                            <input type="text" id="status" name="status">
-                        </div>
-                        <div class="form-group">
-                            <label for="mobile_number">Mobile Number:</label>
-                            <input type="text" id="mobile_number" name="mobile_number" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email:</label>
-                            <input type="email" id="email" name="email" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="address">Address:</label>
-                            <input type="text" id="address" name="address" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="city">City:</label>
-                            <input type="text" id="city" name="city" required>
-                        </div>
-                    </div>
-                    <div class="right-column">
-                        <div class="form-group">
-                            <label for="blood_type">Blood Type:</label>
-                            <input type="text" id="blood_type" name="blood_type">
-                        </div>
-                        <div class="form-group">
-                            <label for="blood_pressure">Blood Pressure:</label>
-                            <input type="text" id="blood_pressure" name="blood_pressure">
-                        </div>
-                        <div class="form-group">
-                            <label for="bleeding_time">Bleeding Time:</label>
-                            <input type="text" id="bleeding_time" name="bleeding_time">
-                        </div>
-                        <div class="form-group">
-                            <label for="medications">Taking any prescription/ non-prescription medication</label>
-                            <input type="checkbox" id="medications" name="medications">
-                        </div>
-                        <div class="form-group">
-                            <label for="allergies">Allergies:</label>
-                            <input type="text" id="allergies" name="allergies">
-                        </div>
-                        <div class="form-group">
-                            <label for="medical_condition">Under medical condition:</label>
-                            <input type="text" id="medical_condition" name="medical_condition">
-                        </div>
-                        <div class="form-group">
-                            <label for="serious_illness">Serious Illness/Surgical Operation:</label>
-                            <input type="text" id="serious_illness" name="serious_illness">
-                        </div>
-                        <div class="form-group">
-                            <label for="hospitalized">Been hospitalized:</label>
-                            <input type="checkbox" id="hospitalized" name="hospitalized">
-                        </div>
-                        <div class="form-group">
-                            <label for="for_woman_only">For woman only:</label>
-                            <input type="text" id="for_woman_only" name="for_woman_only">
-                        </div>
-                    </div>
+            <form id="addPatientForm" action="javascript:void(0);" method="POST">
+                <div class="form-group">
+                    <label for="first_name">First Name:</label>
+                    <input type="text" id="first_name" name="first_name" required>
                 </div>
-                <div class="add-patient-conditions">
-                    <div class="form-group">
-                        <label><input type="checkbox" name="conditions[]" value="high_blood_pressure"> High blood pressure</label>
-                        <label><input type="checkbox" name="conditions[]" value="low_blood_pressure"> Low blood pressure</label>
-                        <label><input type="checkbox" name="conditions[]" value="epilepsy"> Epilepsy/Convulsion</label>
-                        <label><input type="checkbox" name="conditions[]" value="aids"> AIDS or HIV infection</label>
-                        <label><input type="checkbox" name="conditions[]" value="stomach_troubles"> Stomach troubles/Ulcer</label>
-                        <label><input type="checkbox" name="conditions[]" value="fainting_seizure"> Fainting seizure</label>
-                        <label><input type="checkbox" name="conditions[]" value="rapid_weight_loss"> Rapid weight loss</label>
-                        <label><input type="checkbox" name="conditions[]" value="radiation_therapy"> Radiation Therapy</label>
-                    </div>
-                    <div class="form-group">
-                        <label><input type="checkbox" name="conditions[]" value="joint_replacement"> Joint replacement/ Implant</label>
-                        <label><input type="checkbox" name="conditions[]" value="heart_surgery"> Heart Surgery</label>
-                        <label><input type="checkbox" name="conditions[]" value="heart_attack"> Heart attack</label>
-                        <label><input type="checkbox" name="conditions[]" value="thyroid_problem"> Thyroid problem</label>
-                        <label><input type="checkbox" name="conditions[]" value="heart_disease"> Heart disease</label>
-                        <label><input type="checkbox" name="conditions[]" value="heart_murmur"> Heart murmur</label>
-                        <label><input type="checkbox" name="conditions[]" value="hepatitis"> Hepatitis/ Liver Disease</label>
-                        <label><input type="checkbox" name="conditions[]" value="rheumatic_fever"> Rheumatic fever</label>
-                        <label><input type="checkbox" name="conditions[]" value="hay_fever"> Hay fever/ Allergies</label>
-                    </div>
-                    <div class="form-group">
-                        <label><input type="checkbox" name="conditions[]" value="respiratory_problems"> Respiratory problems</label>
-                        <label><input type="checkbox" name="conditions[]" value="anemia"> Anemia</label>
-                        <label><input type="checkbox" name="conditions[]" value="angina"> Angina</label>
-                        <label><input type="checkbox" name="conditions[]" value="asthma"> Asthma</label>
-                        <label><input type="checkbox" name="conditions[]" value="emphysema"> Emphysema</label>
-                        <label><input type="checkbox" name="conditions[]" value="bleeding_problems"> Bleeding problems</label>
-                        <label><input type="checkbox" name="conditions[]" value="blood_diseases"> Blood diseases</label>
-                        <label><input type="checkbox" name="conditions[]" value="head_injury"> Head injury</label>
-                        <label><input type="checkbox" name="conditions[]" value="arthritis"> Arthritis/ Rheumatism</label>
-                        <label><input type="checkbox" name="conditions[]" value="other"> Other:</label>
-                        <input type="text" name="other_condition">
-                    </div>
+                <div class="form-group">
+                    <label for="middle_name">Middle Name:</label>
+                    <input type="text" id="middle_name" name="middle_name">
                 </div>
-                <div class="form-group submit-group">
-                    <button type="submit">Submit</button>
+                <div class="form-group">
+                    <label for="last_name">Last Name:</label>
+                    <input type="text" id="last_name" name="last_name" required>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- View Patient Modal -->
-    <div id="viewPatientModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeViewPatientModal()">&times;</span>
-            <h2>Patient Information</h2>
-            <div id="patientDetails"></div>
-        </div>
-    </div>
-
-    <!-- Edit Patient Modal -->
-    <div id="editPatientModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeEditPatientModal()">&times;</span>
-            <h2>Edit Patient</h2>
-            <form id="editPatientForm" action="{{ url_for('update_patient') }}" method="POST">
-                <input type="hidden" id="edit_patient_id" name="patient_id">
-                <label for="edit_first_name">First Name:</label>
-                <input type="text" id="edit_first_name" name="first_name" required>
-                <label for="edit_last_name">Last Name:</label>
-                <input type="text" id="edit_last_name" name="last_name" required>
-                <label for="edit_phone">Phone:</label>
-                <input type="text" id="edit_phone" name="phone" required>
-                <label for="edit_email">Email:</label>
-                <input type="email" id="edit_email" name="email" required>
-                <label for="edit_address">Address:</label>
-                <input type="text" id="edit_address" name="address" required>
-                <label for="edit_city">City:</label>
-                <input type="text" id="edit_city" name="city" required>
-                <label for="edit_next_appointment">Next Appointment:</label>
-                <input type="date" id="edit_next_appointment" name="next_appointment">
-                <label for="edit_last_appointment">Last Appointment:</label>
-                <input type="date" id="edit_last_appointment" name="last_appointment">
-                <button type="submit">Update</button>
+                <div class="form-group">
+                    <label for="dob">Date of Birth:</label>
+                    <input type="date" id="dob" name="dob" required>
+                </div>
+                <div class="form-group">
+                    <label for="sex">Sex:</label>
+                    <select id="sex" name="sex" required>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="address">Address:</label>
+                    <input type="text" id="address" name="address" required>
+                </div>
+                <div class="form-group">
+                    <label for="city">City:</label>
+                    <input type="text" id="city" name="city" required>
+                </div>
+                <div class="form-group">
+                    <label for="occupation">Occupation:</label>
+                    <input type="text" id="occupation" name="occupation">
+                </div>
+                <div class="form-group">
+                    <label for="mobile_number">Mobile Number:</label>
+                    <input type="text" id="mobile_number" name="mobile_number" required>
+                </div>
+                <div class="submit-group">
+                    <button type="button" onclick="submitAddPatientForm()">Next</button>
+                </div>
             </form>
         </div>
     </div>
@@ -482,20 +285,43 @@
             });
         });
 
-        function openModal() {
-            document.getElementById('userModal').style.display = 'block';
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
         }
 
-        function closeModal() {
-            document.getElementById('userModal').style.display = 'none';
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
 
-        function closeViewPatientModal() {
-            document.getElementById('viewPatientModal').style.display = 'none';
-        }
+        function submitAddPatientForm() {
+            const formData = {
+                first_name: document.getElementById('first_name').value,
+                middle_name: document.getElementById('middle_name').value,
+                last_name: document.getElementById('last_name').value,
+                dob: document.getElementById('dob').value,
+                sex: document.getElementById('sex').value,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                occupation: document.getElementById('occupation').value,
+                mobile_number: document.getElementById('mobile_number').value,
+            };
 
-        function closeEditPatientModal() {
-            document.getElementById('editPatientModal').style.display = 'none';
+            fetch('{{ url_for("submit_add_patient") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect to the patients page
+                    window.location.href = '{{ url_for("patients") }}';
+                } else {
+                    alert('Failed to add patient: ' + data.error);
+                }
+            });
         }
 
         function viewPatient(patientId) {
@@ -513,7 +339,7 @@
                         <p><strong>Next Appointment:</strong> ${data.next_appointment}</p>
                         <p><strong>Last Appointment:</strong> ${data.last_appointment}</p>
                     `;
-                    document.getElementById('viewPatientModal').style.display = 'block';
+                    openModal('viewPatientModal');
                 });
         }
 
@@ -530,7 +356,7 @@
                     document.getElementById('edit_city').value = data.city;
                     document.getElementById('edit_next_appointment').value = data.next_appointment;
                     document.getElementById('edit_last_appointment').value = data.last_appointment;
-                    document.getElementById('editPatientModal').style.display = 'block';
+                    openModal('editPatientModal');
                 });
         }
 

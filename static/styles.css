@@ -15,15 +15,6 @@ body {
     background-color: #cbc7c2;
 }
 
-.login-container {
-    background-color: rgba(120, 77, 60, 1);
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 400px; /* Fixed width */
-    margin: 0 auto;
-}
-
 .login-title, .forgor-title, .verify-title, .reset-title {
     color: #D0C8BB;
 }
@@ -79,42 +70,9 @@ a {
 }
 
 /* Styles for dashboard page */
-body.dashboard {
-    display: flex;
-    height: 100vh;
-    background-color: #cbc7c2;
-    flex-direction: column;
-}
 
-.sidebar {
-    width: 250px;
-    background-color: #3a3f51;
-    color: #fff;
-    overflow-y: scroll;
-    padding: 15px;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: -250px; /* Initially hidden */
-    z-index: 1000;
-    transition: left 0.3s ease;
-}
 
-.sidebar.show {
-    left: 0;
-}
 
-.sidebar-tab {
-    position: fixed;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: #3a3f51;
-    color: #fff;
-    padding: 10px 15px;
-    cursor: pointer;
-    z-index: 1001;
-}
 
 .main-content {
     flex-grow: 1;
@@ -195,154 +153,9 @@ header {
     display: none;
 }
 
-#calendar {
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 20px;
-}
 
-/* FullCalendar styles */
-.fc-header-toolbar {
-    color: #000;
-}
 
-.fc-toolbar-title {
-    color: #000;
-}
 
-.fc-button, .fc-button-primary {
-    background-color: #5d74e2;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.fc-button:hover, .fc-button-primary:hover {
-    background-color: #4a5cb0;
-}
-
-.fc-button-primary:focus {
-    outline: none;
-    box-shadow: none;
-}
-
-.fc-day-grid .fc-day-number, .fc-time-grid .fc-time, .fc-day-grid .fc-day-top {
-    color: #000;
-}
-
-.fc-day-grid-event .fc-content {
-    color: #000;
-}
-
-.fc-day {
-    background-color: #fff;
-}
-
-.fc-head-container thead tr th {
-    color: #000;
-}
-
-.dashboard-title {
-    color: #f44336;
-}
-
-.fc-day-header, .fc-widget-header {
-    color: #f44336;
-}
-
-.fc-axis, .fc-time-grid-axis {
-    color: #f44336;
-}
-
-.create-appointment-btn {
-    background-color: #5d74e2;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
-    display: block;
-    width: calc(100% - 30px);
-    margin: 20px auto;
-    padding: 15px;
-    border-radius: 5px;
-    text-align: center;
-}
-
-.create-appointment-container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 50px;
-    background-color: rgba(120, 77, 60, 1);
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    color: #D0C8BB;
-}
-
-.create-appointment-container h2 {
-    color: #D0C8BB;
-}
-
-.create-appointment-container label {
-    display: block;
-    margin-bottom: 5px;
-    color: #D0C8BB;
-}
-
-.create-appointment-container input,
-.create-appointment-container select,
-.create-appointment-container textarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-.create-appointment-container button {
-    padding: 10px;
-    background-color: #D0C8BB;
-    color: #784D3C;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 48%;
-    margin-right: 2%;
-}
-
-.create-appointment-container button:hover {
-    background-color: #593C3C;
-}
-
-.create-appointment-container button:last-child {
-    margin-right: 0;
-}
-
-.sidebar ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.sidebar ul li {
-    padding: 10px 0;
-}
-
-.sidebar ul li a {
-    color: #fff;
-    text-decoration: none;
-    display: block;
-    padding: 10px 15px;
-}
-
-.sidebar ul li a:hover {
-    background-color: #575c66;
-}
-
-.sidebar ul.logout {
-    position: absolute;
-    bottom: 15px;
-    width: 100%;
-}
 
 /* Styles for user management page */
 .container {
@@ -1213,47 +1026,7 @@ header h1 {
   color: #808080;
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-.sidebar::-webkit-scrollbar {
-    display: none;
-}
 
-/* Hide scrollbar for IE, Edge and Firefox */
-.sidebar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-}
-
-/* Sidebar dropdown shits */
-.sidebar ul li a:hover {
-    background-color: #f1f1f1;
-}
-
-.sidebar .dropdown-content {
-    display: none;
-    position: absolute;
-    left: 100%;
-    top: 0;
-    min-width: 150px;
-    z-index: 1;
-    background-color: #f9f9f9;
-    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-}
-
-.sidebar .dropdown-content a {
-    padding: 8px;
-    text-decoration: none;
-    display: block;
-    color: #000;
-}
-
-.sidebar .dropdown-content a:hover {
-    background-color: #ddd;
-}
-
-.sidebar .dropdown:hover .dropdown-content {
-    display: block;
-}
 
 /* Patient Records CSS */
         .container {
@@ -1441,14 +1214,6 @@ header h1 {
     color: #fff;
 }
 
-.sidebar {
-    overflow-y: auto;
-    scrollbar-width: none;
-}
-
-.sidebar::-webkit-scrollbar {
-    display: none;
-}
 
 /* Inventory Styles */
 .container {
@@ -1957,7 +1722,7 @@ text {
 
 .users-page .user-table th, .users-page .user-table td {
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 0px solid #ccc;
     text-align: left;
 }
 
@@ -2311,3 +2076,733 @@ form button:hover {
     margin-right: 5px;
 }
 
+
+/*==============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================
+Specific styles for login page
+==============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================*/
+
+.login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #e0e0e0;
+}
+
+.login-container {
+    background-color: #784D3C;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 400px; /* Fixed width */
+    margin: 0 auto;
+}
+
+.login-container h2 {
+    margin-bottom: 20px;
+    color: #D0C8BB;
+    text-align: left;
+}
+
+.login-container label {
+    display: block;
+    margin-bottom: 8px;
+    color: #D0C8BB;
+}
+
+.login-container input[type="text"],
+.login-container input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #D0C8BB;
+}
+
+.login-container button {
+    width: 30%;
+    padding: 10px;
+    background-color: #E0D8CB;
+    border: none;
+    border-radius: 5px;
+    color: #784D3C;
+    font-size: 16px;
+    cursor: pointer;
+
+}
+
+.login-container button:hover {
+    background-color: #B9B09E;
+}
+
+.login-container .forgot-password {
+    display: block;
+    margin-top: 10px;
+    text-align: center;
+    color: #fff;
+    text-decoration: none;
+}
+
+.login-container .forgot-password:hover {
+    text-decoration: underline;
+    color: #B9B09E
+}
+
+/*=============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================
+Specific styles for forgot password page
+==============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================*/
+
+
+
+/*=============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================
+Specific styles for enter otp page
+==============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================*/
+
+/*=============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================
+Specific styles for dashboard
+==============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================*/
+
+body.dashboard {
+    display: flex;
+    height: 100vh;
+    background-color: #cbc7c2;
+    flex-direction: column;
+}
+
+#calendar {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    align: center;
+}
+
+/* FullCalendar styles */
+.fc-header-toolbar {
+    color: #000;
+}
+
+.fc-toolbar-title {
+    color: #000;
+}
+
+.fc-button, .fc-button-primary {
+    background-color: #5d74e2;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.fc-button:hover, .fc-button-primary:hover {
+    background-color: #4a5cb0;
+}
+
+.fc-button-primary:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.fc-day-grid .fc-day-number, .fc-time-grid .fc-time, .fc-day-grid .fc-day-top {
+    color: #000;
+}
+
+.fc-day-grid-event .fc-content {
+    color: #000;
+}
+
+.fc-day {
+    background-color: #fff;
+}
+
+.fc-head-container thead tr th {
+    color: #593C3C;
+}
+
+.dashboard-title {
+    color: #f44336;
+}
+
+.fc-day-header, .fc-widget-header {
+    color: #f44336;
+}
+
+.fc-axis, .fc-time-grid-axis {
+    color: #f44336;
+}
+
+.create-appointment-btn {
+    background-color: #5d74e2;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    display: block;
+    width: calc(100% - 30px);
+    margin: 20px auto;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.create-appointment-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 50px;
+    background-color: rgba(120, 77, 60, 1);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    color: #D0C8BB;
+}
+
+.create-appointment-container h2 {
+    color: #D0C8BB;
+}
+
+.create-appointment-container label {
+    display: block;
+    margin-bottom: 5px;
+    color: #D0C8BB;
+}
+
+.create-appointment-container input,
+.create-appointment-container select,
+.create-appointment-container textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.create-appointment-container button {
+    padding: 10px;
+    background-color: #D0C8BB;
+    color: #784D3C;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 48%;
+    margin-right: 2%;
+}
+
+.create-appointment-container button:hover {
+    background-color: #593C3C;
+}
+
+.create-appointment-container button:last-child {
+    margin-right: 0;
+}
+
+/* Dashboard modals*/
+#createAppointmentModal, #viewAppointmentModal, #editAppointmentModal, #successModal, #errorModal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0,0,0,0.4);
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+
+}
+
+/* Specific styles for Create Appointment Modal */
+#createAppointmentModal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 50%;
+    top: 50%;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    justify-content: center;
+    align-items: center;
+}
+
+#createAppointmentModal .modal-content {
+    position: relative;
+    background-color: #D0C8BB;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 70%; /* Adjust the width as needed */
+    max-width: 700px; /* Set a maximum width */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    border-radius: 10px; /* Optional: Add rounded corners */
+}
+
+#createAppointmentModal .close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+}
+
+#createAppointmentModal .close:hover,
+#createAppointmentModal .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Adjust form input styles if needed */
+#createAppointmentModal label {
+    display: block;
+    margin-top: 10px;
+    color: #333;
+}
+
+#createAppointmentModal input,
+#createAppointmentModal select,
+#createAppointmentModal button {
+    width: 95%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+#createAppointmentModal button {
+    background-color: #593C3C;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+#createAppointmentModal button:hover {
+    background-color: #402828;
+}
+
+#createAppointmentModal .createAppointmentModalTitle{
+    color: #593C3C;
+}
+
+/*=============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================
+Specific styles for sidebar
+==============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================*/
+
+.sidebar {
+    width: 250px;
+    background-color: #3a3f51;
+    color: #fff;
+    overflow-y: scroll;
+    padding: 15px;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: -250px; /* Initially hidden */
+    z-index: 1000;
+    transition: left 0.3s ease;
+}
+
+.sidebar.show {
+    left: 0;
+}
+
+.sidebar-tab {
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #3a3f51;
+    color: #fff;
+    padding: 10px 15px;
+    cursor: pointer;
+    z-index: 1001;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    padding: 10px 0;
+}
+
+.sidebar ul li a {
+    color: #fff;
+    text-decoration: none;
+    display: block;
+    padding: 10px 15px;
+}
+
+.sidebar ul li a:hover {
+    background-color: #575c66;
+}
+
+.sidebar ul.logout {
+    position: absolute;
+    bottom: 15px;
+    width: 100%;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.sidebar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+/* Sidebar dropdown shits */
+.sidebar ul li a:hover {
+    background-color: #f1f1f1;
+}
+
+.sidebar .dropdown-content {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    min-width: 150px;
+    z-index: 1;
+    background-color: #f9f9f9;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar .dropdown-content a {
+    padding: 8px;
+    text-decoration: none;
+    display: block;
+    color: #000;
+}
+
+.sidebar .dropdown-content a:hover {
+    background-color: #ddd;
+}
+
+.sidebar .dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.sidebar {
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+
+/*=============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================
+Specific styles for user
+==============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================*/
+
+/* CSS for Users Page */
+.users-page {
+    font-family: 'Arial', sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 20px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    color: #b22222;
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.add-user-btn {
+    background-color: #8B4513;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.add-user-btn:hover {
+    background-color: #D2691E;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+}
+
+.search-form input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px 0 0 5px;
+    outline: none;
+}
+
+.search-form button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #5d74e2;
+    color: #fff;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+}
+
+.search-form button:hover {
+    background-color: #4a5cb0;
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.table-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+    padding: 20px;
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+}
+
+.user-table th,
+.user-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border: none;
+}
+
+.user-table th {
+    background-color: #00BFFF;
+    color: #fff;
+}
+
+.user-table td {
+    background-color: #fff;
+    color: #555;
+}
+
+.user-table tr {
+    border-bottom: 1px solid #eee;
+}
+
+.user-table tr:last-child {
+    border-bottom: none;
+}
+
+.user-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-info .name {
+    color: #1e90ff;
+    text-decoration: none;
+}
+
+.user-info .name:hover {
+    text-decoration: underline;
+}
+
+.user-info .email {
+    font-size: 12px;
+    color: #999;
+}
+
+.status-active {
+    color: green;
+}
+
+.status-inactive {
+    color: red;
+}
+
+.status-password-reset {
+    color: orange;
+}
+
+.ellipsis-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    color: #999;
+    padding: 0;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    min-width: 120px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.dropdown-content a {
+    color: #333;
+    padding: 10px 15px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.page-numbers {
+    list-style: none;
+    display: flex;
+    gap: 5px;
+    padding: 0;
+}
+
+.page-numbers li {
+    margin: 0 5px;
+}
+
+.page-numbers a {
+    padding: 5px 10px;
+    background-color: #8B4513;
+    color: #fff;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.page-numbers a:hover {
+    background-color: #D2691E;
+}
+
+.page-numbers .active a {
+    background-color: #4a5cb0;
+}
+
+/*=============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================
+Specific styles for patients
+==============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================*/
+
+/* Add Patient Modal specific styles */
+.add-patient-modal .modal-content {
+	padding: 30px;
+	background-color: #fff;
+}
+
+.add-patient-modal .form-group {
+	margin-bottom: 20px;
+}
+
+.add-patient-modal .form-group label {
+	display: block;
+	font-weight: bold;
+	margin-bottom: 5px;
+	color: #333;
+}
+
+.add-patient-modal .form-group input[type="text"],
+.add-patient-modal .form-group input[type="number"],
+.add-patient-modal .form-group input[type="date"],
+.add-patient-modal .form-group input[type="email"],
+.add-patient-modal .form-group select {
+	width: 100%;
+	padding: 10px;
+	margin-top: 5px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	box-sizing: border-box;
+}
+
+.add-patient-modal .form-group select {
+	width: 100%;
+	padding: 10px;
+	margin-top: 5px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	box-sizing: border-box;
+}
+
+.add-patient-modal .submit-group {
+	text-align: center;
+	margin-top: 30px;
+}
+
+.add-patient-modal .submit-group button {
+	padding: 10px 20px;
+	background-color: #8B4513;
+	color: #fff;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+.add-patient-modal .submit-group button:hover {
+	background-color: #D2691E;
+}
+
+.add-patient-modal h2 {
+	color: #f44336;
+	text-align: center;
+	margin-bottom: 20px;
+}
