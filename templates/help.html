@@ -1,0 +1,186 @@
+<!-- 
+It has it's own css and javascript, will fixed it lataer
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5ede3;
+            color: #5b2c1e;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+    
+        .content-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+        .content-container.shifted {
+            margin-left: 250px;
+        }
+        .faq-container {
+            width: 70%;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .faq-container h1 {
+            text-align: center;
+            color: #8b4513;
+        }
+        .faq-container label {
+            display: block;
+            margin: 20px 0 5px;
+            font-weight: bold;
+        }
+        .faq-container input, .faq-container textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .faq-container input:hover, .custom-dropdown:hover .custom-dropdown-content {
+            cursor: pointer;
+            background-color: #f0e6d2;
+        }
+        .custom-dropdown {
+            position: relative;
+        }
+        .custom-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            width: calc(100% - 20px);
+            max-height: 180px;
+            overflow-y: auto;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        .custom-dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left; /* Align text to the left */
+        }
+        .custom-dropdown:hover .custom-dropdown-content {
+            display: block;
+        }
+        .custom-dropdown-content a:hover {
+            background-color: white;
+        }
+        .sidebar-tab {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #3a3f51;
+            color: #fff;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+    </style>
+    <script>
+        function showAnswer(question, answer) {
+            document.getElementById('question').value = question;
+            document.getElementById('answer').value = answer;
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const toggleSidebar = document.getElementById('toggleSidebar');
+            const contentContainer = document.querySelector('.content-container');
+
+            toggleSidebar.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                contentContainer.classList.toggle('shifted');
+                toggleSidebar.style.display = 'none';
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    contentContainer.classList.remove('shifted');
+                    toggleSidebar.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="sidebar-tab" id="toggleSidebar">☰</div>
+    <div id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+            <li><a href="#">Treatment</a></li>
+            <li class="dropdown">
+                <a href="#">Records</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('patients') }}">Patient Records</a>
+                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                    <a href="#">Treatment Records</a>
+                </div>
+            </li>
+            <li><a href="#">Maintenance</a></li>
+            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+            <li><a href="{{ url_for('reports') }}">Reports</a></li>
+            <li><a href="#">Payments</a></li>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <li><a href="#">Help</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+    <div class="content-container">
+        <div class="faq-container">
+            <h1>Having any problems?</h1>
+            <label for="question">Questions:</label>
+            <div class="custom-dropdown">
+                <input type="text" id="question" readonly placeholder="Select a question">
+                <div class="custom-dropdown-content">
+                    <a href="#" onclick="showAnswer('Who is Dr. Lorena L. Timola?', 'Dr. Lorena L. Timola is a highly experienced dental practitioner dedicated to providing quality dental care. She specializes in various dental treatments and ensures that her patients receive the best possible care.')">Who is Dr. Lorena L. Timola?</a>
+                    <a href="#" onclick="showAnswer('Where is Dr. Lorena’s clinic located?', 'Dr. Lorena\'s clinic is located at [Clinic Address]. You can visit our contact page for more details and directions.')">Where is Dr. Lorena’s clinic located?</a>
+                    <a href="#" onclick="showAnswer('What are the clinic’s operating hours?', 'The clinic operates from Monday to Saturday, 9:00 AM to 6:00 PM. We are closed on Sundays and public holidays.')">What are the clinic’s operating hours?</a>
+                    <a href="#" onclick="showAnswer('How can I make an appointment with Dr. Lorena?', 'You can make an appointment by calling our clinic at [Clinic Phone Number] or by using our online appointment scheduling system available on our website.')">How can I make an appointment with Dr. Lorena?</a>
+                    <a href="#" onclick="showAnswer('How do I log in to the system?', 'You can log in to the system using your registered email or username and password. If you do not have an account, please contact the clinic administrator for assistance.')">How do I log in to the system?</a>
+                    <a href="#" onclick="showAnswer('I forgot my password. How can I reset it?', 'If you forgot your password, you can reset it by clicking the \'Forgot Password\' link on the login page. Enter your registered email address, and an OTP will be sent to you for verification. Follow the instructions to reset your password.')">I forgot my password. How can I reset it?</a>
+                    <a href="#" onclick="showAnswer('How do I register for a new account?', 'To register for a new account, click the \'Register\' button on the login page and fill in the required information. Your account will be created, and a temporary password will be sent to your registered email.')">How do I register for a new account?</a>
+                    <a href="#" onclick="showAnswer('How can I add a new patient to the system?', 'To add a new patient, log in to the system, go to the \'Patients\' section, and click on \'Add Patient.\' Fill in the required patient information and click \'Submit.\'')">How can I add a new patient to the system?</a>
+                    <a href="#" onclick="showAnswer('How can I view a patient’s records?', 'To view a patient’s records, go to the \'Patient Records\' section, search for the patient by name or ID, and click on their profile. You will be able to see their detailed records, including past appointments and treatments.')">How can I view a patient’s records?</a>
+                    <a href="#" onclick="showAnswer('How do I schedule a new appointment?', 'To schedule a new appointment, go to the \'Appointments\' section, click on \'Create Appointment,\' and fill in the required details such as patient name, date, time, and type of appointment. Click \'Submit\' to save the appointment.')">How do I schedule a new appointment?</a>
+                    <a href="#" onclick="showAnswer('How can I view upcoming appointments?', 'You can view upcoming appointments on the \'Dashboard\' or in the \'Appointments\' section. The calendar view provides a quick overview of all scheduled appointments.')">How can I view upcoming appointments?</a>
+                    <a href="#" onclick="showAnswer('What should I do if I encounter a technical issue?', 'If you encounter any technical issues, please contact our support team at [Support Email] or call [Support Phone Number]. We are here to assist you with any problems you may face.')">What should I do if I encounter a technical issue?</a>
+                    <a href="#" onclick="showAnswer('How do I update my profile information?', 'To update your profile information, log in to the system, go to the \'Profile\' section, and make the necessary changes. Click \'Save\' to update your information.')">How do I update my profile information?</a>
+                </div>
+            </div>
+            <label for="answer">Answer:</label>
+            <textarea id="answer" rows="6" readonly></textarea>
+        </div>
+    </div>
+</body>
+</html>
+
+    

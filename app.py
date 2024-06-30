@@ -858,7 +858,10 @@ def download_report(report_id):
 
     return render_template('report_result.html', report_type=report_type, data=report_details)
 
+@app.route('/help')
+def help():
+    return render_template('help.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
-
