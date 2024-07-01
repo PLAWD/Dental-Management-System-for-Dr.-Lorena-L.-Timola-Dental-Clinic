@@ -13,6 +13,7 @@ from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
+import os
 
 app = Flask(__name__)
 app.config['DATABASE'] = 'instance/DMSDB.db'
@@ -1088,6 +1089,42 @@ def generate_receipt():
 
     return send_file(buffer, as_attachment=True, download_name='receipt.pdf')
 
+@app.route('/maintenance')
+def maintenance():
+    return render_template('maintenance.html')
+
+@app.route('/backup_system', methods=['GET'])
+def backup_system():
+    path = request.args.get('path')
+    name = request.args.get('name')
+    if not os.path.exists(path):
+        return jsonify({"success": False, "error": "Invalid path"}), 400
+    
+    db_path = os.path.join(path, name)
+    try:
+        conn = get_db_connection()
+        backup_conn = sqlite3.connect(db_path)
+        with backup_conn:
+            conn.backup(backup_conn, pages=1, progress=None)
+        backup_conn.close()
+        return jsonify({"success": True, "path": db_path})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/restore_system', methods=['POST'])
+def restore_system():
+    if 'restore_file' not in request.files:
+        return jsonify({"success": False, "error": "No file provided"}), 400
+
+    restore_file = request.files['restore_file']
+    restore_path = os.path.join('DMSDB.db')
+    
+    try:
+        restore_file.save(restore_path)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+    
 @app.route('/help')
 def help():
     return render_template('help.html')

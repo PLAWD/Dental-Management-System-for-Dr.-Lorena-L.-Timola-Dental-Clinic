@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='maintenance.css') }}">
+</head>
+<body>
+    <div class="sidebar-tab" id="sidebarTab">☰</div>
+    <div id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+            <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
+            <li class="dropdown">
+                <a href="#">Records</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('patients') }}">Patient Records</a>
+                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                    <a href="#">Treatment Records</a>
+                </div>
+            </li>
+            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+            <li><a href="{{ url_for('reports') }}">Reports</a></li>
+            <li><a href="{{ url_for('payments') }}">Payments</a></li>
+            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <li><a href="{{ url_for('help') }}">Help</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+    <header>
+        <div class="header-left">
+            <h2>Maintenance</h2>
+        </div>
+        <div class="header-center">
+        </div>
+    </header>
+    <div class="main-content">
+        <div class="maintenance-container">
+            <h2 class="maintenance-header">System Maintenance</h2>
+            <div class="form-group">
+                <label for="backupPath">Backup Path:</label>
+                <input type="file" id="backupPath" webkitdirectory directory style="display:none;">
+                <button id="chooseFolderButton">Choose Folder</button>
+                <span id="selectedPath">Default: Desktop</span>
+            </div>
+            <button onclick="backupSystem()">Backup System</button>
+            <button onclick="restoreSystem()">Restore System</button>
+            <div id="confirmation" style="display:none;">
+                <p>Are you sure you want to restore the system? This action will overwrite current data.</p>
+                <input type="file" id="restoreFile">
+                <button onclick="confirmRestore()">Yes</button>
+                <button onclick="cancelRestore()">No</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let selectedPath = null;
+
+        document.getElementById('chooseFolderButton').addEventListener('click', async () => {
+            const directoryHandle = await window.showDirectoryPicker();
+            selectedPath = directoryHandle.name;
+            document.getElementById('selectedPath').textContent = directoryHandle.name;
+        });
+
+        function backupSystem() {
+            if (!selectedPath) {
+                alert("Please choose a folder for backup.");
+                return;
+            }
+
+            const now = new Date();
+            const date = now.toISOString().split('T')[0];
+            const time = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+            const backupName = `backup_${date}_${time}.db`;
+
+            fetch(`/backup_system?path=${encodeURIComponent(selectedPath)}&name=${backupName}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Backup successful: ' + data.path);
+                    } else {
+                        alert('Backup failed: ' + data.error);
+                    }
+                });
+        }
+
+        function restoreSystem() {
+            document.getElementById('confirmation').style.display = 'block';
+        }
+
+        function confirmRestore() {
+            const restoreFile = document.getElementById('restoreFile').files[0];
+            const formData = new FormData();
+            formData.append('restore_file', restoreFile);
+
+            fetch('/restore_system', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('System restored successfully');
+                } else {
+                    alert('System restore failed: ' + data.error);
+                }
+                document.getElementById('confirmation').style.display = 'none';
+            });
+        }
+
+        function cancelRestore() {
+            document.getElementById('confirmation').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarTab = document.getElementById('sidebarTab');
+            const mainContent = document.querySelector('.main-content');
+
+            sidebarTab.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                mainContent.classList.toggle('shifted');
+                sidebarTab.style.display = 'none';
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    mainContent.classList.remove('shifted');
+                    sidebarTab.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

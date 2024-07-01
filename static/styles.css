@@ -2965,3 +2965,61 @@ body.treatments-page button {
 body.treatments-page button:hover {
     background-color: #0056b3;
 }
+
+/*=============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================
+Specific styles for treatments
+==============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================*/
+
+.maintenance-container {
+    width: 80%;
+    margin: 20px auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.maintenance-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: block;
+    margin: 20px auto;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#confirmation {
+    text-align: center;
+    margin-top: 20px;
+}
