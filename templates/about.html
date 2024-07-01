@@ -111,7 +111,7 @@
         });
         let currentImage = 1;
         function changeImage() {
-            currentImage = (currentImage % 6) + 1; // Cycle through images 1 to 6
+            currentImage = (currentImage % 5) + 1; // Cycle through images 1 to 6
             document.getElementById('mapImage').src = `/static/images/image${currentImage}.png`;
         }
     </script>

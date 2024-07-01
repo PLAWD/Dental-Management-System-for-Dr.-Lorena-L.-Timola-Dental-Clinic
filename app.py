@@ -3,7 +3,7 @@ import smtplib
 import random
 import string
 from datetime import datetime, timedelta, timezone
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, g
 from werkzeug.security import generate_password_hash, check_password_hash
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -862,18 +862,13 @@ def download_report(report_id):
 def help():
     return render_template('help.html')
 
-
-
 @app.route('/inventory')
 def inventory():
     return render_template('inventory.html')
 
-
 @app.route('/about')
 def about():
     return render_template('about.html')
-
-
 
 if __name__ == '__main__':
     app.run(debug=True)
