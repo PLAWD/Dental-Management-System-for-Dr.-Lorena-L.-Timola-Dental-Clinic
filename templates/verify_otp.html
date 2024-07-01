@@ -8,12 +8,12 @@
 </head>
 <body>
     <div class="center-content">
-        <div class="login-container">
+        <div class="otp-container">
             <h2 class="verify-title">Verify OTP</h2>
             <form action="{{ url_for('verify_otp') }}" method="post">
-                <label for="otp">OTP:</label>
-                <input type="text" id="otp" name="otp" required>
-                <button type="submit">Verify</button>
+                <label for="otp" class="l-otp">OTP:</label>
+                <input type="text" id="otp" name="otp" class="otp-input" required>
+                <button type="submit" class="verify-otp-button">Verify</button>
             </form>
             <p><a href="#" id="resend-otp-btn" class="forgor-a" onclick="resendOtp()">Resend OTP</a></p>
             <p><span id="countdown"></span></p>

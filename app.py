@@ -919,7 +919,6 @@ def generate_report(report_type):
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
 
-    # Retrieve logged-in user information from the session
     user_id = session.get('user_id')
     if not user_id:
         return 'User not logged in', 401
@@ -944,9 +943,16 @@ def generate_report(report_type):
             JOIN dentists d ON a.dentist_id = d.dentist_id
             WHERE a.appointment_date BETWEEN ? AND ?''', (start_date, end_date)).fetchall()
     elif report_type == 'payments':
-        data = conn.execute('SELECT payment_id, payment_date, procedures FROM payments WHERE payment_date BETWEEN ? AND ?', (start_date, end_date)).fetchall()
-    elif report_type == 'transactions':
-        data = conn.execute('SELECT transaction_id, transaction_date, procedures FROM transactions WHERE transaction_date BETWEEN ? AND ?', (start_date, end_date)).fetchall()
+        data = conn.execute('''
+            SELECT 
+                p.payment_date AS Date, 
+                p.reference_number AS 'Reference Number', 
+                (pt.last_name || ', ' || pt.first_name) AS 'Patient Name', 
+                p.procedure AS Procedure, 
+                p.amount AS Amount
+            FROM payments p
+            JOIN patients pt ON p.patient_id = pt.patient_id
+            WHERE p.payment_date BETWEEN ? AND ?''', (start_date, end_date)).fetchall()
     else:
         conn.close()
         return 'Invalid report type', 400
@@ -959,37 +965,68 @@ def generate_report(report_type):
     p.drawCentredString(width / 2.0, height - 50, f"{report_type.capitalize()} Report for Dr. Lorena L. Timola Dental Clinic")
 
     p.setFont("Helvetica", 12)
-    p.drawCentredString(width / 2.0, height - 70, f"")
+    p.drawCentredString(width / 2.0, height - 70, f"Blk 1 Lot 4 Brookside Dr. corner Columbus St Brookside Hills Gate 1, Brgy, Cainta, 1900 Rizal")
 
-    p.setFont("Helvetica-Bold", 10)
-    p.drawString(30, height - 130, "Date")
-    p.drawString(100, height - 130, "Patient's Name")
-    p.drawString(230, height - 130, "Appointment Type")
-    p.drawString(360, height - 130, "Procedures")
-    p.drawString(490, height - 130, "Dentist")
+    if report_type == 'appointments':
+        p.setFont("Helvetica-Bold", 10)
+        p.drawString(30, height - 130, "Date")
+        p.drawString(100, height - 130, "Patient's Name")
+        p.drawString(230, height - 130, "Appointment Type")
+        p.drawString(360, height - 130, "Procedures")
+        p.drawString(490, height - 130, "Dentist")
 
-    y = height - 150
-    p.setFont("Helvetica", 10)
-    row_height = 20
+        y = height - 150
+        p.setFont("Helvetica", 10)
+        row_height = 20
 
-    for row in data:
-        p.drawString(30, y, row['appointment_date'])
-        p.drawString(100, y, row['patient_name'])
-        p.drawString(230, y, row['appointment_type'])
-        p.drawString(360, y, row['procedures'])
-        p.drawString(490, y, row['dentist_name'])
-        y -= row_height
-        if y < 50:
-            p.showPage()
-            y = height - 40
-            p.setFont("Helvetica-Bold", 10)
-            p.drawString(30, y, "Date")
-            p.drawString(100, y, "Patient's Name")
-            p.drawString(230, y, "Appointment Type")
-            p.drawString(360, y, "Procedures")
-            p.drawString(490, y, "Dentist")
+        for row in data:
+            p.drawString(30, y, row['appointment_date'])
+            p.drawString(100, y, row['patient_name'])
+            p.drawString(230, y, row['appointment_type'])
+            p.drawString(360, y, row['procedures'])
+            p.drawString(490, y, row['dentist_name'])
             y -= row_height
-            p.setFont("Helvetica", 10)
+            if y < 50:
+                p.showPage()
+                y = height - 40
+                p.setFont("Helvetica-Bold", 10)
+                p.drawString(30, y, "Date")
+                p.drawString(100, y, "Patient's Name")
+                p.drawString(230, y, "Appointment Type")
+                p.drawString(360, y, "Procedures")
+                p.drawString(490, y, "Dentist")
+                y -= row_height
+                p.setFont("Helvetica", 10)
+    elif report_type == 'payments':
+        p.setFont("Helvetica-Bold", 10)
+        p.drawString(30, height - 130, "Date")
+        p.drawString(100, height - 130, "Reference Number")
+        p.drawString(200, height - 130, "Patient's Name")
+        p.drawString(330, height - 130, "Procedure")
+        p.drawString(460, height - 130, "Amount")
+
+        y = height - 150
+        p.setFont("Helvetica", 10)
+        row_height = 20
+
+        for row in data:
+            p.drawString(30, y, row['Date'])
+            p.drawString(100, y, row['Reference Number'])
+            p.drawString(200, y, row['Patient Name'])
+            p.drawString(330, y, row['Procedure'])
+            p.drawString(460, y, str(row['Amount']))
+            y -= row_height
+            if y < 50:
+                p.showPage()
+                y = height - 40
+                p.setFont("Helvetica-Bold", 10)
+                p.drawString(30, y, "Date")
+                p.drawString(100, y, "Reference Number")
+                p.drawString(200, y, "Patient's Name")
+                p.drawString(330, y, "Procedure")
+                p.drawString(460, y, "Amount")
+                y -= row_height
+                p.setFont("Helvetica", 10)
 
     now = datetime.now()
     p.setFont("Helvetica", 10)
@@ -1044,19 +1081,27 @@ def payments():
 
 @app.route('/process_payment', methods=['POST'])
 def process_payment():
-    patient_id = request.form['patient']
-    payment_method = request.form['payment_method']
-    amount = request.form['amount'] if payment_method == 'Cash' else None
-    reference_number = request.form['reference_number'] if payment_method == 'E-wallet' else None
+    patient = request.form.get('patient')
+    payment_method = request.form.get('payment_method')
+    amount = request.form.get('amount')
+    reference_number = request.form.get('reference_number')
+    procedure = request.form.get('procedure')
     payment_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+    # Database connection
     conn = get_db_connection()
-    conn.execute('INSERT INTO payments (patient_id, payment_method, amount, reference_number, payment_date) VALUES (?, ?, ?, ?, ?)',
-                 (patient_id, payment_method, amount, reference_number, payment_date))
+    cursor = conn.cursor()
+
+    # Insert payment record into the database
+    cursor.execute('''
+        INSERT INTO payments (patient_id, payment_method, amount, reference_number, procedure, payment_date)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (patient, payment_method, amount, reference_number, procedure, payment_date))
+
     conn.commit()
     conn.close()
 
-    return redirect(url_for('payments'))
+    return jsonify({'success': True})
 
 @app.route('/generate_receipt')
 def generate_receipt():

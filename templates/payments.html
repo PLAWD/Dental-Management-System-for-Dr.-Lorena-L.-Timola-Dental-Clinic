@@ -48,7 +48,7 @@
     <div class="main-content">
         <div class="payments-container">
             <h2 class="payments-header">Process Payment</h2>
-            <form id="paymentForm" method="POST" action="{{ url_for('process_payment') }}">
+            <form id="paymentForm" method="POST">
                 <div class="form-group">
                     <label for="patient">Select Patient:</label>
                     <select id="patient" name="patient">
@@ -58,21 +58,28 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Payment Method:</label>
-                    <input type="radio" id="cash" name="payment_method" value="Cash" onclick="togglePaymentMethod('cash')" checked>
-                    <label for="cash">Cash</label>
-                    <input type="radio" id="ewallet" name="payment_method" value="E-wallet" onclick="togglePaymentMethod('ewallet')">
-                    <label for="ewallet">E-wallet</label>
+                    <label for="payment_method">Payment Method:</label>
+                    <select id="payment_method" name="payment_method" onchange="togglePaymentMethod(this.value)">
+                        <option value="Select">--- Select ---</option>
+                        <option value="Cash">Cash</option>
+                        <option value="E-wallet">E-wallet</option>
+                    </select>
                 </div>
                 <div id="cashPayment" class="payment-details">
                     <label for="amount">Amount:</label>
                     <input type="text" id="amount" name="amount">
+                    <label for="referenceNumberCash">Reference Number:</label>
+                    <input type="text" id="referenceNumberCash" name="reference_number_cash">
                 </div>
                 <div id="ewalletPayment" class="payment-details" style="display:none;">
                     <p>Scan the QR code to pay:</p>
                     <img src="static/images/gkas.png" alt="QR Code">
                     <label for="referenceNumber">Reference Number:</label>
                     <input type="text" id="referenceNumber" name="reference_number">
+                </div>
+                <div class="form-group">
+                    <label for="procedure">Procedure:</label>
+                    <input type="text" id="procedure" name="procedure">
                 </div>
                 <button type="submit">Submit Payment</button>
             </form>
@@ -81,11 +88,12 @@
                 <button onclick="confirmPayment()">Yes</button>
                 <button onclick="cancelPayment()">No</button>
             </div>
+            <div id="feedback" style="display:none;"></div>
         </div>
     </div>
     <script>
         function togglePaymentMethod(method) {
-            if (method === 'cash') {
+            if (method === 'Cash') {
                 document.getElementById('cashPayment').style.display = 'block';
                 document.getElementById('ewalletPayment').style.display = 'none';
             } else {
@@ -100,7 +108,31 @@
         });
 
         function confirmPayment() {
-            document.getElementById('paymentForm').submit();
+            const form = document.getElementById('paymentForm');
+            const formData = new FormData(form);
+
+            fetch('{{ url_for("process_payment") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const feedback = document.getElementById('feedback');
+                feedback.style.display = 'block';
+                if (data.success) {
+                    feedback.innerHTML = '<p>Payment processed successfully!</p>';
+                    form.reset();  // Reset the form on success
+                } else {
+                    feedback.innerHTML = `<p>Error: ${data.error}</p>`;
+                }
+                document.getElementById('confirmation').style.display = 'none';
+            })
+            .catch(error => {
+                const feedback = document.getElementById('feedback');
+                feedback.style.display = 'block';
+                feedback.innerHTML = `<p>Error: ${error.message}</p>`;
+                document.getElementById('confirmation').style.display = 'none';
+            });
         }
 
         function cancelPayment() {
