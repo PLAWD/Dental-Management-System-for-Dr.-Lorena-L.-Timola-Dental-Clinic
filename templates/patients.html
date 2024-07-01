@@ -87,36 +87,37 @@
     </style>
 </head>
 <body class="patients-page">
-    <div class="sidebar-tab" id="sidebarTab">☰</div>
-    <div id="sidebar" class="sidebar">
-        <ul>
-            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li><a href="#">Profile</a></li>
-            <li><a href="{{ url_for('users') }}">Users</a></li>
-            <li><a href="#">Treatment</a></li>
-            <li class="dropdown">
-                <a href="#">Records</a>
-                <div class="dropdown-content">
-                    <a href="{{ url_for('patients') }}">Patient Records</a>
-                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                    <a href="#">Treatment Records</a>
-                </div>
-            </li>
-            <li><a href="#">Maintenance</a></li>
-            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
-            <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <li><a href="#">Payments</a></li>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <li><a href="#">Help</a></li>
-            <li><a href="#">About</a></li>
-            <li><a href="{{ url_for('logout') }}">Logout</a></li>
-        </ul>
-    </div>
+    <body class="dashboard">
+        <div class="sidebar-tab" id="sidebarTab">☰</div>
+        <div id="sidebar" class="sidebar">
+            <ul>
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="#">Profile</a></li>
+                <li><a href="{{ url_for('users') }}">Users</a></li>
+                <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
+                <li class="dropdown">
+                    <a href="#">Records</a>
+                    <div class="dropdown-content">
+                        <a href="{{ url_for('patients') }}">Patient Records</a>
+                        <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                        <a href="#">Treatment Records</a>
+                    </div>
+                </li>
+                <li><a href="#">Maintenance</a></li>
+                <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+                <li><a href="{{ url_for('reports') }}">Reports</a></li>
+                <li><a href="{{ url_for('payments') }}">Payments</a></li>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <li><a href="{{ url_for('help') }}">Help</a></li>
+                <li><a href="{{ url_for('about') }}">About</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </div>
     <header>
         <div class="header-left">
             <h1>‎ ‎ ‎ ‎ ‎ ‎ ‎Total Patients: {{ total_patients }}</h1>

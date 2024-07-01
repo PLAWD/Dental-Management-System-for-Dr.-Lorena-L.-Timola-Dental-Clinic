@@ -3,12 +3,16 @@ import smtplib
 import random
 import string
 from datetime import datetime, timedelta, timezone
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from functools import wraps
 import json
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
 
 app = Flask(__name__)
 app.config['DATABASE'] = 'instance/DMSDB.db'
@@ -684,31 +688,24 @@ def add_patient():
 
 @app.route('/submit_add_patient', methods=['POST'])
 def submit_add_patient():
-    try:
-        # Retrieve form data from the request object
-        first_name = request.form['first_name']
-        middle_name = request.form.get('middle_name')
-        last_name = request.form['last_name']
-        dob = request.form['dob']
-        sex = request.form['sex']
-        address = request.form['address']
-        city = request.form['city']
-        occupation = request.form.get('occupation')
-        mobile_number = request.form['mobile_number']
+    data = request.json
+    first_name = data.get('first_name')
+    middle_name = data.get('middle_name')
+    last_name = data.get('last_name')
+    dob = data.get('dob')
+    sex = data.get('sex')
+    address = data.get('address')
+    city = data.get('city')
+    occupation = data.get('occupation')
+    phone = data.get('phone')
 
-        # Save the patient information to the database
+    try:
         conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO patients (first_name, middle_name, last_name, dob, sex, address, city, occupation, phone, email)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (first_name, middle_name, last_name, dob, sex, address, city, occupation, mobile_number, ''))
-        patient_id = cursor.lastrowid
+        conn.execute('INSERT INTO patients (first_name, middle_name, last_name, dob, sex, address, city, occupation, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                     (first_name, middle_name, last_name, dob, sex, address, city, occupation, phone))
         conn.commit()
         conn.close()
-
-        # Return the patient ID as JSON
-        return jsonify({'success': True, 'patient_id': patient_id})
+        return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
@@ -811,7 +808,13 @@ def get_records(record_type):
         return jsonify([])
 
     conn.close()
-    return jsonify([dict(row) for row in data])
+    
+@app.route('/treatments')
+def treatments():
+    conn = get_db_connection()
+    patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
+    conn.close()
+    return render_template('treatments.html', patients=patients)
 
 @app.route('/intraoral_exam/<int:patient_id>')
 def intraoral_exam(patient_id):
@@ -910,49 +913,94 @@ def reports():
     return render_template('reports.html')
 
 
-@app.route('/generate_report', methods=['POST'])
-def generate_report():
-    report_type = request.form['report_type']
-    start_date = request.form['start_date']
-    end_date = request.form['end_date']
-    user_id = session.get('user_id')  # Assuming you have user sessions
+@app.route('/generate_report/<report_type>', methods=['GET'])
+def generate_report(report_type):
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    # Retrieve logged-in user information from the session
+    user_id = session.get('user_id')
+    if not user_id:
+        return 'User not logged in', 401
 
     conn = get_db_connection()
+    user = conn.execute('SELECT first_name, last_name FROM users WHERE user_id = ?', (user_id,)).fetchone()
+    if not user:
+        conn.close()
+        return 'Invalid user ID', 400
+    user_name = f"{user['first_name']} {user['last_name']}"
 
     if report_type == 'appointments':
         data = conn.execute('''
-            SELECT * FROM appointments
-            WHERE appointment_date BETWEEN ? AND ?
-        ''', (start_date, end_date)).fetchall()
-        report_details = json.dumps([dict(row) for row in data])
-
+            SELECT 
+                a.appointment_date, 
+                (p.last_name || ', ' || p.first_name) as patient_name, 
+                a.appointment_type, 
+                a.procedures, 
+                (d.first_name || ' ' || d.middle_name || ' ' || d.last_name) as dentist_name 
+            FROM appointments a
+            JOIN patients p ON a.patient_id = p.patient_id
+            JOIN dentists d ON a.dentist_id = d.dentist_id
+            WHERE a.appointment_date BETWEEN ? AND ?''', (start_date, end_date)).fetchall()
     elif report_type == 'payments':
-        data = conn.execute('''
-            SELECT * FROM payments
-            WHERE payment_date BETWEEN ? AND ?
-        ''', (start_date, end_date)).fetchall()
-        report_details = json.dumps([dict(row) for row in data])
-
-    elif report_type == 'patients':
-        data = conn.execute('''
-            SELECT * FROM patients
-            WHERE register_date BETWEEN ? AND ?
-        ''', (start_date, end_date)).fetchall()
-        report_details = json.dumps([dict(row) for row in data])
-
+        data = conn.execute('SELECT payment_id, payment_date, procedures FROM payments WHERE payment_date BETWEEN ? AND ?', (start_date, end_date)).fetchall()
+    elif report_type == 'transactions':
+        data = conn.execute('SELECT transaction_id, transaction_date, procedures FROM transactions WHERE transaction_date BETWEEN ? AND ?', (start_date, end_date)).fetchall()
     else:
         conn.close()
         return 'Invalid report type', 400
 
-    # Insert the report details into the reports table
-    conn.execute('''
-        INSERT INTO reports (report_type, date_generated, start_date, end_date, generated_by, details)
-        VALUES (?, DATE('now'), ?, ?, ?, ?)
-    ''', (report_type, start_date, end_date, user_id, report_details))
-    conn.commit()
-    conn.close()
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
 
-    return render_template('report_result.html', report_type=report_type, data=json.loads(report_details))
+    p.setFont("Helvetica-Bold", 14)
+    p.drawCentredString(width / 2.0, height - 50, f"{report_type.capitalize()} Report for Dr. Lorena L. Timola Dental Clinic")
+
+    p.setFont("Helvetica", 12)
+    p.drawCentredString(width / 2.0, height - 70, f"")
+
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(30, height - 130, "Date")
+    p.drawString(100, height - 130, "Patient's Name")
+    p.drawString(230, height - 130, "Appointment Type")
+    p.drawString(360, height - 130, "Procedures")
+    p.drawString(490, height - 130, "Dentist")
+
+    y = height - 150
+    p.setFont("Helvetica", 10)
+    row_height = 20
+
+    for row in data:
+        p.drawString(30, y, row['appointment_date'])
+        p.drawString(100, y, row['patient_name'])
+        p.drawString(230, y, row['appointment_type'])
+        p.drawString(360, y, row['procedures'])
+        p.drawString(490, y, row['dentist_name'])
+        y -= row_height
+        if y < 50:
+            p.showPage()
+            y = height - 40
+            p.setFont("Helvetica-Bold", 10)
+            p.drawString(30, y, "Date")
+            p.drawString(100, y, "Patient's Name")
+            p.drawString(230, y, "Appointment Type")
+            p.drawString(360, y, "Procedures")
+            p.drawString(490, y, "Dentist")
+            y -= row_height
+            p.setFont("Helvetica", 10)
+
+    now = datetime.now()
+    p.setFont("Helvetica", 10)
+    p.drawString(30, 40, f"Generated by {user_name} on {now.strftime('%Y-%m-%d')} at {now.strftime('%H:%M:%S')}")
+
+    p.showPage()
+    p.save()
+
+    buffer.seek(0)
+    filename = f"{report_type}_{now.strftime('%Y%m%d_%H%M%S')}.pdf"
+    conn.close()
+    return send_file(buffer, as_attachment=True, download_name=filename)
 
 @app.route('/get_report/<report_type>')
 def get_report(report_type):
@@ -985,6 +1033,69 @@ def download_report(report_id):
     report_type = report['report_type']
 
     return render_template('report_result.html', report_type=report_type, data=report_details)
+
+@app.route('/payments')
+def payments():
+    conn = get_db_connection()
+    patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
+    conn.close()
+    return render_template('payments.html', patients=patients)
+
+@app.route('/process_payment', methods=['POST'])
+def process_payment():
+    patient_id = request.form['patient']
+    payment_method = request.form['payment_method']
+    amount = request.form['amount'] if payment_method == 'Cash' else None
+    reference_number = request.form['reference_number'] if payment_method == 'E-wallet' else None
+    payment_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    conn = get_db_connection()
+    conn.execute('INSERT INTO payments (patient_id, payment_method, amount, reference_number, payment_date) VALUES (?, ?, ?, ?, ?)',
+                 (patient_id, payment_method, amount, reference_number, payment_date))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('payments'))
+
+@app.route('/generate_receipt')
+def generate_receipt():
+    patient_id = request.args.get('patient_id')
+    payment_method = request.args.get('payment_method')
+    amount = request.args.get('amount')
+    reference_number = request.args.get('reference_number')
+    payment_date = request.args.get('payment_date')
+
+    conn = get_db_connection()
+    patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
+    conn.close()
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    p.setFont("Helvetica", 12)
+    p.drawString(100, height - 100, f"Receipt for Payment")
+    p.drawString(100, height - 120, f"Patient: {patient['first_name']} {patient['middle_name']} {patient['last_name']}")
+    p.drawString(100, height - 140, f"Payment Method: {payment_method}")
+    p.drawString(100, height - 160, f"Amount: {amount}")
+    p.drawString(100, height - 180, f"Reference Number: {reference_number}")
+    p.drawString(100, height - 200, f"Payment Date: {payment_date}")
+    p.drawString(100, height - 220, f"Generated on: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+
+    return send_file(buffer, as_attachment=True, download_name='receipt.pdf')
+
+@app.route('/help')
+def help():
+    return render_template('help.html')
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
 
 
 if __name__ == '__main__':

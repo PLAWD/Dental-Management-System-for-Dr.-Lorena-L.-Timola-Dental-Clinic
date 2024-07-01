@@ -2806,3 +2806,162 @@ Specific styles for patients
 	text-align: center;
 	margin-bottom: 20px;
 }
+
+/*=============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================
+Specific styles for reports
+==============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================*/
+
+.reports-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.reports-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.report-options,
+.date-range {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.report-options label,
+.date-range label {
+    margin-right: 10px;
+}
+
+.report-options select,
+.date-range input {
+    margin-right: 20px;
+}
+
+button {
+    display: block;
+    margin: 0 auto;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#reportResult {
+    margin-top: 20px;
+    text-align: center;
+}
+
+/*=============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================
+Specific styles for payments
+==============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================*/
+
+.payments-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.payments-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group select,
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group input[type="radio"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.form-group input[type="radio"] {
+    width: auto;
+    margin-right: 10px;
+}
+
+.payment-details {
+    display: none;
+    margin-bottom: 20px;
+}
+
+#confirmation {
+    text-align: center;
+}
+
+#confirmation p {
+    margin-bottom: 20px;
+}
+
+#confirmation button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+}
+
+#confirmation button:hover {
+    background-color: #45a049;
+}
+
+/*=============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================
+Specific styles for treatments
+==============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================*/
+
+body.treatments-page .treatments-container {
+    margin: 20px;
+}
+
+body.treatments-page .treatments-header {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+body.treatments-page .form-group {
+    margin-bottom: 15px;
+}
+
+body.treatments-page label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+body.treatments-page select {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+body.treatments-page button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+body.treatments-page button:hover {
+    background-color: #0056b3;
+}
