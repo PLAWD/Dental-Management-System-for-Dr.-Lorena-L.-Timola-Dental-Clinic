@@ -1460,222 +1460,6 @@ header h1 {
     border: 1px solid #ccc;
 }
 
-/* Specific styles for intraoral page */
-.intraoral-page .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    background-color: #f9f9f9;
-}
-
-.intraoral-page .tab-container {
-    display: flex;
-    justify-content: space-around;
-    width: 100%;
-    margin-bottom: 20px;
-}
-
-.intraoral-page .tab {
-    padding: 10px 20px;
-    background-color: #8B4513;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.intraoral-page .tab.active {
-    background-color: #D2691E;
-}
-
-.intraoral-page .tab-content {
-    display: none;
-    width: 100%;
-}
-
-.intraoral-page .exam-form {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    margin-bottom: 20px;
-}
-
-.intraoral-page .teeth-diagram {
-    width: 60%;
-    background-color: #fff;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.intraoral-page .teeth-section {
-    margin-bottom: 20px;
-}
-
-.intraoral-page .teeth-header {
-    margin-bottom: 10px;
-    font-weight: bold;
-}
-
-.intraoral-page .teeth-row {
-    display: flex;
-    justify-content: space-between;
-}
-
-.intraoral-page .tooth-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.intraoral-page .tooth-box {
-    width: 30px;
-    height: 20px;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin-bottom: 5px;
-    cursor: pointer;
-}
-
-.intraoral-page .tooth {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #ccc;
-    border-radius: 50%;
-    background-color: #f9f9f9;
-    font-size: 14px;
-    margin: 5px;
-}
-
-.intraoral-page .exam-details {
-    width: 35%;
-    background-color: #fff;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.intraoral-page .exam-details p {
-    margin: 5px 0;
-}
-
-.intraoral-page .treatment-record {
-    width: 100%;
-    background-color: #fff;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.intraoral-page .treatment-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.intraoral-page .treatment-table th, .intraoral-page .treatment-table td {
-    padding: 10px;
-    border: 1px solid #ccc;
-    text-align: left;
-}
-
-.intraoral-page .treatment-table tr {
-    cursor: pointer;
-}
-
-.intraoral-page .treatment-table tr:hover {
-    background-color: #f1f1f1;
-}
-
-/* Specific styles for interactive circle */
-.interactive-circle {
-    width: 50px;
-    height: 50px;
-    fill: #FFFFFF;
-    stroke: #8B4513;
-}
-
-.segment {
-    fill: #FFFFFF;
-    stroke: #8B4513;
-    stroke-width: 1;
-}
-
-text {
-    font-size: 25px;
-    fill: #000;
-}
-
-/* Modal styles */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 500px;
-    border-radius: 10px;
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.legend-content {
-    display: flex;
-    justify-content: space-between;
-}
-
-.preview {
-    margin-top: 20px;
-    text-align: center;
-}
-
-.preview-circle {
-    display: inline-block;
-    position: relative;
-}
-
-.legend-preview-text {
-    position: absolute;
-    top: 20%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 14px;
-    text-align: center;
-    width: 80%;
-    height: 80%;
-}
-
 /* Specific styles for users page */
 .users-page .container {
     display: flex;
@@ -3022,4 +2806,233 @@ button:hover {
 #confirmation {
     text-align: center;
     margin-top: 20px;
+}
+
+/*=============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================
+Specific styles for intraoral exam
+==============================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================*/
+
+/* Specific styles for intraoral page */
+.intraoral-page .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #f9f9f9;
+}
+
+.intraoral-page .tab-container {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.intraoral-page .tab {
+    padding: 10px 20px;
+    background-color: #8B4513;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.intraoral-page .tab.active {
+    background-color: #D2691E;
+}
+
+.intraoral-page .tab-content {
+    display: none;
+    width: 100%;
+}
+
+.intraoral-page .exam-form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.intraoral-page .teeth-diagram {
+    width: 100%;
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.intraoral-page .teeth-section {
+    margin-bottom: 20px;
+}
+
+.intraoral-page .teeth-header {
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.intraoral-page .teeth-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.intraoral-page .tooth-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.intraoral-page .tooth-box {
+    width: 30px;
+    height: 20px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+.intraoral-page .tooth {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    background-color: #f9f9f9;
+    font-size: 14px;
+    margin: 5px;
+}
+
+.intraoral-page .exam-details {
+    width: 100%;
+    background-color: #fff;
+    color: #784D3C;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.intraoral-page .exam-details p {
+    margin: 5px 0;
+}
+
+.intraoral-page .treatment-record {
+    width: 100%;
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.intraoral-page .treatment-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.intraoral-page .treatment-table th, .intraoral-page .treatment-table td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+}
+
+.intraoral-page .treatment-table tr {
+    cursor: pointer;
+}
+
+.intraoral-page .treatment-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Specific styles for interactive circle */
+.interactive-circle {
+    width: 50px;
+    height: 50px;
+    fill: #FFFFFF;
+    stroke: #8B4513;
+}
+
+.segment {
+    fill: #FFFFFF;
+    stroke: #8B4513;
+    stroke-width: 1;
+}
+
+.segment:hover {
+    fill: #cf6d7a;
+}
+
+text {
+    font-size: 25px;
+    fill: #000;
+}
+
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 10px;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.legend-content {
+    display: flex;
+    justify-content: space-between;
+}
+
+.preview {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.preview-circle {
+    display: inline-block;
+    position: relative;
+}
+
+.legend-preview-text {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    text-align: center;
+    width: 80%;
+    height: 80%;
 }

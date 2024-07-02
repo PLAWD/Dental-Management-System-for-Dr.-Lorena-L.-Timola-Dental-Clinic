@@ -689,26 +689,30 @@ def add_patient():
 
 @app.route('/submit_add_patient', methods=['POST'])
 def submit_add_patient():
-    data = request.json
-    first_name = data.get('first_name')
-    middle_name = data.get('middle_name')
-    last_name = data.get('last_name')
-    dob = data.get('dob')
-    sex = data.get('sex')
-    address = data.get('address')
-    city = data.get('city')
-    occupation = data.get('occupation')
-    phone = data.get('phone')
+    data = request.get_json()
+    first_name = data['first_name']
+    middle_name = data.get('middle_name', '')
+    last_name = data['last_name']
+    dob = data['dob']
+    sex = data['sex']
+    address = data['address']
+    city = data['city']
+    occupation = data.get('occupation', '')
+    mobile_number = data['mobile_number']
+    email = data['email']
 
     try:
         conn = get_db_connection()
-        conn.execute('INSERT INTO patients (first_name, middle_name, last_name, dob, sex, address, city, occupation, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                     (first_name, middle_name, last_name, dob, sex, address, city, occupation, phone))
+        conn.execute('''
+            INSERT INTO patients (first_name, middle_name, last_name, dob, sex, address, city, occupation, mobile_number, email)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (first_name, middle_name, last_name, dob, sex, address, city, occupation, mobile_number, email))
         conn.commit()
         conn.close()
-        return jsonify({'success': True})
+        return jsonify(success=True)
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        return jsonify(success=False, error=str(e))
+
 
 @app.route('/submit_medical_history', methods=['POST'])
 def submit_medical_history():
@@ -919,6 +923,7 @@ def generate_report(report_type):
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
 
+    # Retrieve logged-in user information from the session
     user_id = session.get('user_id')
     if not user_id:
         return 'User not logged in', 401
@@ -945,17 +950,21 @@ def generate_report(report_type):
     elif report_type == 'payments':
         data = conn.execute('''
             SELECT 
-                p.payment_date AS Date, 
-                p.reference_number AS 'Reference Number', 
-                (pt.last_name || ', ' || pt.first_name) AS 'Patient Name', 
-                p.procedure AS Procedure, 
-                p.amount AS Amount
-            FROM payments p
-            JOIN patients pt ON p.patient_id = pt.patient_id
-            WHERE p.payment_date BETWEEN ? AND ?''', (start_date, end_date)).fetchall()
+                payment_date, 
+                reference_number, 
+                (p.last_name || ', ' || p.first_name) as patient_name, 
+                procedure, 
+                amount 
+            FROM payments pm
+            JOIN patients p ON pm.patient_id = p.patient_id
+            WHERE payment_date BETWEEN ? AND ?''', (start_date, end_date)).fetchall()
     else:
         conn.close()
         return 'Invalid report type', 400
+
+    # Debugging step to print data
+    for row in data:
+        print(dict(row))
 
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
@@ -980,6 +989,7 @@ def generate_report(report_type):
         row_height = 20
 
         for row in data:
+            print("Appointment row:", row)  # Debugging step
             p.drawString(30, y, row['appointment_date'])
             p.drawString(100, y, row['patient_name'])
             p.drawString(230, y, row['appointment_type'])
@@ -1001,20 +1011,21 @@ def generate_report(report_type):
         p.setFont("Helvetica-Bold", 10)
         p.drawString(30, height - 130, "Date")
         p.drawString(100, height - 130, "Reference Number")
-        p.drawString(200, height - 130, "Patient's Name")
-        p.drawString(330, height - 130, "Procedure")
-        p.drawString(460, height - 130, "Amount")
+        p.drawString(230, height - 130, "Patient's Name")
+        p.drawString(360, height - 130, "Procedure")
+        p.drawString(490, height - 130, "Amount")
 
         y = height - 150
         p.setFont("Helvetica", 10)
         row_height = 20
 
         for row in data:
-            p.drawString(30, y, row['Date'])
-            p.drawString(100, y, row['Reference Number'])
-            p.drawString(200, y, row['Patient Name'])
-            p.drawString(330, y, row['Procedure'])
-            p.drawString(460, y, str(row['Amount']))
+            print("Payment row:", row)  # Debugging step
+            p.drawString(30, y, row['payment_date'])
+            p.drawString(100, y, row['reference_number'])
+            p.drawString(230, y, row['patient_name'])
+            p.drawString(360, y, row['procedure'])
+            p.drawString(490, y, str(row['amount']))
             y -= row_height
             if y < 50:
                 p.showPage()
@@ -1022,9 +1033,9 @@ def generate_report(report_type):
                 p.setFont("Helvetica-Bold", 10)
                 p.drawString(30, y, "Date")
                 p.drawString(100, y, "Reference Number")
-                p.drawString(200, y, "Patient's Name")
-                p.drawString(330, y, "Procedure")
-                p.drawString(460, y, "Amount")
+                p.drawString(230, y, "Patient's Name")
+                p.drawString(360, y, "Procedure")
+                p.drawString(490, y, "Amount")
                 y -= row_height
                 p.setFont("Helvetica", 10)
 

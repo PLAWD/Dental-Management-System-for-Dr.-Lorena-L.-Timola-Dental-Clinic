@@ -141,10 +141,14 @@
                         <form>
                             <div class="form-group">
                                 <label>Periodontal Screening</label>
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="G"> Gingivitis
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="EP"> Early Periodontitis
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="MP"> Moderate Periodontitis
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="AP"> Advanced Periodontitis
+                                <input type="checkbox" class="diagnosis-checkbox" id="G" data-code="G">
+                                <label for="G"> Gingivitis </label>
+                                <input type="checkbox" class="diagnosis-checkbox" id="EP" data-code="EP">
+                                <label for="EP"> Early Periodontitis </label>
+                                <input type="checkbox" class="diagnosis-checkbox" id="MP" data-code="MP">
+                                <label for="MP"> Moderate Periodontitis </label>
+                                <input type="checkbox" class="diagnosis-checkbox" id="AP" data-code="AP">
+                                <label for="AP"> Advanced Periodontitis </label>
                             </div>
                             <div class="form-group">
                                 <label>Occlusion</label>
@@ -179,8 +183,207 @@
                 </div>
             </div>
 
+            <div id="overview" class="tab-content" style="display:none;">
+                <!-- Overview content -->
+                <div class="exam-form">
+                    <div class="teeth-diagram">
+                        <div class="teeth-section">
+                            <div class="teeth-header">Upper Temporary Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Upper temporary teeth row -->
+                                {% for number in [55, 54, 53, 52, 51, 61, 62, 63, 64, 65] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="teeth-section">
+                            <div class="teeth-header">Permanent Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Permanent teeth upper row -->
+                                {% for number in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="teeth-row">
+                                <!-- Permanent teeth lower row -->
+                                {% for number in [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="teeth-section">
+                            <div class="teeth-header">Lower Temporary Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Lower temporary teeth row -->
+                                {% for number in [85, 84, 83, 82, 81, 71, 72, 73, 74, 75] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                <div class="exam-details">
+                    <h3>Consent Form</h3>
+                    <form>
+                        <div class="form-group">
+                            <label>Patient's Signature</label>
+                            <input type="text"><br>
+                        </div>
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date"><br>
+                        </div>
+                        <div class="form-group">
+                            <label>Consent</label>
+                            <textarea rows="5"></textarea><br>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
             <div id="medical-history" class="tab-content" style="display:none;">
                 <!-- Medical history content -->
+                <div class="exam-form">
+                    <div class="teeth-diagram">
+                        <div class="teeth-section">
+                            <div class="teeth-header">Upper Temporary Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Upper temporary teeth row -->
+                                {% for number in [55, 54, 53, 52, 51, 61, 62, 63, 64, 65] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="teeth-section">
+                            <div class="teeth-header">Permanent Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Permanent teeth upper row -->
+                                {% for number in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="teeth-row">
+                                <!-- Permanent teeth lower row -->
+                                {% for number in [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="teeth-section">
+                            <div class="teeth-header">Lower Temporary Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Lower temporary teeth row -->
+                                {% for number in [85, 84, 83, 82, 81, 71, 72, 73, 74, 75] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
                 <div class="exam-details">
                     <h3>Medical History</h3>
                     <form>
@@ -225,7 +428,95 @@
             </div>
 
             <div id="consent-form" class="tab-content" style="display:none;">
-                <!-- Consent form content -->
+                <!-- Overview content -->
+                <div class="exam-form">
+                    <div class="teeth-diagram">
+                        <div class="teeth-section">
+                            <div class="teeth-header">Upper Temporary Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Upper temporary teeth row -->
+                                {% for number in [55, 54, 53, 52, 51, 61, 62, 63, 64, 65] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="teeth-section">
+                            <div class="teeth-header">Permanent Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Permanent teeth upper row -->
+                                {% for number in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="teeth-row">
+                                <!-- Permanent teeth lower row -->
+                                {% for number in [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="teeth-section">
+                            <div class="teeth-header">Lower Temporary Teeth</div>
+                            <div class="teeth-row">
+                                <!-- Lower temporary teeth row -->
+                                {% for number in [85, 84, 83, 82, 81, 71, 72, 73, 74, 75] %}
+                                <div class="tooth-container">
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth">
+                                        <svg viewBox="0 0 100 100" class="interactive-circle">
+                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
                 <div class="exam-details">
                     <h3>Consent Form</h3>
                     <form>
@@ -246,6 +537,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Modal for teeth conditions -->
     <div id="conditionModal" class="modal">

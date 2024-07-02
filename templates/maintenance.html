@@ -23,10 +23,10 @@
                     <a href="#">Treatment Records</a>
                 </div>
             </li>
+            <li><a href="#">Maintenance</a></li>
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
             <li><a href="{{ url_for('payments') }}">Payments</a></li>
-            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
             <br>
             <br>
             <br>
@@ -40,7 +40,7 @@
     </div>
     <header>
         <div class="header-left">
-            <h2>Maintenance</h2>
+            <h2>‎ ‎ ‎ ‎ ‎ ‎ ‎Maintenance</h2>
         </div>
         <div class="header-center">
         </div>
@@ -48,12 +48,6 @@
     <div class="main-content">
         <div class="maintenance-container">
             <h2 class="maintenance-header">System Maintenance</h2>
-            <div class="form-group">
-                <label for="backupPath">Backup Path:</label>
-                <input type="file" id="backupPath" webkitdirectory directory style="display:none;">
-                <button id="chooseFolderButton">Choose Folder</button>
-                <span id="selectedPath">Default: Desktop</span>
-            </div>
             <button onclick="backupSystem()">Backup System</button>
             <button onclick="restoreSystem()">Restore System</button>
             <div id="confirmation" style="display:none;">
@@ -65,33 +59,26 @@
         </div>
     </div>
     <script>
-        let selectedPath = null;
-
-        document.getElementById('chooseFolderButton').addEventListener('click', async () => {
-            const directoryHandle = await window.showDirectoryPicker();
-            selectedPath = directoryHandle.name;
-            document.getElementById('selectedPath').textContent = directoryHandle.name;
-        });
-
         function backupSystem() {
-            if (!selectedPath) {
-                alert("Please choose a folder for backup.");
-                return;
-            }
-
             const now = new Date();
             const date = now.toISOString().split('T')[0];
             const time = now.toTimeString().split(' ')[0].replace(/:/g, '-');
             const backupName = `backup_${date}_${time}.db`;
 
-            fetch(`/backup_system?path=${encodeURIComponent(selectedPath)}&name=${backupName}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Backup successful: ' + data.path);
-                    } else {
-                        alert('Backup failed: ' + data.error);
-                    }
+            fetch(`/backup_system`)
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = backupName;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    alert('Backup failed: ' + error.message);
                 });
         }
 
@@ -115,6 +102,10 @@
                 } else {
                     alert('System restore failed: ' + data.error);
                 }
+                document.getElementById('confirmation').style.display = 'none';
+            })
+            .catch(error => {
+                alert('System restore failed: ' + error.message);
                 document.getElementById('confirmation').style.display = 'none';
             });
         }

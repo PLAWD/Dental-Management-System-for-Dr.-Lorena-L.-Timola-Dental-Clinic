@@ -56,6 +56,7 @@
         .form-group input[type="text"],
         .form-group input[type="date"],
         .form-group input[type="number"],
+        .form-group input[type="email"],
         .form-group select {
             width: 100%;
             padding: 8px;
@@ -242,6 +243,10 @@
                     <label for="mobile_number">Mobile Number:</label>
                     <input type="text" id="mobile_number" name="mobile_number" required>
                 </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
                 <div class="submit-group">
                     <button type="submit">Submit</button>
                 </div>
@@ -306,6 +311,7 @@
                 city: document.getElementById('city').value,
                 occupation: document.getElementById('occupation').value,
                 mobile_number: document.getElementById('mobile_number').value,
+                email: document.getElementById('email').value
             };
 
             fetch('{{ url_for("submit_add_patient") }}', {
