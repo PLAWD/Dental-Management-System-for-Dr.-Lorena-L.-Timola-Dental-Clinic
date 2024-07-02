@@ -1104,6 +1104,7 @@ def process_payment():
     payment_method = data['payment_method']
     amount = data['amount']
     services = data['services']
+    payment_type = data['payment_type']  # Full or Partial
     reference_number = data.get('reference_number', '')
 
     # Retrieve logged-in user information from the session
@@ -1118,14 +1119,15 @@ def process_payment():
         return 'Invalid user ID', 400
     user_name = f"{user['first_name']} {user['last_name']}"
 
-    patient = conn.execute('SELECT email FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
+    patient = conn.execute('SELECT email, last_name, first_name, middle_name FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
     if not patient:
         conn.close()
         return 'Invalid patient ID', 400
+    patient_full_name = f"{patient['last_name']} {patient['first_name']} {patient['middle_name']}"
 
     payment_date = datetime.now().strftime('%Y-%m-%d')
-    conn.execute('INSERT INTO payments (patient_id, payment_method, amount, payment_date, reference_number) VALUES (?, ?, ?, ?, ?)',
-                 (patient_id, payment_method, amount, payment_date, reference_number))
+    conn.execute('INSERT INTO payments (patient_id, payment_method, amount, payment_date, reference_number, payment_type) VALUES (?, ?, ?, ?, ?, ?)',
+                 (patient_id, payment_method, amount, payment_date, reference_number, payment_type))
 
     for service in services:
         conn.execute('INSERT INTO services (patient_id, service_name, amount, payment_date) VALUES (?, ?, ?, ?)',
@@ -1146,7 +1148,7 @@ def process_payment():
     p.drawString(inch, height - 2 * inch, f"RECEIVED from Dr. Lorena L. Timola Dental Clinic with TIN 912686393 address")
     p.drawString(inch, height - 2.2 * inch, f"at Blk 1 Lot 4 Brookside Dr. Corner Columbus St Brookside Hills Gate 1, Brgy,")
     p.drawString(inch, height - 2.4 * inch, f"Cainta, 1900 Rizal engaged with the business style of Dental Clinic the sum of")
-    p.drawString(inch, height - 2.6 * inch, f"{amount} in Full or partial payment for {patient['email']}")
+    p.drawString(inch, height - 2.6 * inch, f"{amount} in {payment_type.lower()} payment for {patient_full_name}")
 
     p.drawString(inch, height - 3 * inch, "IN SETTLEMENT FOR THE FOLLOWING")
     p.drawString(inch, height - 3.2 * inch, "Service        Amount")
