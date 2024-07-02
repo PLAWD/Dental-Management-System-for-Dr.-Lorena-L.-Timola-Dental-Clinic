@@ -958,20 +958,16 @@ def generate_report(report_type):
         data = conn.execute('''
             SELECT 
                 payment_date, 
-                reference_number, 
                 (p.last_name || ', ' || p.first_name) as patient_name, 
-                procedure, 
-                amount 
-            FROM payments pm
-            JOIN patients p ON pm.patient_id = p.patient_id
+                payment_method, 
+                amount, 
+                reference_number 
+            FROM payments py
+            JOIN patients p ON py.patient_id = p.patient_id
             WHERE payment_date BETWEEN ? AND ?''', (start_date, end_date)).fetchall()
     else:
         conn.close()
         return 'Invalid report type', 400
-
-    # Debugging step to print data
-    for row in data:
-        print(dict(row))
 
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
@@ -996,7 +992,6 @@ def generate_report(report_type):
         row_height = 20
 
         for row in data:
-            print("Appointment row:", row)  # Debugging step
             p.drawString(30, y, row['appointment_date'])
             p.drawString(100, y, row['patient_name'])
             p.drawString(230, y, row['appointment_type'])
@@ -1014,35 +1009,35 @@ def generate_report(report_type):
                 p.drawString(490, y, "Dentist")
                 y -= row_height
                 p.setFont("Helvetica", 10)
+
     elif report_type == 'payments':
         p.setFont("Helvetica-Bold", 10)
         p.drawString(30, height - 130, "Date")
-        p.drawString(100, height - 130, "Reference Number")
-        p.drawString(230, height - 130, "Patient's Name")
-        p.drawString(360, height - 130, "Procedure")
-        p.drawString(490, height - 130, "Amount")
+        p.drawString(100, height - 130, "Patient Name")
+        p.drawString(230, height - 130, "Payment Type")
+        p.drawString(360, height - 130, "Amount")
+        p.drawString(490, height - 130, "Reference Number")
 
         y = height - 150
         p.setFont("Helvetica", 10)
         row_height = 20
 
         for row in data:
-            print("Payment row:", row)  # Debugging step
             p.drawString(30, y, row['payment_date'])
-            p.drawString(100, y, row['reference_number'])
-            p.drawString(230, y, row['patient_name'])
-            p.drawString(360, y, row['procedure'])
-            p.drawString(490, y, str(row['amount']))
+            p.drawString(100, y, row['patient_name'])
+            p.drawString(230, y, row['payment_method'])
+            p.drawString(360, y, str(row['amount']))
+            p.drawString(490, y, row['reference_number'])
             y -= row_height
             if y < 50:
                 p.showPage()
                 y = height - 40
                 p.setFont("Helvetica-Bold", 10)
                 p.drawString(30, y, "Date")
-                p.drawString(100, y, "Reference Number")
-                p.drawString(230, y, "Patient's Name")
-                p.drawString(360, y, "Procedure")
-                p.drawString(490, y, "Amount")
+                p.drawString(100, y, "Patient Name")
+                p.drawString(230, y, "Payment Type")
+                p.drawString(360, y, "Amount")
+                p.drawString(490, y, "Reference Number")
                 y -= row_height
                 p.setFont("Helvetica", 10)
 
