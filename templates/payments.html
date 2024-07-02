@@ -78,8 +78,18 @@
                     <input type="text" id="referenceNumber" name="reference_number">
                 </div>
                 <div class="form-group">
-                    <label for="procedure">Procedure:</label>
-                    <input type="text" id="procedure" name="procedure">
+                    <label for="services">Services:</label>
+                    <div id="services">
+                        <!-- Services will be dynamically added here -->
+                    </div>
+                    <button type="button" onclick="addService()">+ Add Service</button>
+                </div>
+                <div class="form-group">
+                    <label for="payment_type">Payment Type:</label>
+                    <select id="payment_type" name="payment_type">
+                        <option value="full">Full</option>
+                        <option value="partial">Partial</option>
+                    </select>
                 </div>
                 <button type="submit">Submit Payment</button>
             </form>
@@ -102,6 +112,22 @@
             }
         }
 
+        function addService() {
+            const servicesContainer = document.getElementById('services');
+            const serviceDiv = document.createElement('div');
+            serviceDiv.classList.add('service-entry');
+            serviceDiv.innerHTML = `
+                <input type="text" name="service_name" placeholder="Service Name">
+                <input type="text" name="service_amount" placeholder="Amount">
+                <button type="button" onclick="removeService(this)">- Remove</button>
+            `;
+            servicesContainer.appendChild(serviceDiv);
+        }
+
+        function removeService(button) {
+            button.parentElement.remove();
+        }
+
         document.getElementById('paymentForm').addEventListener('submit', function(event) {
             event.preventDefault();
             document.getElementById('confirmation').style.display = 'block';
@@ -110,10 +136,22 @@
         function confirmPayment() {
             const form = document.getElementById('paymentForm');
             const formData = new FormData(form);
+            const services = [];
+            document.querySelectorAll('.service-entry').forEach(entry => {
+                const serviceName = entry.querySelector('input[name="service_name"]').value;
+                const serviceAmount = entry.querySelector('input[name="service_amount"]').value;
+                services.push({ name: serviceName, amount: serviceAmount });
+            });
+
+            const data = Object.fromEntries(formData);
+            data.services = services;
 
             fetch('{{ url_for("process_payment") }}', {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
             })
             .then(response => response.json())
             .then(data => {

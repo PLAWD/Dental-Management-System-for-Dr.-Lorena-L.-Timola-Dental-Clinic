@@ -3,7 +3,9 @@ import smtplib
 import random
 import string
 from datetime import datetime, timedelta, timezone
+from email.mime.application import MIMEApplication
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
+from reportlab.lib.units import inch
 from werkzeug.security import generate_password_hash, check_password_hash
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -52,12 +54,17 @@ def get_db_connection():
 def generate_otp():
     return ''.join(random.choices(string.digits, k=6))
 
-def send_email(to_email, subject, body):
+def send_email(to_email, subject, body, attachment=None, attachment_name=None):
     msg = MIMEMultipart()
     msg['From'] = EMAIL_ADDRESS
     msg['To'] = to_email
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
+
+    if attachment and attachment_name:
+        part = MIMEApplication(attachment.read(), Name=attachment_name)
+        part['Content-Disposition'] = f'attachment; filename="{attachment_name}"'
+        msg.attach(part)
 
     with smtplib.SMTP('smtp.gmail.com', 587) as server:
         server.starttls()
@@ -1092,58 +1099,76 @@ def payments():
 
 @app.route('/process_payment', methods=['POST'])
 def process_payment():
-    patient = request.form.get('patient')
-    payment_method = request.form.get('payment_method')
-    amount = request.form.get('amount')
-    reference_number = request.form.get('reference_number')
-    procedure = request.form.get('procedure')
-    payment_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    data = request.json
+    patient_id = data['patient']
+    payment_method = data['payment_method']
+    amount = data['amount']
+    services = data['services']
+    reference_number = data.get('reference_number', '')
 
-    # Database connection
+    # Retrieve logged-in user information from the session
+    user_id = session.get('user_id')
+    if not user_id:
+        return 'User not logged in', 401
+
     conn = get_db_connection()
-    cursor = conn.cursor()
+    user = conn.execute('SELECT first_name, last_name FROM users WHERE user_id = ?', (user_id,)).fetchone()
+    if not user:
+        conn.close()
+        return 'Invalid user ID', 400
+    user_name = f"{user['first_name']} {user['last_name']}"
 
-    # Insert payment record into the database
-    cursor.execute('''
-        INSERT INTO payments (patient_id, payment_method, amount, reference_number, procedure, payment_date)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (patient, payment_method, amount, reference_number, procedure, payment_date))
+    patient = conn.execute('SELECT email FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
+    if not patient:
+        conn.close()
+        return 'Invalid patient ID', 400
+
+    payment_date = datetime.now().strftime('%Y-%m-%d')
+    conn.execute('INSERT INTO payments (patient_id, payment_method, amount, payment_date, reference_number) VALUES (?, ?, ?, ?, ?)',
+                 (patient_id, payment_method, amount, payment_date, reference_number))
+
+    for service in services:
+        conn.execute('INSERT INTO services (patient_id, service_name, amount, payment_date) VALUES (?, ?, ?, ?)',
+                     (patient_id, service['name'], service['amount'], payment_date))
 
     conn.commit()
-    conn.close()
 
-    return jsonify({'success': True})
-
-@app.route('/generate_receipt')
-def generate_receipt():
-    patient_id = request.args.get('patient_id')
-    payment_method = request.args.get('payment_method')
-    amount = request.args.get('amount')
-    reference_number = request.args.get('reference_number')
-    payment_date = request.args.get('payment_date')
-
-    conn = get_db_connection()
-    patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
-    conn.close()
-
+    # Generate the PDF receipt
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    p.setFont("Helvetica", 12)
-    p.drawString(100, height - 100, f"Receipt for Payment")
-    p.drawString(100, height - 120, f"Patient: {patient['first_name']} {patient['middle_name']} {patient['last_name']}")
-    p.drawString(100, height - 140, f"Payment Method: {payment_method}")
-    p.drawString(100, height - 160, f"Amount: {amount}")
-    p.drawString(100, height - 180, f"Reference Number: {reference_number}")
-    p.drawString(100, height - 200, f"Payment Date: {payment_date}")
-    p.drawString(100, height - 220, f"Generated on: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    p.setFont("Helvetica-Bold", 14)
+    p.drawCentredString(width / 2.0, height - inch, "Service Invoice")
 
-    p.showPage()
+    p.setFont("Helvetica", 12)
+    p.drawString(inch, height - 1.5 * inch, f"Date: {payment_date}")
+    p.drawString(inch, height - 2 * inch, f"RECEIVED from Dr. Lorena L. Timola Dental Clinic with TIN 912686393 address")
+    p.drawString(inch, height - 2.2 * inch, f"at Blk 1 Lot 4 Brookside Dr. Corner Columbus St Brookside Hills Gate 1, Brgy,")
+    p.drawString(inch, height - 2.4 * inch, f"Cainta, 1900 Rizal engaged with the business style of Dental Clinic the sum of")
+    p.drawString(inch, height - 2.6 * inch, f"{amount} in Full or partial payment for {patient['email']}")
+
+    p.drawString(inch, height - 3 * inch, "IN SETTLEMENT FOR THE FOLLOWING")
+    p.drawString(inch, height - 3.2 * inch, "Service        Amount")
+
+    y = height - 3.4 * inch
+    for service in services:
+        p.drawString(inch, y, f"{service['name']}        {service['amount']}")
+        y -= 0.2 * inch
+
+    p.drawString(inch, y - 0.4 * inch, f"FORM OF PAYMENT: {payment_method}")
+    p.drawString(inch, y - 0.6 * inch, f"By: {user_name}")
+
     p.save()
     buffer.seek(0)
 
-    return send_file(buffer, as_attachment=True, download_name='receipt.pdf')
+    pdf_data = buffer.getvalue()
+
+    # Send the email with the PDF receipt
+    send_email(patient['email'], "Payment Receipt", "Please find attached your payment receipt.", attachment=BytesIO(pdf_data), attachment_name="Receipt.pdf")
+
+    conn.close()
+    return jsonify({'success': True})
 
 @app.route('/maintenance')
 def maintenance():
