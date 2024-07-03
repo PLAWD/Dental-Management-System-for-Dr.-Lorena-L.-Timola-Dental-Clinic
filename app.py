@@ -260,73 +260,16 @@ def dashboard():
 
 
 
-@app.route('/create_appointment')
+@app.route('/create_appointment', methods=['GET'])
 def create_appointment():
     conn = get_db_connection()
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
     statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
     conn.close()
-    return render_template('dashboard.html', patients=patients, dentists=dentists, statuses=statuses)
-
+    return render_template('create_appointment.html', patients=patients, dentists=dentists, statuses=statuses)
 
 from flask import request, jsonify
-
-
-@app.route('/submit_appointment', methods=['POST'])
-def submit_appointment():
-    data = request.get_json()
-    if not data:
-        return jsonify({'success': False, 'message': 'No data provided'}), 400
-
-    try:
-        patient_id = data['patient_id']
-        appointment_date = data['appointment_date']
-        start_time = data['start_time']
-        end_time = data['end_time']
-        appointment_type = data['appointment_type']
-        chief_complaints = data['chief_complaints']
-        procedures = data['procedures']
-        dentist_id = data['dentist_id']
-        status_id = data['status_id']
-    except KeyError as e:
-        return jsonify({'success': False, 'message': f'Missing key: {str(e)}'}), 400
-
-    conn = get_db_connection()
-
-    # Check for conflicts
-    conflict = conn.execute('''
-        SELECT a.*, 
-               p.first_name || " " || p.middle_name || " " || p.last_name AS patient_name,
-               d.first_name || " " || d.last_name AS dentist_name
-        FROM appointments a
-        JOIN patients p ON a.patient_id = p.patient_id
-        JOIN dentists d ON a.dentist_id = d.dentist_id
-        WHERE a.dentist_id = ? AND a.appointment_date = ? AND (
-            (a.start_time <= ? AND a.end_time > ?) OR
-            (a.start_time < ? AND a.end_time >= ?) OR
-            (a.start_time >= ? AND a.end_time <= ?)
-        )
-    ''', (dentist_id, appointment_date, start_time, start_time, end_time, end_time, start_time, end_time)).fetchone()
-
-    if conflict:
-        conn.close()
-        return jsonify({'success': False, 'conflict': dict(conflict)})
-
-    conn.execute('''
-        INSERT INTO appointments (patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (
-        patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id,
-        status_id))
-
-    # Update the patient's next appointment
-    conn.execute('UPDATE patients SET next_appointment = ? WHERE patient_id = ?', (appointment_date, patient_id))
-    conn.commit()
-    conn.close()
-
-    return jsonify({'success': True})
-
 
 @app.route('/view_appointment')
 def view_appointment():
@@ -448,22 +391,7 @@ def search():
     query = request.args.get('query')
     return f"Search results for: {query}"
 
-@app.route('/profile')
-def profile():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
 
-    conn = get_db_connection()
-    user = conn.execute('SELECT first_name || " " || last_name AS name, username, email, role_id, userstat_id FROM users WHERE user_id = ?', (session['user_id'],)).fetchone()
-    conn.close()
-
-    if user:
-        role_name = get_role_name(user['role_id'])
-        user_status = get_user_status(user['userstat_id'])
-        return render_template('profile.html', name=user['name'], username=user['username'], email=user['email'], role=role_name, status=user_status)
-    else:
-        flash('User not found.')
-        return redirect(url_for('dashboard'))
 
 @app.route('/users')
 @role_required([1])  # Only admin can access
@@ -809,13 +737,6 @@ def patient_records():
     conn.close()
     return render_template('patients.html', records=patient_records)
 
-@app.route('/appointment_records')
-def appointment_records():
-    conn = get_db_connection()
-    appointment_records = conn.execute('SELECT * FROM appointments').fetchall()
-    conn.close()
-    return render_template('appointment_records.html', records=appointment_records)
-
 @app.route('/records')
 @role_required([1])  # Only admin can access
 def records():
@@ -854,8 +775,6 @@ def intraoral_exam(patient_id):
         flash('Patient not found!')
         return redirect(url_for('patients'))
     return render_template('intraoral_exam.html', patient=patient)
-
-
 
 @app.route('/logout')
 def logout():
@@ -1228,6 +1147,105 @@ def help():
 def about():
     return render_template('about.html')
 
+@app.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    user = conn.execute('SELECT first_name || " " || last_name AS name, username, email, role_id, userstat_id FROM users WHERE user_id = ?', (session['user_id'],)).fetchone()
+    conn.close()
+
+    if user:
+        role_name = get_role_name(user['role_id'])
+        user_status = get_user_status(user['userstat_id'])
+        return render_template('profile.html', name=user['name'], username=user['username'], email=user['email'], role=role_name, status=user_status)
+    else:
+        flash('User not found.')
+        return redirect(url_for('dashboard'))
+
+@app.route('/appointment_records')
+@role_required([1, 2])  # Both admin and user can access
+def appointment_records():
+    conn = get_db_connection()
+    appointment_records = conn.execute('''
+        SELECT 
+            a.*, 
+            p.first_name || " " || p.middle_name || " " || p.last_name AS patient_name,
+            d.first_name || " " || d.last_name AS dentist_name,
+            s.status_name
+        FROM appointments a
+        JOIN patients p ON a.patient_id = p.patient_id
+        JOIN dentists d ON a.dentist_id = d.dentist_id
+        JOIN AppointmentStatus s ON a.status_id = s.status_id
+    ''').fetchall()
+
+    patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
+    dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
+    statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
+    conn.close()
+
+    return render_template('appointment_records.html', 
+                           records=appointment_records, 
+                           patients=patients, 
+                           dentists=dentists, 
+                           statuses=statuses)
+
+@app.route('/submit_appointment', methods=['POST'])
+def submit_appointment():
+    data = request.json  
+
+    # Ensure JSON data is used
+    if not data:
+        return jsonify({'success': False, 'message': 'No data provided'}), 400
+
+    try:
+        patient_id = data['patient_id']
+        appointment_date = data['appointment_date']
+        start_time = data['start_time']
+        end_time = data['end_time']
+        appointment_type = data['appointment_type']
+        chief_complaints = data['chief_complaints']
+        procedures = data['procedures']
+        dentist_id = data['dentist_id']
+        status_id = data['status_id']
+    except KeyError as e:
+        return jsonify({'success': False, 'message': f'Missing key: {str(e)}'}), 400
+
+    conn = get_db_connection()
+
+    # Check for conflicts
+    conflict = conn.execute('''
+        SELECT a.*, 
+               p.first_name || " " || p.middle_name || " " || p.last_name AS patient_name,
+               d.first_name || " " || d.last_name AS dentist_name
+        FROM appointments a
+        JOIN patients p ON a.patient_id = p.patient_id
+        JOIN dentists d ON a.dentist_id = d.dentist_id
+        WHERE a.dentist_id = ? AND a.appointment_date = ? AND (
+            (a.start_time <= ? AND a.end_time > ?) OR
+            (a.start_time < ? AND a.end_time >= ?) OR
+            (a.start_time >= ? AND a.end_time <= ?)
+        )
+    ''', (dentist_id, appointment_date, start_time, start_time, end_time, end_time, start_time, end_time)).fetchone()
+
+    if conflict:
+        conn.close()
+        return jsonify({'success': False, 'conflict': dict(conflict)})
+
+    conn.execute('''
+        INSERT INTO appointments (patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id,
+        status_id))
+
+    # Update the patient's next appointment
+    conn.execute('UPDATE patients SET next_appointment = ? WHERE patient_id = ?', (appointment_date, patient_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
 
 
 if __name__ == '__main__':

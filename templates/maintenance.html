@@ -12,7 +12,7 @@
     <div id="sidebar" class="sidebar">
         <ul>
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li><a href="#">Profile</a></li>
+            <li><a href="{{ url_for('profile') }}">Profile</a></li>
             <li><a href="{{ url_for('users') }}">Users</a></li>
             <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
             <li class="dropdown">
@@ -23,7 +23,7 @@
                     <a href="#">Treatment Records</a>
                 </div>
             </li>
-            <li><a href="#">Maintenance</a></li>
+            <li><a href="{{ url_for('maintenance') }}s">Maintenance</a></li>
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
             <li><a href="{{ url_for('payments') }}">Payments</a></li>

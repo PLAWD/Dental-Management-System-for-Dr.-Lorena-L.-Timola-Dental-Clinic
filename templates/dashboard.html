@@ -16,7 +16,7 @@
     <div id="sidebar" class="sidebar">
         <ul>
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li><a href="#">Profile</a></li>
+            <li><a href="{{ url_for('profile') }}">Profile</a></li>
             <li><a href="{{ url_for('users') }}">Users</a></li>
             <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
             <li class="dropdown">
@@ -159,7 +159,51 @@
             </form>
         </div>
     </div>
+    <script>
+        function submitAppointment(event) {
+            event.preventDefault();
+            const formData = {
+                patient_id: document.getElementById('patient_id').value,
+                appointment_date: document.getElementById('appointment_date').value,
+                start_time: document.getElementById('start_time').value,
+                end_time: document.getElementById('end_time').value,
+                appointment_type: document.getElementById('appointment_type').value,
+                chief_complaints: document.getElementById('chief_complaints').value,
+                procedures: document.getElementById('procedures').value,
+                dentist_id: document.getElementById('dentist_id').value,
+                status_id: document.getElementById('status_id').value
+            };
 
+            $.ajax({
+                url: '{{ url_for("submit_appointment") }}',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function (data) {
+                    if (data.success) {
+                        $('#calendar').fullCalendar('refetchEvents');
+                        closeCreateAppointmentModal();
+                        showModal('successModal', 'Appointment created successfully.');
+                    } else {
+                        if (data.conflict) {
+                            const conflictMessage = `Conflict with appointment:
+                                Patient: ${data.conflict.patient_name},
+                                Dentist: ${data.conflict.dentist_name},
+                                Date: ${data.conflict.appointment_date},
+                                Start Time: ${data.conflict.start_time},
+                                End Time: ${data.conflict.end_time}`;
+                            showModal('errorModal', conflictMessage);
+                        } else {
+                            showModal('errorModal', 'Failed to create appointment.');
+                        }
+                    }
+                },
+                error: function (xhr, status, error) {
+                    showModal('errorModal', 'Failed to create appointment: ' + error);
+                }
+            });
+        }
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');

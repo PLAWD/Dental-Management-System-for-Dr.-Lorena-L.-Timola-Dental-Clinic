@@ -63,7 +63,7 @@
             document.addEventListener('click', function (event) {
                 if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
                     sidebar.classList.remove('show');
-                    contentContainer.   classList.remove('shifted');
+                    contentContainer.classList.remove('shifted');
                     toggleSidebar.style.display = 'block';
                 }
             });
@@ -71,6 +71,36 @@
     </script>
 </head>
 <body>
+    <div class="sidebar-tab" id="toggleSidebar">☰</div>
+    <div id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('profile') }}">Profile</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+            <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
+            <li class="dropdown">
+                <a href="#">Records</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('patients') }}">Patient Records</a>
+                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                    <a href="#">Treatment Records</a>
+                </div>
+            </li>
+            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
+            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+            <li><a href="{{ url_for('reports') }}">Reports</a></li>
+            <li><a href="{{ url_for('payments') }}">Payments</a></li>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <li><a href="{{ url_for('help') }}">Help</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
     <div class="profile-container">
         <div class="profile-details">
             <h1>{{ name }}</h1>

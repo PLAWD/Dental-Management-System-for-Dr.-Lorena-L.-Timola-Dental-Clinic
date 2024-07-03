@@ -11,22 +11,22 @@
     <div id="sidebar" class="sidebar">
         <ul>
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li><a href="#">Profile</a></li>
+            <li><a href="{{ url_for('profile') }}">Profile</a></li>
             <li><a href="{{ url_for('users') }}">Users</a></li>
             <li><a href="{{ url_for('patients') }}">Patients</a></li>
             <li><a href="{{ url_for('records') }}">Records</a></li>
-            <li><a href="#">Maintenance</a></li>
-            <li><a href="#">Inventory</a></li>
+            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
+            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <li><a href="#">Payments</a></li>
+            <li><a href="{{ url_for('payments') }}">Payments</a></li>
             <br>
             <br>
             <br>
             <br>
             <br>
             <br>
-            <li><a href="#">Help</a></li>
-            <li><a href="#">About</a>
+            <li><a href="{{ url_for('help') }}">Help</a></li>
+            <li><a href="{{ url_for('about') }}">About</a>
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
         </ul>
     </div>
