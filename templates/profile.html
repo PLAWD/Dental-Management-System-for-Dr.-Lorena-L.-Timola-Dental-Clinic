@@ -131,10 +131,48 @@
         <div class="modal-content">
             <span class="modal-close" onclick="document.getElementById('changeEmailModal').style.display='none'">&times;</span>
             <h2>Change Email</h2>
-            <form method="POST" action="{{ url_for('change_email') }}">
+            <form id="sendOtpForm">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+                <label for="current_email">Current Email:</label>
+                <input type="email" id="current_email" name="current_email" required>
+                <button type="submit" class="btn">Send OTP</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="verifyOtpModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="document.getElementById('verifyOtpModal').style.display='none'">&times;</span>
+            <h2>Verify OTP</h2>
+            <form id="verifyOtpForm">
+                <label for="otp">Enter OTP:</label>
+                <input type="text" id="otp" name="otp" required>
+                <button type="submit" class="btn">Verify OTP</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="newEmailModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="document.getElementById('newEmailModal').style.display='none'">&times;</span>
+            <h2>Enter New Email</h2>
+            <form id="sendNewEmailOtpForm">
                 <label for="new_email">New Email:</label>
                 <input type="email" id="new_email" name="new_email" required>
-                <button type="submit" class="btn">Update Email</button>
+                <button type="submit" class="btn">Send OTP</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="verifyNewEmailOtpModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="document.getElementById('verifyNewEmailOtpModal').style.display='none'">&times;</span>
+            <h2>Verify New Email OTP</h2>
+            <form id="verifyNewEmailOtpForm">
+                <label for="new_email_otp">Enter OTP:</label>
+                <input type="text" id="new_email_otp" name="new_email_otp" required>
+                <button type="submit" class="btn">Verify OTP</button>
             </form>
         </div>
     </div>
@@ -153,26 +191,106 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const sidebar = document.getElementById('sidebar');
-            const toggleSidebar = document.getElementById('toggleSidebar');
-            const contentContainer = document.querySelector('.content-container');
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebar = document.getElementById('sidebar');
+        const toggleSidebar = document.getElementById('toggleSidebar');
+        const contentContainer = document.querySelector('.content-container');
 
-            toggleSidebar.addEventListener('click', function () {
-                sidebar.classList.toggle('show');
-                contentContainer.classList.toggle('shifted');
-                toggleSidebar.style.display = 'none';
-            });
+        toggleSidebar.addEventListener('click', function () {
+            sidebar.classList.toggle('show');
+            contentContainer.classList.toggle('shifted');
+            toggleSidebar.style.display = 'none';
+        });
 
-            document.addEventListener('click', function (event) {
-                if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
-                    sidebar.classList.remove('show');
-                    contentContainer.classList.remove('shifted');
-                    toggleSidebar.style.display = 'block';
+        document.addEventListener('click', function (event) {
+            if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
+                sidebar.classList.remove('show');
+                contentContainer.classList.remove('shifted');
+                toggleSidebar.style.display = 'block';
+            }
+        });
+
+        document.getElementById('sendOtpForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('{{ url_for("send_otp") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('OTP sent to your email.');
+                    document.getElementById('changeEmailModal').style.display = 'none';
+                    document.getElementById('verifyOtpModal').style.display = 'block';
+                } else {
+                    alert(data.message);
                 }
             });
         });
-    </script>
+
+        document.getElementById('verifyOtpForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('{{ url_for("verify_otp") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.next_step === 'new_email') {
+                    alert('OTP verified. You can now enter your new email.');
+                    document.getElementById('verifyOtpModal').style.display = 'none';
+                    document.getElementById('newEmailModal').style.display = 'block';
+                } else if (data.success && data.next_step === 'verify_new_email') {
+                    alert('OTP verified. Please check your new email for another OTP.');
+                    document.getElementById('verifyOtpModal').style.display = 'none';
+                    document.getElementById('verifyNewEmailOtpModal').style.display = 'block';
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+
+        document.getElementById('sendNewEmailOtpForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('{{ url_for("send_new_email_otp") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('OTP sent to your new email.');
+                    document.getElementById('newEmailModal').style.display = 'none';
+                    document.getElementById('verifyNewEmailOtpModal').style.display = 'block';
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+
+        document.getElementById('verifyNewEmailOtpForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('{{ url_for("verify_otp") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Your email has been changed successfully.');
+                    document.getElementById('verifyNewEmailOtpModal').style.display = 'none';
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+    });
+</script>
 </body>
 </html>
