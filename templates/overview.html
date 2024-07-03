@@ -13,13 +13,13 @@
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
             <li><a href="{{ url_for('profile') }}">Profile</a></li>
             <li><a href="{{ url_for('users') }}">Users</a></li>
-            <li><a href="#">Treatment</a></li>
+            <li><a href="{{ url_for('treatment') }}">Treatment</a></li>
             <li class="dropdown">
                 <a href="#">Records</a>
                 <div class="dropdown-content">
                     <a href="{{ url_for('patients') }}">Patient Records</a>
                     <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                    <a href="#">Treatment Records</a>
+                    <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
                 </div>
             </li>
             <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>

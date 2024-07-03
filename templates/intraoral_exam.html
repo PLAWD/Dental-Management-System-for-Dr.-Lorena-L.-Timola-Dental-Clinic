@@ -19,13 +19,13 @@
                 <div class="dropdown-content">
                     <a href="{{ url_for('patients') }}">Patient Records</a>
                     <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                    <a href="#">Treatment Records</a>
+                    <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
                 </div>
             </li>
             <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <li><a href="#">Payments</a></li>
+            <li><a href="{{ url_for('payments') }}">Payments</a></li>
             <br>
             <br>
             <br>
@@ -40,15 +40,13 @@
     <div class="main-content">
         <div class="container">
             <div class="tab-container">
-                <button class="tab active" onclick="openTab(event, 'enter-diagnosis')">Enter diagnosis</button>
-                <button class="tab" onclick="openTab(event, 'overview')">Overview</button>
+                <button class="tab active" onclick="openTab(event, 'consent-form')">Consent Form</button>
                 <button class="tab" onclick="openTab(event, 'medical-history')">Medical History</button>
-                <button class="tab" onclick="openTab(event, 'consent-form')">Consent Form</button>
+                <button class="tab" onclick="openTab(event, 'overview')">Overview</button>
+                <button class="tab" onclick="openTab(event, 'enter-diagnosis')">Enter Diagnosis</button>
             </div>
 
-            <div id="enter-diagnosis" class="tab-content">
-                <!-- Enter diagnosis content -->
-                <div class="exam-form">
+            <div class="exam-form">
                     <div class="teeth-diagram">
                         <div class="teeth-section">
                             <div class="teeth-header">Upper Temporary Teeth</div>
@@ -56,8 +54,9 @@
                                 <!-- Upper temporary teeth row -->
                                 {% for number in [55, 54, 53, 52, 51, 61, 62, 63, 64, 65] %}
                                 <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})">
+                                        <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
+                                    </div>
                                     <div class="tooth">
                                         <svg viewBox="0 0 100 100" class="interactive-circle">
                                             <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
@@ -78,8 +77,9 @@
                                 <!-- Permanent teeth upper row -->
                                 {% for number in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] %}
                                 <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})">
+                                        <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
+                                    </div>
                                     <div class="tooth">
                                         <svg viewBox="0 0 100 100" class="interactive-circle">
                                             <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
@@ -97,8 +97,9 @@
                                 <!-- Permanent teeth lower row -->
                                 {% for number in [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] %}
                                 <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                     <div class="tooth-box" onclick="openModal(this, {{ number }})">
+                                        <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
+                                    </div>
                                     <div class="tooth">
                                         <svg viewBox="0 0 100 100" class="interactive-circle">
                                             <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
@@ -119,8 +120,9 @@
                                 <!-- Lower temporary teeth row -->
                                 {% for number in [85, 84, 83, 82, 81, 71, 72, 73, 74, 75] %}
                                 <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
+                                    <div class="tooth-box" onclick="openModal(this, {{ number }})">
+                                        <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
+                                    </div>
                                     <div class="tooth">
                                         <svg viewBox="0 0 100 100" class="interactive-circle">
                                             <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
@@ -136,6 +138,154 @@
                             </div>
                         </div>
                     </div>
+
+<!-- ////////////////////////////////// Consent form ////////////////-->
+
+<div id="consent-form" class="tab-content" style="display:none;">
+    <!-- Consent form content -->
+    <div class="exam-details">
+        <h3>Consent Form</h3>
+        <form>
+            <div class="form-group">
+                <label>Patient's Signature</label>
+                <input type="text"><br>
+            </div>
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date"><br>
+            </div>
+            <div class="form-group">
+                <label>Consent</label>
+                <textarea rows="5"></textarea><br>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+
+
+<!-- ////////////////////////////////// Overview ////////////////-->
+
+<div id="overview" class="tab-content" style="display:none;">
+    <!-- Overview content -->
+    <div class="exam-details">
+        <h3> Patient Records</h3>
+        <form>
+            <div>
+                <p>{{ patient.first_name }} {{ patient.middle_name }} {{ patient.last_name }}
+                    <span class="status-badge {{ 'inactive' if not patient.is_active else '' }}">{{ 'Active' if patient.is_active else 'Inactive' }}</span>
+                </p>
+                <p>Email: <a href="mailto:{{ patient.email }}">{{ patient.email }}</a></p>
+                <p>Mobile number: <a href="tel:{{ patient.phone }}">{{ patient.phone }}</a></p>
+                <p>Address: {{ patient.address }}</p>
+                <p>City: <strong>{{ patient.city }}</strong></p>
+                <p>Patient ID: {{ patient.patient_id }}</p>
+                <p>Patient since: {{ patient.register_date }}</p>
+            </div>
+            <div>
+                <p>Age: {{ patient.age }}</p>
+                <p>Birth date: {{ patient.dob }}</p>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+<!-- ////////////////////////////////// Medical History ////////////////-->
+
+<div id="medical-history" class="tab-content" style="display:none;">
+    <!-- Medical History content -->
+    <div class="exam-details">
+        <h3>Medical History</h3>
+<form>
+<div class="form-group">
+    <input type="checkbox" id="diabetes" name="diabetes">
+    <label for="diabetes">Diabetes</label>
+</div>
+<div class="form-group">
+    <input type="checkbox" id="tired" name="tired">
+    <label for="tired">Gets tired easily</label>
+</div>
+<div class="form-group">
+    <input type="checkbox" id="urinates" name="urinates">
+    <label for="urinates">Urinates frequently</label>
+</div>
+<div class="form-group">
+    <input type="checkbox" id="thirsty" name="thirsty">
+    <label for="thirsty">Easily gets thirsty</label>
+</div>
+<div class="form-group">
+    <input type="checkbox" id="heart" name="heart">
+    <label for="heart">Heart Disease</label>
+</div>
+<div class="form-group">
+    <input type="checkbox" id="hepatitis" name="hepatitis">
+    <label for="hepatitis">Hepatitis</label>
+</div>
+<div class="form-group">
+    <input type="checkbox" id="anemia" name="anemia">
+    <label for="anemia">Anemia</label>
+</div>
+<div class="form-group">
+    <input type="checkbox" id="hypertension" name="hypertension">
+    <label for="hypertension">Hypertension</label>
+</div>
+<div class="form-group">
+    <input type="checkbox" id="allergic" name="allergic" onclick="toggleTextBox('allergic', 'allergic-specify')">
+    <label for="allergic">Allergic to Anesthetic Agent (specify)</label>
+    <input type="text" id="allergic-specify" class="conditional-field" placeholder="Specify">
+</div>
+<div class="form-group">
+    <input type="checkbox" id="extraction" name="extraction" onclick="toggleDatePicker('extraction', 'extraction-date')">
+    <label for="extraction">Had a tooth extraction before (when was the latest?)</label>
+    <input type="date" id="extraction-date" class="conditional-field">
+</div>
+<div class="form-group">
+    <input type="checkbox" id="bleeds" name="bleeds">
+    <label for="bleeds">Bleeds profusely after extraction</label>
+</div>
+<div class="form-group">
+    <input type="checkbox" id="chest" name="chest">
+    <label for="chest">Chest pain</label>
+</div>
+<div class="form-group">
+    <input type="checkbox" id="asthma" name="asthma">
+    <label for="asthma">Asthma</label>
+</div>
+<div class="form-group">
+    <input type="checkbox" id="menstruation" name="menstruation">
+    <label for="menstruation">(This question is for female patients only) Menstruation</label>
+</div>
+<div class="form-group">
+    <input type="checkbox" id="pregnant" name="pregnant" onclick="toggleTextBox('pregnant', 'pregnant-months')">
+    <label for="pregnant">(This question is for female patients only) Pregnant (how many months)</label>
+    <input type="text" id="pregnant-months" class="conditional-field" placeholder="How many months?">
+</div>
+<div class="form-group">
+    <input type="checkbox" id="hospitalized" name="hospitalized" onclick="toggleTextBox('hospitalized', 'hospitalized-disease')">
+    <label for="hospitalized">Hospitalized before (what disease?)</label>
+    <input type="text" id="hospitalized-disease" class="conditional-field" placeholder="What disease?">
+</div>
+<div class="form-group">
+    <input type="checkbox" id="medicine" name="medicine" onclick="toggleTextBox('medicine', 'medicine-specify')">
+    <label for="medicine">Taking medicine at present (specify)</label>
+    <input type="text" id="medicine-specify" class="conditional-field" placeholder="Specify">
+</div>
+<div class="form-group">
+    <input type="checkbox" id="epilepsy" name="epilepsy">
+    <label for="epilepsy">Epilepsy</label>
+</div>
+</form>
+</div>
+</div>
+
+
+
+<!-- ////////////////////////////////// Enter Diagnosis ////////////////-->
+
+<div id="enter-diagnosis" class="tab-content">
+    <!-- Enter diagnosis content -->
                     <div class="exam-details">
                         <h3>Enter Diagnosis</h3>
                         <form>
@@ -183,360 +333,12 @@
                 </div>
             </div>
 
-            <div id="overview" class="tab-content" style="display:none;">
-                <!-- Overview content -->
-                <div class="exam-form">
-                    <div class="teeth-diagram">
-                        <div class="teeth-section">
-                            <div class="teeth-header">Upper Temporary Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Upper temporary teeth row -->
-                                {% for number in [55, 54, 53, 52, 51, 61, 62, 63, 64, 65] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="teeth-section">
-                            <div class="teeth-header">Permanent Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Permanent teeth upper row -->
-                                {% for number in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            <div class="teeth-row">
-                                <!-- Permanent teeth lower row -->
-                                {% for number in [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="teeth-section">
-                            <div class="teeth-header">Lower Temporary Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Lower temporary teeth row -->
-                                {% for number in [85, 84, 83, 82, 81, 71, 72, 73, 74, 75] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                <div class="exam-details">
-                    <h3>Consent Form</h3>
-                    <form>
-                        <div class="form-group">
-                            <label>Patient's Signature</label>
-                            <input type="text"><br>
-                        </div>
-                        <div class="form-group">
-                            <label>Date</label>
-                            <input type="date"><br>
-                        </div>
-                        <div class="form-group">
-                            <label>Consent</label>
-                            <textarea rows="5"></textarea><br>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+                        
+                                
 
-            <div id="medical-history" class="tab-content" style="display:none;">
-                <!-- Medical history content -->
-                <div class="exam-form">
-                    <div class="teeth-diagram">
-                        <div class="teeth-section">
-                            <div class="teeth-header">Upper Temporary Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Upper temporary teeth row -->
-                                {% for number in [55, 54, 53, 52, 51, 61, 62, 63, 64, 65] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="teeth-section">
-                            <div class="teeth-header">Permanent Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Permanent teeth upper row -->
-                                {% for number in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            <div class="teeth-row">
-                                <!-- Permanent teeth lower row -->
-                                {% for number in [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="teeth-section">
-                            <div class="teeth-header">Lower Temporary Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Lower temporary teeth row -->
-                                {% for number in [85, 84, 83, 82, 81, 71, 72, 73, 74, 75] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                <div class="exam-details">
-                    <h3>Medical History</h3>
-                    <form>
-                        <div class="form-group">
-                            <label>Blood Type</label>
-                            <input type="text"><br>
-                        </div>
-                        <div class="form-group">
-                            <label>Blood Pressure</label>
-                            <input type="text"><br>
-                        </div>
-                        <div class="form-group">
-                            <label>Serious Illness/Surgical Operation</label>
-                            <input type="text"><br>
-                        </div>
-                        <div class="form-group">
-                            <label>Bleeding Time</label>
-                            <input type="text"><br>
-                        </div>
-                        <div class="form-group">
-                            <label>In good health</label>
-                            <input type="checkbox"><br>
-                        </div>
-                        <div class="form-group">
-                            <label>High blood pressure</label>
-                            <input type="checkbox"><br>
-                        </div>
-                        <div class="form-group">
-                            <label>Low blood pressure</label>
-                            <input type="checkbox"><br>
-                        </div>
-                        <div class="form-group">
-                            <label>Epilepsy/Convulsion</label>
-                            <input type="checkbox"><br>
-                        </div>
-                        <div class="form-group">
-                            <label>AIDS or HIV infection</label>
-                            <input type="checkbox"><br>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div id="consent-form" class="tab-content" style="display:none;">
-                <!-- Overview content -->
-                <div class="exam-form">
-                    <div class="teeth-diagram">
-                        <div class="teeth-section">
-                            <div class="teeth-header">Upper Temporary Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Upper temporary teeth row -->
-                                {% for number in [55, 54, 53, 52, 51, 61, 62, 63, 64, 65] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="teeth-section">
-                            <div class="teeth-header">Permanent Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Permanent teeth upper row -->
-                                {% for number in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            <div class="teeth-row">
-                                <!-- Permanent teeth lower row -->
-                                {% for number in [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="teeth-section">
-                            <div class="teeth-header">Lower Temporary Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Lower temporary teeth row -->
-                                {% for number in [85, 84, 83, 82, 81, 71, 72, 73, 74, 75] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})"></div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                <div class="exam-details">
-                    <h3>Consent Form</h3>
-                    <form>
-                        <div class="form-group">
-                            <label>Patient's Signature</label>
-                            <input type="text"><br>
-                        </div>
-                        <div class="form-group">
-                            <label>Date</label>
-                            <input type="date"><br>
-                        </div>
-                        <div class="form-group">
-                            <label>Consent</label>
-                            <textarea rows="5"></textarea><br>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            
         </div>
-    </div>
+   
 
 
     <!-- Modal for teeth conditions -->
@@ -581,11 +383,11 @@
                 </div>
             <div>
                  <svg viewBox="0 0 100 100" class="interactive-circle">
-        <path class="segment" d="M50 50 L50 0 A50 50 0 0 1 100 50 z" ></path>
-        <path class="segment" d="M50 50 L100 50 A50 50 0 0 1 50 100 z" ></path>
-        <path class="segment" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-        <path class="segment" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-        <circle class="segment" cx="50" cy="50" r="20"></circle>
+                    <path class="segment" onclick="toggleSegment(this)" d="M50 50 L50 0 A50 50 0 0 1 100 50 z" ></path>
+                    <path class="segment" onclick="toggleSegment(this)" d="M50 50 L100 50 A50 50 0 0 1 50 100 z" ></path>
+                    <path class="segment" onclick="toggleSegment(this)" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                    <path class="segment" onclick="toggleSegment(this)" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                    <circle class="segment" onclick="toggleSegment(this)" cx="50" cy="50" r="20"></circle>
                 </svg>
             </div>
             <button onclick="saveConditions()">Save</button>
@@ -596,70 +398,102 @@
         let currentTooth = null;
 
         function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tab");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tab");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+function openModal(toothElement, toothNumber) {
+    currentTooth = toothElement;
+    currentTooth.setAttribute('data-tooth-number', toothNumber);
+    document.getElementById('conditionModal').style.display = 'block';
+    loadConditions(toothNumber);
+    loadSegments(toothNumber);
+}
+function closeModal() {
+    document.getElementById('conditionModal').style.display = 'none';
+}
+function saveConditions() {
+    const checkboxes = document.querySelectorAll('.condition-checkbox');
+    let selectedCodes = [];
+    checkboxes.forEach((checkbox) => {
+        if (checkbox.checked) {
+            selectedCodes.push(checkbox.getAttribute('data-code'));
         }
-
-        function openModal(toothElement, toothNumber) {
-            currentTooth = toothElement;
-            currentTooth.setAttribute('data-tooth-number', toothNumber);
-            document.getElementById('conditionModal').style.display = 'block';
-            updatePreview();
-            loadConditions(toothNumber);
+    });
+    const toothNumber = currentTooth.getAttribute('data-tooth-number');
+    localStorage.setItem(`tooth_${toothNumber}_conditions`, JSON.stringify(selectedCodes));
+    displaySavedConditions(toothNumber, selectedCodes);
+    closeModal();
+}
+function displaySavedConditions(toothNumber, selectedCodes) {
+    const toothBox = document.querySelector(`.tooth-box[data-tooth-number="${toothNumber}"]`);
+    if (toothBox) {
+        let conditionText = toothBox.querySelector('.condition-text');
+        if (!conditionText) {
+            conditionText = document.createElement('div');
+            conditionText.className = 'condition-text';
+            toothBox.appendChild(conditionText);
         }
+        conditionText.textContent = selectedCodes.join(' ');
+    }
+}
+function loadConditions(toothNumber) {
+    const storedConditions = JSON.parse(localStorage.getItem(`tooth_${toothNumber}_conditions`)) || [];
+    const checkboxes = document.querySelectorAll('.condition-checkbox');
+    checkboxes.forEach((checkbox) => {
+        checkbox.checked = storedConditions.includes(checkbox.getAttribute('data-code'));
+    });
+    updatePreview();
+}
 
-        function closeModal() {
-            document.getElementById('conditionModal').style.display = 'none';
+function updatePreview() {
+    const checkboxes = document.querySelectorAll('.condition-checkbox:checked');
+    let selectedCodes = [];
+    checkboxes.forEach((checkbox) => {
+        selectedCodes.push(checkbox.getAttribute('data-code'));
+    });
+    const previewText = document.getElementById('previewText');
+    previewText.textContent = selectedCodes.join(' ');
+}
+function toggleSegment(segment) {
+    if (segment.style.fill === 'red') {
+        segment.style.fill = '#FFFFFF';
+    } else {
+        segment.style.fill = 'red';
+    }
+    saveSegments();
+}
+       
+function saveSegments() {
+    const segments = document.querySelectorAll('.segment');
+    let selectedSegments = [];
+    segments.forEach((segment, index) => {
+        if (segment.style.fill === 'red') {
+            selectedSegments.push(index);
         }
+    });
+    const toothNumber = currentTooth.getAttribute('data-tooth-number');
+    localStorage.setItem(`tooth_${toothNumber}_segments`, JSON.stringify(selectedSegments));
+}
 
-        function saveConditions() {
-            const checkboxes = document.querySelectorAll('.condition-checkbox');
-            let selectedCodes = [];
-            checkboxes.forEach((checkbox) => {
-                if (checkbox.checked) {
-                    selectedCodes.push(checkbox.getAttribute('data-code'));
-                }
-            });
-            const toothNumber = currentTooth.getAttribute('data-tooth-number');
-            localStorage.setItem(`tooth_${toothNumber}_conditions`, selectedCodes.join(' '));
-            closeModal();
-        }
+function loadSegments(toothNumber) {
+    const selectedSegments = JSON.parse(localStorage.getItem(`tooth_${toothNumber}_segments`)) || [];
+    const segments = document.querySelectorAll('.segment');
+    segments.forEach((segment, index) => {
+        segment.style.fill = selectedSegments.includes(index) ? 'red' : '#FFFFFF';
+    });
+}
 
-                function updatePreview() {
-            const checkboxes = document.querySelectorAll('.condition-checkbox:checked');
-            let selectedCodes = [];
-            checkboxes.forEach((checkbox) => {
-                selectedCodes.push(checkbox.getAttribute('data-code'));
-            });
-            const previewText = document.getElementById('previewText');
-            previewText.textContent = selectedCodes.join(' ');
-        }
+// Click Function to change the display value of the input
 
-        function loadConditions(toothNumber) {
-            const conditions = localStorage.getItem(`tooth_${toothNumber}_conditions`);
-            const checkboxes = document.querySelectorAll('.condition-checkbox');
-            checkboxes.forEach((checkbox) => {
-                checkbox.checked = conditions && conditions.includes(checkbox.getAttribute('data-code'));
-            });
-            updatePreview();
-        }
-
-        function load() {
-            let button = document.querySelector("button");
-
-             button.addEventListener("click", clickMe);
-            }
-
-            // Click Function to change the display value of the input
             function clickMe() {
                 let input = document.getElementById("popup");
 
@@ -681,42 +515,42 @@
                 });
             });
 
-        document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('enter-diagnosis').style.display = 'block';
-            const sidebar = document.getElementById('sidebar');
-            const sidebarTab = document.getElementById('sidebarTab');
-            const mainContent = document.querySelector('.main-content');
+    document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('enter-diagnosis').style.display = 'block';
+    const sidebar = document.getElementById('sidebar');
+    const sidebarTab = document.getElementById('sidebarTab');
+    const mainContent = document.querySelector('.main-content');
 
-            sidebarTab.addEventListener('click', function () {
-                sidebar.classList.toggle('show');
-                mainContent.classList.toggle('shifted');
-                sidebarTab.style.display = 'none';
-            });
+    sidebarTab.addEventListener('click', function () {
+        sidebar.classList.toggle('show');
+        mainContent.classList.toggle('shifted');
+        sidebarTab.style.display = 'none';
+    });
+    document.addEventListener('click', function (event) {
+        if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+            sidebar.classList.remove('show');
+            mainContent.classList.remove('shifted');
+            sidebarTab.style.display = 'block';
+        }
+    });
+  
+     // Dropdown functionality
+     const dropdowns = document.querySelectorAll('.dropdown');
+    dropdowns.forEach(dropdown => {
+        const btn = dropdown.querySelector('.ellipsis-btn');
+        const content = dropdown.querySelector('.dropdown-content');
 
-            document.addEventListener('click', function (event) {
-                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
-                    sidebar.classList.remove('show');
-                    mainContent.classList.remove('shifted');
-                    sidebarTab.style.display = 'block';
-                }
-            });
-
-            // Dropdown functionality
-            const dropdowns = document.querySelectorAll('.dropdown');
-            dropdowns.forEach(dropdown => {
-                const btn = dropdown.querySelector('.ellipsis-btn');
-                const content = dropdown.querySelector('.dropdown-content');
-
-                btn.addEventListener('click', function (event) {
-                    event.stopPropagation();
-                    content.classList.toggle('show');
-                });
-
-                document.addEventListener('click', function () {
-                    content.classList.remove('show');
-                });
-            });
+        btn.addEventListener('click', function (event) {
+            event.stopPropagation();
+            content.classList.toggle('show');
         });
+
+        document.addEventListener('click', function () {
+            content.classList.remove('show');
+            
+        });   
+     });
+    });
     </script>
 </body>
 </html>

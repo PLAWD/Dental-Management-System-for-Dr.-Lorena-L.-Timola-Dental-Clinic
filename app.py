@@ -1151,18 +1151,17 @@ def about():
 def profile():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-
+    user_id = session['user_id']
     conn = get_db_connection()
-    user = conn.execute('SELECT first_name || " " || last_name AS name, username, email, role_id, userstat_id FROM users WHERE user_id = ?', (session['user_id'],)).fetchone()
+    user = conn.execute('''
+        SELECT users.*, userStatus.userStatus AS user_status, Roles.role_name AS role_name
+        FROM users
+        LEFT JOIN userStatus ON users.userstat_id = userStatus.userstat_id
+        LEFT JOIN Roles ON users.role_id = Roles.role_id
+        WHERE users.user_id = ?
+    ''', (user_id,)).fetchone()
     conn.close()
-
-    if user:
-        role_name = get_role_name(user['role_id'])
-        user_status = get_user_status(user['userstat_id'])
-        return render_template('profile.html', name=user['name'], username=user['username'], email=user['email'], role=role_name, status=user_status)
-    else:
-        flash('User not found.')
-        return redirect(url_for('dashboard'))
+    return render_template('profile.html', user=user)
 
 @app.route('/appointment_records')
 @role_required([1, 2])  # Both admin and user can access
@@ -1246,6 +1245,96 @@ def submit_appointment():
     conn.close()
 
     return jsonify({'success': True})
+
+def get_all_treatment_records():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute('''
+        SELECT treatment_records.treatment_date, 
+               patients.first_name || ' ' || IFNULL(patients.middle_name, '') || ' ' || patients.last_name AS patient_name, 
+               GROUP_CONCAT(services.service_name, ', ') AS services
+        FROM treatment_records
+        JOIN patients ON treatment_records.patient_id = patients.patient_id
+        LEFT JOIN services ON treatment_records.patient_id = services.patient_id
+        GROUP BY treatment_records.treatment_date, patients.first_name, patients.middle_name, patients.last_name
+    ''')
+    records = cursor.fetchall()
+    connection.close()
+    return records
+
+@app.route('/treatment_records')
+@role_required([1, 2])  # Both admin and user can access
+def treatment_records():
+    conn = get_db_connection()
+    records = conn.execute('''
+        SELECT s.payment_date AS treatment_date, 
+               p.first_name || ' ' || p.middle_name || ' ' || p.last_name AS patient_name, 
+               GROUP_CONCAT(s.service_name, ', ') AS services
+        FROM services s
+        JOIN patients p ON s.patient_id = p.patient_id
+        GROUP BY s.payment_date, p.first_name, p.middle_name, p.last_name
+        ORDER BY s.payment_date DESC
+    ''').fetchall()
+    conn.close()
+
+    return render_template('treatment_records.html', records=records)
+
+@app.route('/change_password', methods=['POST'])
+def change_password():
+    current_password = request.form['current_password']
+    new_password = request.form['new_password']
+    confirm_password = request.form['confirm_password']
+
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if new_password != confirm_password:
+        flash('New passwords do not match. Please try again.')
+        return redirect(url_for('profile'))
+
+    user_id = session['user_id']
+    conn = get_db_connection()
+    user = conn.execute('SELECT password_hash FROM users WHERE user_id = ?', (user_id,)).fetchone()
+
+    if not check_password_hash(user['password_hash'], current_password):
+        flash('Current password is incorrect. Please try again.')
+        conn.close()
+        return redirect(url_for('profile'))
+
+    hashed_password = generate_password_hash(new_password)
+    conn.execute('UPDATE users SET password_hash = ? WHERE user_id = ?', (hashed_password, user_id))
+    conn.commit()
+    conn.close()
+
+    flash('Password changed successfully.')
+    return redirect(url_for('profile'))
+
+@app.route('/change_email', methods=['POST'])
+def change_email():
+    password = request.form['password']
+    new_email = request.form['new_email']
+
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    conn = get_db_connection()
+    user = conn.execute('SELECT password_hash FROM users WHERE user_id = ?', (user_id,)).fetchone()
+
+    if not check_password_hash(user['password_hash'], password):
+        flash('Password is incorrect. Please try again.')
+        conn.close()
+        return redirect(url_for('profile'))
+
+    conn.execute('UPDATE users SET email = ? WHERE user_id = ?', (new_email, user_id))
+    conn.commit()
+    conn.close()
+
+    session['user_email'] = new_email
+    flash('Email changed successfully.')
+    return redirect(url_for('profile'))
+
+
 
 
 if __name__ == '__main__':

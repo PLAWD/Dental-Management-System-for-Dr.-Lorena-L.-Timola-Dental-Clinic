@@ -3019,7 +3019,48 @@ Specific styles for intraoral exam
 .intraoral-page .treatment-table tr:hover {
     background-color: #f1f1f1;
 }
+.intraoral-page .condition-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    line-height: 1.2;
+    white-space: normal;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-wrap: break-word;
+}
 
+.intraoral-page .tooth-box {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    text-align: center;
+}
+
+.intraoral-page h3 {
+color: #784D3C;
+}
+
+.intraoral-page label {
+color: #784D3C;
+}
+
+.intraoral-page input{
+color: #784D3C;
+}
+
+.intraoral-page p {
+color: #784D3C;
+}
 /* Specific styles for interactive circle */
 .interactive-circle {
     width: 50px;
