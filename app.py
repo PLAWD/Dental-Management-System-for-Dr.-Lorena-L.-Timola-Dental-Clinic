@@ -448,6 +448,23 @@ def search():
     query = request.args.get('query')
     return f"Search results for: {query}"
 
+@app.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    user = conn.execute('SELECT first_name || " " || last_name AS name, username, email, role_id, userstat_id FROM users WHERE user_id = ?', (session['user_id'],)).fetchone()
+    conn.close()
+
+    if user:
+        role_name = get_role_name(user['role_id'])
+        user_status = get_user_status(user['userstat_id'])
+        return render_template('profile.html', name=user['name'], username=user['username'], email=user['email'], role=role_name, status=user_status)
+    else:
+        flash('User not found.')
+        return redirect(url_for('dashboard'))
+
 @app.route('/users')
 @role_required([1])  # Only admin can access
 def users():
