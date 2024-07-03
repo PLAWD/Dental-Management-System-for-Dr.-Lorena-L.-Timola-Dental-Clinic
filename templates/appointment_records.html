@@ -1,118 +1,325 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Appointment Records</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-    <div class="container">
-    <div class="sidebar-tab" id="sidebarTab">☰</div>
-    <div id="sidebar" class="sidebar">
-        <ul>
-            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li><a href="#">Profile</a></li>
-            <li><a href="{{ url_for('users') }}">Users</a></li>
-            <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
-            <li class="dropdown">
-                <a href="#">Records</a>
-                <div class="dropdown-content">
-                    <a href="{{ url_for('patients') }}">Patient Records</a>
-                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                    <a href="#">Treatment Records</a>
-                </div>
-            </li>
-            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
-            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
-            <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <li><a href="{{ url_for('payments') }}">Payments</a></li>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <li><a href="{{ url_for('help') }}">Help</a></li>
-            <li><a href="{{ url_for('about') }}">About</a></li>
-            <li><a href="{{ url_for('logout') }}">Logout</a></li>
-        </ul>
-    </div>
-        <div class="header">
-            <h1>Appointment Records</h1>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Appointment Records</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <style>
+            .appointment-container {
+                margin: 0 auto;
+                padding: 20px;
+                max-width: 1200px;
+            }
+
+            .appointment-header, .appointment-create-btn {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .appointment-search-bar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+
+            .appointment-search-bar input {
+                flex: 1;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                margin-right: 10px;
+            }
+
+            .appointment-search-btn, .appointment-create-btn button {
+                padding: 10px;
+                background-color: #5d74e2;
+                border: none;
+                color: white;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+
+            .appointment-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+            }
+
+            .appointment-table th, .appointment-table td {
+                border: 1px solid #ccc;
+                padding: 10px;
+                text-align: left;
+            }
+
+            .appointment-table th {
+                background-color: #8B4513;
+                color: white;
+            }
+
+            .appointment-status {
+                display: inline-block;
+                padding: 5px 10px;
+                border-radius: 5px;
+                color: white;
+            }
+
+            .status-scheduled { background-color: green; }
+            .status-rescheduled { background-color: purple; }
+
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0, 0, 0, 0.4);
+                justify-content: center;
+                align-items: center;
+            }
+
+            .modal-content {
+                background-color: #fefefe;
+                margin: auto;
+                padding: 20px;
+                border: 1px solid #888;
+                width: 70%;
+                max-width: 700px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+                border-radius: 10px;
+            }
+
+            .modal-close {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 28px;
+                font-weight: bold;
+                color: #aaa;
+                cursor: pointer;
+            }
+
+            .modal-label {
+                display: block;
+                margin-top: 10px;
+                color: #333;
+            }
+
+            .modal-input, .modal-select, .modal-button {
+                width: 95%;
+                padding: 10px;
+                margin-top: 5px;
+                margin-bottom: 10px;
+                border-radius: 5px;
+                border: 1px solid #ddd;
+            }
+
+            .modal-button {
+                background-color: #593C3C;
+                color: white;
+                border: none;
+                cursor: pointer;
+            }
+
+            .modal-button:hover { background-color: #402828; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+        <div class="sidebar-tab" id="sidebarTab">☰</div>
+        <div id="sidebar" class="sidebar">
+            <ul>
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                <li><a href="{{ url_for('users') }}">Users</a></li>
+                <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
+                <li class="dropdown">
+                    <a href="#">Records</a>
+                    <div class="dropdown-content">
+                        <a href="{{ url_for('patients') }}">Patient Records</a>
+                        <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                        <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
+                    </div>
+                </li>
+                <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
+                <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+                <li><a href="{{ url_for('reports') }}">Reports</a></li>
+                <li><a href="{{ url_for('payments') }}">Payments</a></li>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <li><a href="{{ url_for('help') }}">Help</a></li>
+                <li><a href="{{ url_for('about') }}">About</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
         </div>
-        <div class="search-bar">
-            <input type="text" placeholder="Type here to search by name, date, and status">
-            <button class="search-btn">🔍</button>
-        </div>
-        <div class="create-appointment">
-            <button class="create-appointment-btn">Create Appointment</button>
-        </div>
-        <div class="appointment-records">
+        <div class="appointment-container">
+            <div class="appointment-header">
+                <h1>Appointment Records</h1>
+            </div>
+            <div class="appointment-search-bar">
+                <input type="text" placeholder="Type here to search by name, date, and status">
+                <button class="appointment-search-btn">🔍</button>
+            </div>
+            <div class="appointment-create-btn">
+                <button onclick="openCreateAppointmentModal()">Create Appointment</button>
+            </div>
             <table class="appointment-table">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Time & Date</th>
+                        <th>Patient Name</th>
+                        <th>Date</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Chief Complaints</th>
+                        <th>Dentist</th>
                         <th>Visit Type</th>
                         <th>Status</th>
-                        <th>Reason</th>
+                        <th>Procedures</th>
                     </tr>
                 </thead>
-                <tbody>
+                <body>
+                    {% for record in records %}
                     <tr>
-                        <td>Santos, Gloie Taho El Gatto A.</td>
-                        <td>10:30 am<br>01-08-2024</td>
-                        <td>Braces</td>
-                        <td><span class="appointment-status" style="background-color: #32CD32;">Scheduled</span></td>
-                        <td>-</td>
+                        <td>{{ record['patient_name'] }}</td>
+                        <td>{{ record['appointment_date'] }}</td>
+                        <td>{{ record['start_time'] }}</td>
+                        <td>{{ record['end_time'] }}</td>
+                        <td>{{ record['chief_complaints'] }}</td>
+                        <td>{{ record['dentist_name'] }}</td>
+                        <td>{{ record['appointment_type'] }}</td>
+                        <td><span class="appointment-status status-{{ record['status_name'] | lower }}">{{ record['status_name'] }}</span></td>
+                        <td>{{ record['procedures'] }}</td>
                     </tr>
-                    <tr>
-                        <td>Santos, Mizgy Bistek A.</td>
-                        <td>9:20 pm<br>01-08-2024</td>
-                        <td>Pick up</td>
-                        <td><span class="appointment-status" style="background-color: #800080;">Rescheduled</span></td>
-                        <td>Sick</td>
-                    </tr>
-                </tbody>
+                    {% endfor %}
+                </body>
             </table>
+        </div>
+        <div id="createAppointmentModal" class="modal create-appointment-modal">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeCreateAppointmentModal()">&times;</span>
+                <h2 class="modal-title">Create Appointment</h2>
+                <form id="create-appointment-form" onsubmit="submitAppointment(event)">
+
+                    <label class="modal-label" for="patient_id">Patient:</label>
+                    <select class="modal-select" id="patient_id" name="patient_id" required>
+                        {% for patient in patients %}
+                        <option value="{{ patient.patient_id }}">{{ patient.first_name }} {{ patient.middle_name }} {{ patient.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <label class="modal-label" for="appointment_date">Date:</label>
+                    <input class="modal-input" type="date" id="appointment_date" name="appointment_date" required>
+                    <label class="modal-label" for="start_time">Start Time:</label>
+                    <input class="modal-input" type="time" id="start_time" name="start_time" required>
+                    <label class="modal-label" for="end_time">End Time:</label>
+                    <input class="modal-input" type="time" id="end_time" name="end_time" required>
+                    <label class="modal-label" for="appointment_type">Type:</label>
+                    <input class="modal-input" type="text" id="appointment_type" name="appointment_type" required>
+                    <label class="modal-label" for="chief_complaints">Chief Complaints:</label>
+                    <input class="modal-input" type="text" id="chief_complaints" name="chief_complaints" required>
+                    <label class="modal-label" for="procedures">Procedures:</label>
+                    <input class="modal-input" type="text" id="procedures" name="procedures" required>
+                    <label class="modal-label" for="dentist_id">Dentist:</label>
+                    <select class="modal-select" id="dentist_id" name="dentist_id" required>
+                        {% for dentist in dentists %}
+                        <option value="{{ dentist.dentist_id }}">{{ dentist.first_name }} {{ dentist.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <label class="modal-label" for="status_id">Status:</label>
+                    <select class="modal-select" id="status_id" name="status_id" required>
+                    {% for status in statuses %}
+                    <option value="{{ status.status_id }}">{{ status.status_name }}</option>
+                    {% endfor %}
+                </select>
+                <button class="modal-button" type="submit">Create</button>
+            </form>
         </div>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
             const sidebarTab = document.getElementById('sidebarTab');
-            const mainContent = document.querySelector('.main-content');
 
             sidebarTab.addEventListener('click', function () {
                 sidebar.classList.toggle('show');
-                mainContent.classList.toggle('shifted');
                 sidebarTab.style.display = 'none';
             });
 
             document.addEventListener('click', function (event) {
                 if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
                     sidebar.classList.remove('show');
-                    mainContent.classList.remove('shifted');
                     sidebarTab.style.display = 'block';
                 }
             });
-
             const dropdowns = document.querySelectorAll('.dropdown');
             dropdowns.forEach(dropdown => {
                 const btn = dropdown.querySelector('a');
                 const content = dropdown.querySelector('.dropdown-content');
-
                 btn.addEventListener('click', function (event) {
                     event.preventDefault();
                     content.classList.toggle('show');
                 });
-
                 document.addEventListener('click', function () {
                     content.classList.remove('show');
                 });
             });
         });
+        function openCreateAppointmentModal() {
+            document.getElementById('createAppointmentModal').style.display = 'flex';
+        }
+
+        function closeCreateAppointmentModal() {
+            document.getElementById('createAppointmentModal').style.display = 'none';
+        }
+
+        function submitAppointment(event) {
+        event.preventDefault();
+        const formData = {
+            patient_id: document.getElementById('patient_id').value,
+            appointment_date: document.getElementById('appointment_date').value,
+            start_time: document.getElementById('start_time').value,
+            end_time: document.getElementById('end_time').value,
+            appointment_type: document.getElementById('appointment_type').value,
+            chief_complaints: document.getElementById('chief_complaints').value,
+            procedures: document.getElementById('procedures').value,
+            dentist_id: document.getElementById('dentist_id').value,
+            status_id: document.getElementById('status_id').value
+        };
+
+        $.ajax({
+            url: '{{ url_for("submit_appointment") }}',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function (data) {
+                if (data.success) {
+                    location.reload();  // Refresh the page to show the new appointment
+                } else {
+                    if (data.conflict) {
+                        const conflictMessage = `Conflict with appointment:
+                            Patient: ${data.conflict.patient_name},
+                            Dentist: ${data.conflict.dentist_name},
+                            Date: ${data.conflict.appointment_date},
+                            Start Time: ${data.conflict.start_time},
+                            End Time: ${data.conflict.end_time}`;
+                        alert(conflictMessage);
+                    } else {
+                        alert('Failed to create appointment.');
+                    }
+                }
+            },
+            error: function (xhr, status, error) {
+                alert('Failed to create appointment: ' + error);
+            }
+        });
+    }
     </script>
-</body>
-</html>
+    </body>
+    </html>

@@ -15,6 +15,8 @@ from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import os
+from random import randint
+
 
 app = Flask(__name__)
 app.config['DATABASE'] = 'instance/DMSDB.db'
@@ -177,22 +179,34 @@ def resend_otp():
 @app.route('/verify_otp', methods=['GET', 'POST'])
 def verify_otp():
     if request.method == 'POST':
-        otp = request.form['otp']
+        otp = request.form.get('otp')
         if 'otp' in session:
             if session.get('otp_attempts', 0) >= 3:
                 flash('You have reached the maximum number of attempts. Please try again later.')
-                return redirect(url_for('forgot_password'))
+                return jsonify({'success': False, 'message': 'Maximum attempts reached.'})
             if otp == session['otp']:
-                flash('OTP verified successfully.')
                 session.pop('otp_attempts', None)
-                return redirect(url_for('reset_password'))
+                session.pop('otp', None)
+                if session.get('otp_stage') == 'new_email':
+                    session['otp_stage'] = 'verify_new_email'
+                    return jsonify({'success': True, 'next_step': 'new_email'})
+                elif session.get('otp_stage') == 'verify_new_email':
+                    user_id = session['user_id']
+                    new_email = session['new_email']
+                    conn = get_db_connection()
+                    conn.execute('UPDATE users SET email = ? WHERE user_id = ?', (new_email, user_id))
+                    conn.commit()
+                    conn.close()
+                    session.pop('otp_stage', None)
+                    session.pop('new_email', None)
+                    return jsonify({'success': True, 'message': 'Email updated successfully.'})
             else:
                 session['otp_attempts'] = session.get('otp_attempts', 0) + 1
-                flash('Invalid OTP. Please try again.')
+                return jsonify({'success': False, 'message': 'Invalid OTP. Please try again.'})
         else:
-            flash('OTP session expired. Please request a new OTP.')
-        return redirect(url_for('verify_otp'))
+            return jsonify({'success': False, 'message': 'OTP session expired. Please request a new OTP.'})
     return render_template('verify_otp.html')
+
 
 
 def is_password_in_history(user_id, new_password):
@@ -251,7 +265,7 @@ def dashboard():
     appointments = conn.execute('SELECT p.first_name || " " || p.last_name AS patient_name, a.appointment_date, a.start_time, a.end_time FROM appointments a JOIN patients p ON a.patient_id = p.patient_id').fetchall()
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
-    statuses = conn.execute('SELECT status_id, userStatus FROM AppointmentStatus').fetchall()
+    statuses = conn.execute('SELECT status_id, status_id FROM AppointmentStatus').fetchall()
     conn.close()
 
     first_name = session.get('first_name')
@@ -802,11 +816,31 @@ def patient_records():
     return render_template('patients.html', records=patient_records)
 
 @app.route('/appointment_records')
+@role_required([1, 2])  # Both admin and user can access
 def appointment_records():
     conn = get_db_connection()
-    appointment_records = conn.execute('SELECT * FROM appointments').fetchall()
+    appointment_records = conn.execute('''
+        SELECT 
+            a.*, 
+            p.first_name || " " || p.middle_name || " " || p.last_name AS patient_name,
+            d.first_name || " " || d.last_name AS dentist_name,
+            s.status_name
+        FROM appointments a
+        JOIN patients p ON a.patient_id = p.patient_id
+        JOIN dentists d ON a.dentist_id = d.dentist_id
+        JOIN AppointmentStatus s ON a.status_id = s.status_id
+    ''').fetchall()
+
+    patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
+    dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
+    statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
     conn.close()
-    return render_template('appointment_records.html', records=appointment_records)
+
+    return render_template('appointment_records.html',
+                           records=appointment_records,
+                           patients=patients,
+                           dentists=dentists,
+                           statuses=statuses)
 
 @app.route('/records')
 @role_required([1])  # Only admin can access
@@ -836,6 +870,40 @@ def treatments():
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     conn.close()
     return render_template('treatments.html', patients=patients)
+
+def get_all_treatment_records():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute('''
+        SELECT treatment_records.treatment_date, 
+               patients.first_name || ' ' || IFNULL(patients.middle_name, '') || ' ' || patients.last_name AS patient_name, 
+               GROUP_CONCAT(services.service_name, ', ') AS services
+        FROM treatment_records
+        JOIN patients ON treatment_records.patient_id = patients.patient_id
+        LEFT JOIN services ON treatment_records.patient_id = services.patient_id
+        GROUP BY treatment_records.treatment_date, patients.first_name, patients.middle_name, patients.last_name
+    ''')
+    records = cursor.fetchall()
+    connection.close()
+    return records
+
+@app.route('/treatment_records')
+@role_required([1, 2])  # Both admin and user can access
+def treatment_records():
+    conn = get_db_connection()
+    records = conn.execute('''
+        SELECT s.payment_date AS treatment_date, 
+               p.first_name || ' ' || p.middle_name || ' ' || p.last_name AS patient_name, 
+               GROUP_CONCAT(s.service_name, ', ') AS services
+        FROM services s
+        JOIN patients p ON s.patient_id = p.patient_id
+        GROUP BY s.payment_date, p.first_name, p.middle_name, p.last_name
+        ORDER BY s.payment_date DESC
+    ''').fetchall()
+    conn.close()
+
+    return render_template('treatment_records.html', records=records)
+
 
 @app.route('/intraoral_exam/<int:patient_id>')
 def intraoral_exam(patient_id):
@@ -1220,12 +1288,13 @@ def help():
 def about():
     return render_template('about.html')
 
-@app.route('/profile')
+@app.route('/profile', methods=['GET', 'POST'])
 def profile():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     user_id = session['user_id']
     conn = get_db_connection()
+
     user = conn.execute('''
         SELECT users.*, userStatus.userStatus AS user_status, Roles.role_name AS role_name
         FROM users
@@ -1249,6 +1318,68 @@ def change_email():
     flash('Email updated successfully', 'success')
     return redirect(url_for('profile'))
 
+@app.route('/send_new_email_otp', methods=['POST'])
+def send_new_email_otp():
+    if 'user_id' not in session or not session.get('otp_verified'):
+        return redirect(url_for('login'))
+    new_email = request.form['new_email']
+    otp = str(randint(100000, 999999))
+    expiry = datetime.now() + timedelta(minutes=10)
+    user_id = session['user_id']
+    conn = get_db_connection()
+    conn.execute('UPDATE users SET otp = ?, otp_expiry = ?, otp_attempts = 0 WHERE user_id = ?',
+                 (otp, expiry, user_id))
+    conn.commit()
+    send_email(new_email, 'Your OTP Code', f'Your OTP code is {otp}')
+    session['otp_stage'] = 'new_email'
+    session['new_email'] = new_email
+    return jsonify({'success': True})
+@app.route('/verify_otp_for_email_change', methods=['POST'])
+def verify_otp_for_email_change():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    user_id = session['user_id']
+    otp = request.form['otp']
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE user_id = ?', (user_id,)).fetchone()
+
+    if user['otp_attempts'] >= 3:
+        return jsonify({'success': False, 'message': 'Too many failed attempts. Try again later.'})
+
+    if datetime.now() > datetime.strptime(user['otp_expiry'], '%Y-%m-%d %H:%M:%S.%f'):
+        return jsonify({'success': False, 'message': 'OTP has expired. Please request a new one.'})
+
+    if user['otp'] == otp:
+        conn.execute('UPDATE users SET otp = NULL, otp_expiry = NULL, otp_attempts = 0 WHERE user_id = ?',
+                     (user_id,))
+        conn.commit()
+        return jsonify({'success': True})
+    else:
+        conn.execute('UPDATE users SET otp_attempts = otp_attempts + 1 WHERE user_id = ?', (user_id,))
+        conn.commit()
+        return jsonify({'success': False, 'message': 'Invalid OTP'})
+
+@app.route('/verify_otp_for_password_reset', methods=['GET', 'POST'])
+def verify_otp_for_password_reset():
+    if request.method == 'POST':
+        otp = request.form['otp']
+        if 'otp' in session:
+            if session.get('otp_attempts', 0) >= 3:
+                flash('You have reached the maximum number of attempts. Please try again later.')
+                return redirect(url_for('forgot_password'))
+            if otp == session['otp']:
+                flash('OTP verified successfully.')
+                session.pop('otp_attempts', None)
+                return redirect(url_for('reset_password'))
+            else:
+                session['otp_attempts'] = session.get('otp_attempts', 0) + 1
+                flash('Invalid OTP. Please try again.')
+        else:
+            flash('OTP session expired. Please request a new OTP.')
+        return redirect(url_for('verify_otp_for_password_reset'))
+    return render_template('verify_otp.html')
+
+
 @app.route('/change_password', methods=['POST'])
 def change_password():
     if 'user_id' not in session:
@@ -1257,16 +1388,40 @@ def change_password():
     current_password = request.form['current_password']
     new_password = request.form['new_password']
     conn = get_db_connection()
-    user = conn.execute('SELECT password_hash FROM users WHERE user_id = ?', (user_id,)).fetchone()
-    if user and user['password_hash'] == hash_password(current_password):
-        conn.execute('UPDATE users SET password_hash = ? WHERE user_id = ?', (hash_password(new_password), user_id))
+    user = conn.execute('SELECT * FROM users WHERE user_id = ?', (user_id,)).fetchone()
+
+    if check_password_hash(user['password_hash'], current_password):
+        conn.execute('UPDATE users SET password_hash = ? WHERE user_id = ?',
+                     (generate_password_hash(new_password), user_id))
         conn.commit()
-        flash('Password updated successfully', 'success')
+        flash('Password updated successfully.')
     else:
-        flash('Current password is incorrect', 'danger')
+        flash('Current password is incorrect.')
     conn.close()
     return redirect(url_for('profile'))
 
+@app.route('/send_otp', methods=['POST'])
+def send_otp():
+    current_email = request.form['current_email']
+    username = request.form['username']
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    user_id = session['user_id']
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE user_id = ? AND email = ? AND username = ?',
+                        (user_id, current_email, username)).fetchone()
+
+    if user:
+        otp = str(randint(100000, 999999))
+        expiry = datetime.now() + timedelta(minutes=10)
+        conn.execute('UPDATE users SET otp = ?, otp_expiry = ?, otp_attempts = 0 WHERE user_id = ?',
+                     (otp, expiry, user_id))
+        conn.commit()
+        send_email(current_email, 'Your OTP Code', f'Your OTP code is {otp}')
+        session['otp_stage'] = 'current_email'
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'message': 'Invalid username or email'})
 
 
 if __name__ == '__main__':
