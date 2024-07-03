@@ -948,26 +948,55 @@ def logout():
 @role_required([1, 2])  # Both admin and user can access
 def inventory():
     conn = get_db_connection()
-    inventory_items = conn.execute('SELECT * FROM inventory').fetchall()
+    inventory_items = conn.execute('''
+        SELECT item_id, name, category, variations, stocked_quantity, low_stock_threshold, is_disabled, seller, price_min, price_max
+        FROM inventory
+        WHERE is_disabled = 0
+    ''').fetchall()
     conn.close()
     return render_template('inventory.html', inventory_items=inventory_items)
 
+@app.route('/submit_add_item', methods=['POST'])
+def submit_add_item():
+    data = request.get_json()
+    name = data['name']
+    category = data['category']
+    variations = data['variations']
+    stocked_quantity = data['stocked_quantity']
+    seller = data['seller']
+    price_min = data['price_min']
+    price_max = data['price_max']
+    low_stock_threshold = data['low_stock_threshold']
+
+    try:
+        conn = get_db_connection()
+        conn.execute('''
+            INSERT INTO inventory (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold))
+        conn.commit()
+        conn.close()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
 
 @app.route('/register_item', methods=['GET', 'POST'])
 def register_item():
     if request.method == 'POST':
         name = request.form['name']
         category = request.form['category']
-        price = request.form['price']
-        stock = request.form['stock']
         variations = request.form['variations']
+        stocked_quantity = request.form['stocked_quantity']
         seller = request.form['seller']
+        price_min = request.form['price_min']
+        price_max = request.form['price_max']
+        low_stock_threshold = request.form['low_stock_threshold']
 
         conn = get_db_connection()
         conn.execute('''
-            INSERT INTO inventory (name, category, price, stock, variations, seller)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (name, category, price, stock, variations, seller))
+            INSERT INTO inventory (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold))
         conn.commit()
         conn.close()
 
@@ -975,47 +1004,54 @@ def register_item():
         return redirect(url_for('inventory'))
     return render_template('register_item.html')
 
-
 @app.route('/item/<int:item_id>')
 def view_item(item_id):
     conn = get_db_connection()
-    item = conn.execute('SELECT * FROM inventory WHERE id = ?', (item_id,)).fetchone()
+    item = conn.execute('SELECT * FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
     conn.close()
     if item is None:
         flash('Item not found!')
         return redirect(url_for('inventory'))
     return render_template('view_item.html', item=item)
 
-
-@app.route('/edit_item/<int:item_id>', methods=['GET', 'POST'])
-def edit_item(item_id):
+@app.route('/edit_inventory/<int:item_id>', methods=['GET', 'POST'])
+@role_required([1])  # Assuming only admin can edit
+def edit_inventory(item_id):
     conn = get_db_connection()
-    item = conn.execute('SELECT * FROM inventory WHERE id = ?', (item_id,)).fetchone()
-
     if request.method == 'POST':
         name = request.form['name']
         category = request.form['category']
-        price = request.form['price']
-        stock = request.form['stock']
         variations = request.form['variations']
+        stocked_quantity = request.form['stocked_quantity']
+        low_stock_threshold = request.form['low_stock_threshold']
         seller = request.form['seller']
+        price_min = request.form['price_min']
+        price_max = request.form['price_max']
 
         conn.execute('''
             UPDATE inventory
-            SET name = ?, category = ?, price = ?, stock = ?, variations = ?, seller = ?
-            WHERE id = ?
-        ''', (name, category, price, stock, variations, seller, item_id))
+            SET name = ?, category = ?, variations = ?, stocked_quantity = ?, low_stock_threshold = ?, seller = ?, price_min = ?, price_max = ?
+            WHERE item_id = ?
+        ''', (name, category, variations, stocked_quantity, low_stock_threshold, seller, price_min, price_max, item_id))
         conn.commit()
         conn.close()
-
-        flash('Item updated successfully.')
         return redirect(url_for('inventory'))
 
+    item = conn.execute('SELECT * FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
     conn.close()
-    if item is None:
-        flash('Item not found!')
-        return redirect(url_for('inventory'))
-    return render_template('edit_item.html', item=item)
+    return render_template('edit_inventory.html', item=item)
+
+@app.route('/disable_inventory/<int:item_id>', methods=['POST'])
+@role_required([1])  # Assuming only admin can disable
+def disable_inventory(item_id):
+    conn = get_db_connection()
+    item = conn.execute('SELECT is_disabled FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
+    new_status = not item['is_disabled']
+    conn.execute('UPDATE inventory SET is_disabled = ? WHERE item_id = ?', (new_status, item_id))
+    conn.commit()
+    conn.close()
+    return jsonify(success=True)
+
 
 @app.route('/reports')
 @role_required([1, 2])  # Both admin and user can access

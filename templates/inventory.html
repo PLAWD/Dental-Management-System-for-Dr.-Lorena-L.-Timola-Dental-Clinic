@@ -5,6 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* Page specific styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5ede3;
+            color: #5b2c1e;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        .header {
+            margin-bottom: 20px;
+        }
+        .filter-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .search-form {
+            display: flex;
+            align-items: center;
+        }
+        .search-form input {
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .register-item-btn {
+            padding: 10px 20px;
+            background-color: #8B4513;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .inventory-list .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .inventory-list .item.low-stock {
+            border-color: red;
+        }
+        .inventory-list .item .item-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .inventory-list .item .options-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5em;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -44,42 +110,69 @@
             </div>
             <div class="filter-container">
                 <div class="search-form">
-                    <input type="text" placeholder="Type here to search by name, seller, date, or category">
-                    <button class="register-item-btn">Register Item</button>
+                    <input type="text" id="searchInput" onkeyup="searchItems()" placeholder="Type here to search by name, seller, or date">
+                    <button class="register-item-btn" onclick="openModal('addItemModal')">Register Item</button>
                 </div>
-            </div>
-            <div class="categories">
-                <button class="category-btn">All</button>
-                <button class="category-btn">Uncategorized</button>
-                <button class="category-btn">Prosthodinthics</button>
-                <button class="category-btn">Orthodontic</button>
             </div>
             <div class="inventory-list">
-                <div class="item">
+                {% for item in inventory_items %}
+                <div class="item {% if item.stocked_quantity <= item.low_stock_threshold %}low-stock{% endif %}">
                     <div class="item-info">
-                        <img src="dental_stone_image.png" alt="Dental Stone">
-                        <div class="item-details">
-                            <h2>Dental Stone</h2>
-                            <p>6 variations • Prosthodinthics • Stocked product: 6</p>
-                            <p>Seller: Idk what seller this is</p>
-                            <p>Price: ₱470 ~ ₱580</p>
-                        </div>
+                        <h2>{{ item.name }}</h2>
+                        <p>Variations: {{ item.variations }}</p>
+                        <p>Stocked Quantity: {{ item.stocked_quantity }}</p>
+                        <p>Seller: {{ item.seller }}</p>
+                        <p>Price Range: ₱{{ item.price_min }} ~ ₱{{ item.price_max }}</p>
                     </div>
-                    <button class="options-btn">⋮</button>
+                    <button class="options-btn" onclick="disableItem({{ item.item_id }})">⋮</button>
                 </div>
-                <div class="item low-stock">
-                    <div class="item-info">
-                        <img src="elastics_image.png" alt="Elastics">
-                        <div class="item-details">
-                            <h2>Elastics</h2>
-                            <p>8 variations • Orthodontic • Stocked product: 2 <span class="low-stock-badge">Low stock</span></p>
-                            <p>Seller: Idk what seller this is</p>
-                            <p>Price: ₱470 ~ ₱580</p>
-                        </div>
-                    </div>
-                    <button class="options-btn">⋮</button>
-                </div>
+                {% endfor %}
             </div>
+        </div>
+    </div>
+
+    <!-- Add Item Modal -->
+    <div id="addItemModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('addItemModal')">&times;</span>
+            <h2 class="register-user-title">Register Item</h2>
+            <form id="addItemForm" action="javascript:void(0);" method="POST">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="category">Category:</label>
+                    <input type="text" id="category" name="category" required>
+                </div>
+                <div class="form-group">
+                    <label for="variations">Variations:</label>
+                    <input type="number" id="variations" name="variations" required>
+                </div>
+                <div class="form-group">
+                    <label for="stocked_quantity">Stocked Quantity:</label>
+                    <input type="number" id="stocked_quantity" name="stocked_quantity" required>
+                </div>
+                <div class="form-group">
+                    <label for="seller">Seller:</label>
+                    <input type="text" id="seller" name="seller" required>
+                </div>
+                <div class="form-group">
+                    <label for="price_min">Price Min:</label>
+                    <input type="number" id="price_min" name="price_min" required>
+                </div>
+                <div class="form-group">
+                    <label for="price_max">Price Max:</label>
+                    <input type="number" id="price_max" name="price_max" required>
+                </div>
+                <div class="form-group">
+                    <label for="low_stock_threshold">Low Stock Threshold:</label>
+                    <input type="number" id="low_stock_threshold" name="low_stock_threshold" required>
+                </div>
+                <div class="submit-group">
+                    <button type="submit">Submit</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -118,6 +211,83 @@
                 });
             });
         });
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        document.getElementById('addItemForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = {
+                name: document.getElementById('name').value,
+                category: document.getElementById('category').value,
+                variations: document.getElementById('variations').value,
+                stocked_quantity: document.getElementById('stocked_quantity').value,
+                seller: document.getElementById('seller').value,
+                price_min: document.getElementById('price_min').value,
+                price_max: document.getElementById('price_max').value,
+                low_stock_threshold: document.getElementById('low_stock_threshold').value
+            };
+
+            fetch('{{ url_for("submit_add_item") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{{ url_for("inventory") }}';
+                } else {
+                    alert('Failed to add item: ' + data.error);
+                }
+            });
+        });
+
+        function disableItem(itemId) {
+            if (confirm('Are you sure you want to disable this item?')) {
+                fetch(`{{ url_for('disable_inventory', item_id=itemId) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ item_id: itemId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to disable item.');
+                    }
+                });
+            }
+        }
+
+        function searchItems() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const inventoryList = document.querySelector('.inventory-list');
+            const items = inventoryList.getElementsByClassName('item');
+
+            for (let i = 0; i < items.length; i++) {
+                const itemInfo = items[i].getElementsByClassName('item-info')[0];
+                if (itemInfo) {
+                    const textValue = itemInfo.textContent || itemInfo.innerText;
+                    if (textValue.toLowerCase().indexOf(filter) > -1) {
+                        items[i].style.display = '';
+                    } else {
+                        items[i].style.display = 'none';
+                    }
+                }
+            }
+        }
     </script>
 </body>
 </html>
