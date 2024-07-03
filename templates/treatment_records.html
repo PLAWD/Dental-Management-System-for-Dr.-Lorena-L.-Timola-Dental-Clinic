@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treatment Records</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .treatment-container {
+            margin: 0 auto;
+            padding: 20px;
+            max-width: 1200px;
+        }
+
+        .treatment-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .treatment-search-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .treatment-search-bar input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .treatment-search-btn {
+            padding: 10px;
+            background-color: #5d74e2;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .treatment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .treatment-table th, .treatment-table td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .treatment-table th {
+            background-color: #8B4513;
+            color: white;
+        }
+    </style>
+</head>
+<script>
+    function showAnswer(question, answer) {
+        document.getElementById('question').value = question;
+        document.getElementById('answer').value = answer;
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebar = document.getElementById('sidebar');
+        const toggleSidebar = document.getElementById('toggleSidebar');
+        const contentContainer = document.querySelector('.content-container');
+
+        toggleSidebar.addEventListener('click', function () {
+            sidebar.classList.toggle('show');
+            contentContainer.classList.toggle('shifted');
+            toggleSidebar.style.display = 'none';
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
+                sidebar.classList.remove('show');
+                contentContainer.classList.remove('shifted');
+                toggleSidebar.style.display = 'block';
+            }
+        });
+    });
+</script>
+<body>
+    <div class="sidebar-tab" id="toggleSidebar">☰</div>
+    <div id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('profile') }}">Profile</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+            <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
+            <li class="dropdown">
+                <a href="#">Records</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('patients') }}">Patient Records</a>
+                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                    <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
+                </div>
+            </li>
+            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
+            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+            <li><a href="{{ url_for('reports') }}">Reports</a></li>
+            <li><a href="{{ url_for('payments') }}">Payments</a></li>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <li><a href="{{ url_for('help') }}">Help</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+    <div class="treatment-container">
+        <div class="treatment-header">
+            <h1>Treatment Records</h1>
+        </div>
+        <div class="treatment-search-bar">
+            <input type="text" placeholder="Type here to search by name, date, and services">
+            <button class="treatment-search-btn">🔍</button>
+        </div>
+        <table class="treatment-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Patient Name</th>
+                    <th>Services</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record['treatment_date'] }}</td>
+                    <td>{{ record['patient_name'] }}</td>
+                    <td>{{ record['services'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

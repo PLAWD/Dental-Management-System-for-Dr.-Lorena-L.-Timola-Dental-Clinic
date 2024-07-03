@@ -14,7 +14,6 @@ import json
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from reportlab.lib import colors
 import os
 
 app = Flask(__name__)
@@ -594,7 +593,17 @@ def submit_register_user():
 def patients():
     conn = get_db_connection()
     patients = conn.execute('''
-        SELECT p.patient_id, p.first_name || ' ' || p.middle_name || ' ' || p.last_name AS name, p.phone AS phone_number, p.address, p.city, p.next_appointment, p.last_appointment, p.register_date, p.email, p.dob AS date_of_birth
+        SELECT 
+            p.patient_id, 
+            p.first_name || ' ' || p.middle_name || ' ' || p.last_name AS name, 
+            p.mobile_number AS phone_number, 
+            p.address, 
+            p.city, 
+            p.next_appointment, 
+            p.last_appointment, 
+            p.register_date, 
+            p.email, 
+            p.dob AS date_of_birth
         FROM patients p
     ''').fetchall()
     total_patients = conn.execute('SELECT COUNT(*) as count FROM patients').fetchone()['count']
