@@ -607,23 +607,15 @@ def submit_register_user():
 def patients():
     conn = get_db_connection()
     patients = conn.execute('''
-        SELECT 
-            p.patient_id, 
-            p.first_name || ' ' || p.middle_name || ' ' || p.last_name AS name, 
-            p.mobile_number AS phone_number, 
-            p.address, 
-            p.city, 
-            p.next_appointment, 
-            p.last_appointment, 
-            p.register_date, 
-            p.email, 
-            p.dob AS date_of_birth
+        SELECT p.patient_id, p.first_name || ' ' || p.middle_name || ' ' || p.last_name AS name, p.mobile_number AS phone_number, p.address, p.city, p.next_appointment, p.last_appointment, p.register_date, p.email, p.dob AS date_of_birth
         FROM patients p
+        WHERE p.is_active = 1
     ''').fetchall()
-    total_patients = conn.execute('SELECT COUNT(*) as count FROM patients').fetchone()['count']
+    total_patients = conn.execute('SELECT COUNT(*) as count FROM patients WHERE is_active = 1').fetchone()['count']
     conn.close()
 
     return render_template('patients.html', patients=patients, total_patients=total_patients)
+
 
 
 @app.route('/overview/<int:patient_id>')
@@ -655,23 +647,16 @@ def overview(patient_id):
                            examination=examination or {}, 
                            medical_history=medical_history or {})
 
-@app.route('/get_patient_details')
+
+@app.route('/get_patient_details', methods=['GET'])
 def get_patient_details():
     patient_id = request.args.get('patient_id')
     conn = get_db_connection()
-    patient_details = conn.execute('''
-        SELECT p.patient_id, p.first_name, p.middle_name, p.last_name, p.dob, p.sex, p.address, p.city, p.occupation, p.phone, p.email, p.next_appointment, p.last_appointment, m.medical_history, m.heart_disease_specify, m.blood_pressure, m.allergic_anesthetic_specify, m.extraction_date, m.pregnant_specify, m.hospitalization_specify, m.medicine_specify
-        FROM patients p
-        LEFT JOIN medical_history m ON p.patient_id = m.patient_id
-        WHERE p.patient_id = ?
-    ''', (patient_id,)).fetchone()
+    patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
     conn.close()
-
-    if patient_details:
-        patient_details = dict(patient_details)
-
-    return jsonify(patient_details)
-
+    if patient:
+        return jsonify(dict(patient))
+    return jsonify(error="Patient not found"), 404
 
 @app.route('/add_patient', methods=['POST'])
 def add_patient():
@@ -731,8 +716,13 @@ def submit_add_patient():
     mobile_number = data['mobile_number']
     email = data['email']
 
+    conn = get_db_connection()
+    existing_patient = conn.execute('SELECT * FROM patients WHERE email = ?', (email,)).fetchone()
+    if existing_patient:
+        conn.close()
+        return jsonify(success=False, error='Patient with this email already exists.')
+
     try:
-        conn = get_db_connection()
         conn.execute('''
             INSERT INTO patients (first_name, middle_name, last_name, dob, sex, address, city, occupation, mobile_number, email)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -743,6 +733,33 @@ def submit_add_patient():
     except Exception as e:
         return jsonify(success=False, error=str(e))
 
+@app.route('/submit_edit_patient', methods=['POST'])
+def submit_edit_patient():
+    data = request.get_json()
+    patient_id = data['patient_id']
+    first_name = data['first_name']
+    middle_name = data.get('middle_name', '')
+    last_name = data['last_name']
+    dob = data['dob']
+    sex = data['sex']
+    address = data['address']
+    city = data['city']
+    occupation = data.get('occupation', '')
+    mobile_number = data['mobile_number']
+    email = data['email']
+
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            UPDATE patients
+            SET first_name = ?, middle_name = ?, last_name = ?, dob = ?, sex = ?, address = ?, city = ?, occupation = ?, mobile_number = ?, email = ?
+            WHERE patient_id = ?
+        ''', (first_name, middle_name, last_name, dob, sex, address, city, occupation, mobile_number, email, patient_id))
+        conn.commit()
+        conn.close()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
 
 @app.route('/submit_medical_history', methods=['POST'])
 def submit_medical_history():
@@ -800,13 +817,17 @@ def update_patient():
 
 @app.route('/disable_patient', methods=['POST'])
 def disable_patient():
-    patient_id = request.form['patient_id']
+    data = request.get_json()
+    patient_id = data['patient_id']
     conn = get_db_connection()
-    conn.execute('UPDATE patients SET is_active = 0 WHERE patient_id = ?', (patient_id,))
-    conn.commit()
-    conn.close()
+    try:
+        conn.execute('UPDATE patients SET is_active = 0 WHERE patient_id = ?', (patient_id,))
+        conn.commit()
+        conn.close()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
 
-    return jsonify({'success': True})
 
 @app.route('/patient_records')
 def patient_records():
