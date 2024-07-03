@@ -251,7 +251,7 @@ def dashboard():
     appointments = conn.execute('SELECT p.first_name || " " || p.last_name AS patient_name, a.appointment_date, a.start_time, a.end_time FROM appointments a JOIN patients p ON a.patient_id = p.patient_id').fetchall()
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
-    statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
+    statuses = conn.execute('SELECT status_id, userStatus FROM AppointmentStatus').fetchall()
     conn.close()
 
     first_name = session.get('first_name')
@@ -264,7 +264,7 @@ def create_appointment():
     conn = get_db_connection()
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
-    statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
+    statuses = conn.execute('SELECT status_id, userStatus FROM AppointmentStatus').fetchall()
     conn.close()
     return render_template('dashboard.html', patients=patients, dentists=dentists, statuses=statuses)
 
@@ -1219,6 +1219,53 @@ def help():
 @app.route('/about')
 def about():
     return render_template('about.html')
+
+@app.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    user_id = session['user_id']
+    conn = get_db_connection()
+    user = conn.execute('''
+        SELECT users.*, userStatus.userStatus AS user_status, Roles.role_name AS role_name
+        FROM users
+        LEFT JOIN userStatus ON users.userstat_id = userStatus.userstat_id
+        LEFT JOIN Roles ON users.role_id = Roles.role_id
+        WHERE users.user_id = ?
+    ''', (user_id,)).fetchone()
+    conn.close()
+    return render_template('profile.html', user=user)
+
+@app.route('/change_email', methods=['POST'])
+def change_email():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    user_id = session['user_id']
+    new_email = request.form['new_email']
+    conn = get_db_connection()
+    conn.execute('UPDATE users SET email = ? WHERE user_id = ?', (new_email, user_id))
+    conn.commit()
+    conn.close()
+    flash('Email updated successfully', 'success')
+    return redirect(url_for('profile'))
+
+@app.route('/change_password', methods=['POST'])
+def change_password():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    user_id = session['user_id']
+    current_password = request.form['current_password']
+    new_password = request.form['new_password']
+    conn = get_db_connection()
+    user = conn.execute('SELECT password_hash FROM users WHERE user_id = ?', (user_id,)).fetchone()
+    if user and user['password_hash'] == hash_password(current_password):
+        conn.execute('UPDATE users SET password_hash = ? WHERE user_id = ?', (hash_password(new_password), user_id))
+        conn.commit()
+        flash('Password updated successfully', 'success')
+    else:
+        flash('Current password is incorrect', 'danger')
+    conn.close()
+    return redirect(url_for('profile'))
 
 
 
