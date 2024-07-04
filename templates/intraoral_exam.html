@@ -3,554 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Intraoral Examination</title>
+    <title>Inventory</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* Page specific styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5ede3;
+            color: #5b2c1e;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        .header {
+            margin-bottom: 20px;
+        }
+        .filter-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .search-form {
+            display: flex;
+            align-items: center;
+        }
+        .search-form input {
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .register-item-btn {
+            padding: 10px 20px;
+            background-color: #8B4513;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .inventory-list .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .inventory-list .item.low-stock {
+            border-color: red;
+        }
+        .inventory-list .item .item-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .inventory-list .item .options-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5em;
+        }
+    </style>
 </head>
-<body class="intraoral-page">
-    <div class="sidebar-tab" id="sidebarTab">☰</div>
-    <div id="sidebar" class="sidebar">
-        <ul>
-            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li><a href="{{ url_for('profile') }}">Profile</a></li>
-            <li><a href="{{ url_for('users') }}">Users</a></li>
-            <li><a href="#">Treatment</a></li>
-            <li class="dropdown">
-                <a href="#">Records</a>
-                <div class="dropdown-content">
-                    <a href="{{ url_for('patients') }}">Patient Records</a>
-                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                    <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
-                </div>
-            </li>
-            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
-            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
-            <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <li><a href="{{ url_for('payments') }}">Payments</a></li>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <li><a href="#">Help</a></li>
-            <li><a href="#">About</a></li>
-            <li><a href="{{ url_for('logout') }}">Logout</a></li>
-        </ul>
-    </div>
-    <div class="main-content">
-        <div class="container">
-            <div class="tab-container">
-                <button class="tab active" onclick="openTab(event, 'consent-form')">Consent Form</button>
-                <button class="tab" onclick="openTab(event, 'medical-history')">Medical History</button>
-                <button class="tab" onclick="openTab(event, 'overview')">Overview</button>
-                <button class="tab" onclick="openTab(event, 'enter-diagnosis')">Enter Diagnosis</button>
-            </div>
-
-            <div class="exam-form">
-                    <div class="teeth-diagram">
-                        <div class="teeth-section">
-                            <div class="teeth-header">Upper Temporary Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Upper temporary teeth row -->
-                                {% for number in [55, 54, 53, 52, 51, 61, 62, 63, 64, 65] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})">
-                                        <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
-                                    </div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="teeth-section">
-                            <div class="teeth-header">Permanent Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Permanent teeth upper row -->
-                                {% for number in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})">
-                                        <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
-                                    </div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            <div class="teeth-row">
-                                <!-- Permanent teeth lower row -->
-                                {% for number in [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] %}
-                                <div class="tooth-container">
-                                     <div class="tooth-box" onclick="openModal(this, {{ number }})">
-                                        <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
-                                    </div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="teeth-section">
-                            <div class="teeth-header">Lower Temporary Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Lower temporary teeth row -->
-                                {% for number in [85, 84, 83, 82, 81, 71, 72, 73, 74, 75] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})">
-                                        <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
-                                    </div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
+<body>
+    <div class="container">
+        <div class="sidebar-tab" id="sidebarTab">☰</div>
+        <div id="sidebar" class="sidebar">
+            <ul>
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="#">Profile</a></li>
+                <li><a href="{{ url_for('users') }}">Users</a></li>
+                <li><a href="#">Treatment</a></li>
+                <li class="dropdown">
+                    <a href="#">Records</a>
+                    <div class="dropdown-content">
+                        <a href="{{ url_for('patients') }}">Patient Records</a>
+                        <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                        <a href="#">Treatment Records</a>
                     </div>
-
-<!-- ////////////////////////////////// Consent form ////////////////-->
-
-<div id="consent-form" class="tab-content" style="display:none;">
-    <!-- Consent form content -->
-    <div class="exam-details">
-        <h3>Consent Form</h3>
-        <form>
-            <div class="form-group">
-                <label>Patient's Signature</label>
-                <input type="text"><br>
-            </div>
-            <div class="form-group">
-                <label>Date</label>
-                <input type="date"><br>
-            </div>
-            <div class="form-group">
-                <label>Consent</label>
-                <textarea rows="5"></textarea><br>
-            </div>
-        </form>
-    </div>
-</div>
-</div>
-
-
-<!-- ////////////////////////////////// Overview ////////////////-->
-
-<div id="overview" class="tab-content" style="display:none;">
-    <!-- Overview content -->
-    <div class="exam-details">
-        <h3> Patient Records</h3>
-        <form>
-            <div>
-                <p>{{ patient.first_name }} {{ patient.middle_name }} {{ patient.last_name }}
-                    <span class="status-badge {{ 'inactive' if not patient.is_active else '' }}">{{ 'Active' if patient.is_active else 'Inactive' }}</span>
-                </p>
-                <p>Email: <a href="mailto:{{ patient.email }}">{{ patient.email }}</a></p>
-                <p>Mobile number: <a href="tel:{{ patient.phone }}">{{ patient.phone }}</a></p>
-                <p>Address: {{ patient.address }}</p>
-                <p>City: <strong>{{ patient.city }}</strong></p>
-                <p>Patient ID: {{ patient.patient_id }}</p>
-                <p>Patient since: {{ patient.register_date }}</p>
-            </div>
-            <div>
-                <p>Age: {{ patient.age }}</p>
-                <p>Birth date: {{ patient.dob }}</p>
-            </div>
-        </form>
-    </div>
-</div>
-
-
-
-<!-- ////////////////////////////////// Medical History ////////////////-->
-
-<div id="medical-history" class="tab-content" style="display:none;">
-    <!-- Medical History content -->
-    <div class="exam-details">
-        <h3>Medical History</h3>
-<form>
-<div class="form-group">
-    <input type="checkbox" id="diabetes" name="diabetes">
-    <label for="diabetes">Diabetes</label>
-</div>
-<div class="form-group">
-    <input type="checkbox" id="tired" name="tired">
-    <label for="tired">Gets tired easily</label>
-</div>
-<div class="form-group">
-    <input type="checkbox" id="urinates" name="urinates">
-    <label for="urinates">Urinates frequently</label>
-</div>
-<div class="form-group">
-    <input type="checkbox" id="thirsty" name="thirsty">
-    <label for="thirsty">Easily gets thirsty</label>
-</div>
-<div class="form-group">
-    <input type="checkbox" id="heart" name="heart">
-    <label for="heart">Heart Disease</label>
-</div>
-<div class="form-group">
-    <input type="checkbox" id="hepatitis" name="hepatitis">
-    <label for="hepatitis">Hepatitis</label>
-</div>
-<div class="form-group">
-    <input type="checkbox" id="anemia" name="anemia">
-    <label for="anemia">Anemia</label>
-</div>
-<div class="form-group">
-    <input type="checkbox" id="hypertension" name="hypertension">
-    <label for="hypertension">Hypertension</label>
-</div>
-<div class="form-group">
-    <input type="checkbox" id="allergic" name="allergic" onclick="toggleTextBox('allergic', 'allergic-specify')">
-    <label for="allergic">Allergic to Anesthetic Agent (specify)</label>
-    <input type="text" id="allergic-specify" class="conditional-field" placeholder="Specify">
-</div>
-<div class="form-group">
-    <input type="checkbox" id="extraction" name="extraction" onclick="toggleDatePicker('extraction', 'extraction-date')">
-    <label for="extraction">Had a tooth extraction before (when was the latest?)</label>
-    <input type="date" id="extraction-date" class="conditional-field">
-</div>
-<div class="form-group">
-    <input type="checkbox" id="bleeds" name="bleeds">
-    <label for="bleeds">Bleeds profusely after extraction</label>
-</div>
-<div class="form-group">
-    <input type="checkbox" id="chest" name="chest">
-    <label for="chest">Chest pain</label>
-</div>
-<div class="form-group">
-    <input type="checkbox" id="asthma" name="asthma">
-    <label for="asthma">Asthma</label>
-</div>
-<div class="form-group">
-    <input type="checkbox" id="menstruation" name="menstruation">
-    <label for="menstruation">(This question is for female patients only) Menstruation</label>
-</div>
-<div class="form-group">
-    <input type="checkbox" id="pregnant" name="pregnant" onclick="toggleTextBox('pregnant', 'pregnant-months')">
-    <label for="pregnant">(This question is for female patients only) Pregnant (how many months)</label>
-    <input type="text" id="pregnant-months" class="conditional-field" placeholder="How many months?">
-</div>
-<div class="form-group">
-    <input type="checkbox" id="hospitalized" name="hospitalized" onclick="toggleTextBox('hospitalized', 'hospitalized-disease')">
-    <label for="hospitalized">Hospitalized before (what disease?)</label>
-    <input type="text" id="hospitalized-disease" class="conditional-field" placeholder="What disease?">
-</div>
-<div class="form-group">
-    <input type="checkbox" id="medicine" name="medicine" onclick="toggleTextBox('medicine', 'medicine-specify')">
-    <label for="medicine">Taking medicine at present (specify)</label>
-    <input type="text" id="medicine-specify" class="conditional-field" placeholder="Specify">
-</div>
-<div class="form-group">
-    <input type="checkbox" id="epilepsy" name="epilepsy">
-    <label for="epilepsy">Epilepsy</label>
-</div>
-</form>
-</div>
-</div>
-
-
-
-<!-- ////////////////////////////////// Enter Diagnosis ////////////////-->
-
-<div id="enter-diagnosis" class="tab-content">
-    <!-- Enter diagnosis content -->
-                    <div class="exam-details">
-                        <h3>Enter Diagnosis</h3>
-                        <form>
-                            <div class="form-group">
-                                <label>Periodontal Screening</label>
-                                <input type="checkbox" class="diagnosis-checkbox" id="G" data-code="G">
-                                <label for="G"> Gingivitis </label>
-                                <input type="checkbox" class="diagnosis-checkbox" id="EP" data-code="EP">
-                                <label for="EP"> Early Periodontitis </label>
-                                <input type="checkbox" class="diagnosis-checkbox" id="MP" data-code="MP">
-                                <label for="MP"> Moderate Periodontitis </label>
-                                <input type="checkbox" class="diagnosis-checkbox" id="AP" data-code="AP">
-                                <label for="AP"> Advanced Periodontitis </label>
-                            </div>
-                            <div class="form-group">
-                                <label>Occlusion</label>
-                                <select>
-                                    <option>Class I</option>
-                                    <option>Class II</option>
-                                    <option>Class III</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Appliances</label>
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="O"> Orthodontic
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="S"> Stayplate
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="OT"> Others <input type="text">
-                            </div>
-                            <div class="form-group">
-                                <label>TMD</label>
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="C"> Clenching
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="CL"> Clicking
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="T"> Trismus
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="MS"> Muscle spasm
-                            </div>
-                            <div class="form-group">
-                                <label>X-ray Taken</label>
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="P"> Panoramic
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="C"> Cephalometric
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="PT"> Periapical Tth. No. <input type="text">
-                                <input type="checkbox" class="diagnosis-checkbox" data-code="O"> Occlusal <input type="text">
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-                        
-                                
-
-            
+                </li>
+                <li><a href="#">Maintenance</a></li>
+                <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+                <li><a href="{{ url_for('reports') }}">Reports</a></li>
+                <li><a href="#">Payments</a></li>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <li><a href="#">Help</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
         </div>
-   
+        <div class="main-content">
+            <div class="header">
+                <h1>Inventory</h1>
+            </div>
+            <div class="filter-container">
+                <div class="search-form">
+                    <input type="text" id="searchInput" onkeyup="searchItems()" placeholder="Type here to search by name, seller, or date">
+                    <button class="register-item-btn" onclick="openModal('addItemModal')">Register Item</button>
+                </div>
+            </div>
+            <div class="inventory-list">
+                {% for item in inventory_items %}
+                <div class="item {% if item.stocked_quantity <= item.low_stock_threshold %}low-stock{% endif %}">
+                    <div class="item-info">
+                        <h2>{{ item.name }}</h2>
+                        <p>Variations: {{ item.variations }}</p>
+                        <p>Stocked Quantity: {{ item.stocked_quantity }}</p>
+                        <p>Seller: {{ item.seller }}</p>
+                        <p>Price Range: ₱{{ item.price_min }} ~ ₱{{ item.price_max }}</p>
+                    </div>
+                    <button class="options-btn" onclick="disableItem({{ item.item_id }})">⋮</button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 
-
-    <!-- Modal for teeth conditions -->
-    <div id="conditionModal" class="modal">
+    <!-- Add Item Modal -->
+    <div id="addItemModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2>Select Conditions</h2>
-            <div class="legend">
-                <div>
-                    <h3>Conditions:</h3>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="Pt"> - Present Teeth</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="D"> D - Decayed (Caries indicated for filling)</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="M"> M - Missing due to caries</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="MO"> MO - Missing due to other causes</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="Sp"> Sp - Supernumerary Tooth</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="Rf"> Rf - Roof Fragment</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="Un"> Un - Unerupted</label><br>
+            <span class="modal-close" onclick="closeModal('addItemModal')">&times;</span>
+            <h2 class="register-user-title">Register Item</h2>
+            <form id="addItemForm" action="javascript:void(0);" method="POST">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
                 </div>
-                <div>
-                    <h3>Surgery:</h3>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="X"> X - Extraction due to caries</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="XO"> XO - Extraction due to other causes</label><br>
+                <div class="form-group">
+                    <label for="category">Category:</label>
+                    <input type="text" id="category" name="category" required>
                 </div>
-                <div>
-                    <h3>Restoration & Prosthetics</h3>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="Am"> Am - Amalgam Filling</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="Co"> Co - Composite Filling</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="JC"> JC - Jacket Crown</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="Ab"> Ab - Abutment</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="Att"> Att - Attachment</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="P"> P - Pontic</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="In"> In - Inlay</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="Imp"> Imp - Implant</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="S"> S - Sealants</label><br>
-                    <label><input type="checkbox" class="condition-checkbox" data-code="Rm"> Rm - Removable dentures</label><br>
+                <div class="form-group">
+                    <label for="variations">Variations:</label>
+                    <input type="number" id="variations" name="variations" required>
                 </div>
-            </div>
-            <h3>Preview</h3>
-            <p id="selectedConditions"></p>
-            <div id="preview">
-                  <text id="previewText" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
+                <div class="form-group">
+                    <label for="stocked_quantity">Stocked Quantity:</label>
+                    <input type="number" id="stocked_quantity" name="stocked_quantity" required>
                 </div>
-            <div>
-                 <svg viewBox="0 0 100 100" class="interactive-circle">
-                    <path class="segment" onclick="toggleSegment(this)" d="M50 50 L50 0 A50 50 0 0 1 100 50 z" ></path>
-                    <path class="segment" onclick="toggleSegment(this)" d="M50 50 L100 50 A50 50 0 0 1 50 100 z" ></path>
-                    <path class="segment" onclick="toggleSegment(this)" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                    <path class="segment" onclick="toggleSegment(this)" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                    <circle class="segment" onclick="toggleSegment(this)" cx="50" cy="50" r="20"></circle>
-                </svg>
-            </div>
-            <button onclick="saveConditions()">Save</button>
+                <div class="form-group">
+                    <label for="seller">Seller:</label>
+                    <input type="text" id="seller" name="seller" required>
+                </div>
+                <div class="form-group">
+                    <label for="price_min">Price Min:</label>
+                    <input type="number" id="price_min" name="price_min" required>
+                </div>
+                <div class="form-group">
+                    <label for="price_max">Price Max:</label>
+                    <input type="number" id="price_max" name="price_max" required>
+                </div>
+                <div class="form-group">
+                    <label for="low_stock_threshold">Low Stock Threshold:</label>
+                    <input type="number" id="low_stock_threshold" name="low_stock_threshold" required>
+                </div>
+                <div class="submit-group">
+                    <button type="submit">Submit</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        let currentTooth = null;
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarTab = document.getElementById('sidebarTab');
+            const mainContent = document.querySelector('.main-content');
 
-        function openTab(evt, tabName) {
-    var i, tabcontent, tablinks;
-    tabcontent = document.getElementsByClassName("tab-content");
-    for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-    tablinks = document.getElementsByClassName("tab");
-    for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-    document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
-}
-function openModal(toothElement, toothNumber) {
-    currentTooth = toothElement;
-    currentTooth.setAttribute('data-tooth-number', toothNumber);
-    document.getElementById('conditionModal').style.display = 'block';
-    loadConditions(toothNumber);
-    loadSegments(toothNumber);
-}
-function closeModal() {
-    document.getElementById('conditionModal').style.display = 'none';
-}
-function saveConditions() {
-    const checkboxes = document.querySelectorAll('.condition-checkbox');
-    let selectedCodes = [];
-    checkboxes.forEach((checkbox) => {
-        if (checkbox.checked) {
-            selectedCodes.push(checkbox.getAttribute('data-code'));
-        }
-    });
-    const toothNumber = currentTooth.getAttribute('data-tooth-number');
-    localStorage.setItem(`tooth_${toothNumber}_conditions`, JSON.stringify(selectedCodes));
-    displaySavedConditions(toothNumber, selectedCodes);
-    closeModal();
-}
-function displaySavedConditions(toothNumber, selectedCodes) {
-    const toothBox = document.querySelector(`.tooth-box[data-tooth-number="${toothNumber}"]`);
-    if (toothBox) {
-        let conditionText = toothBox.querySelector('.condition-text');
-        if (!conditionText) {
-            conditionText = document.createElement('div');
-            conditionText.className = 'condition-text';
-            toothBox.appendChild(conditionText);
-        }
-        conditionText.textContent = selectedCodes.join(' ');
-    }
-}
-function loadConditions(toothNumber) {
-    const storedConditions = JSON.parse(localStorage.getItem(`tooth_${toothNumber}_conditions`)) || [];
-    const checkboxes = document.querySelectorAll('.condition-checkbox');
-    checkboxes.forEach((checkbox) => {
-        checkbox.checked = storedConditions.includes(checkbox.getAttribute('data-code'));
-    });
-    updatePreview();
-}
-
-function updatePreview() {
-    const checkboxes = document.querySelectorAll('.condition-checkbox:checked');
-    let selectedCodes = [];
-    checkboxes.forEach((checkbox) => {
-        selectedCodes.push(checkbox.getAttribute('data-code'));
-    });
-    const previewText = document.getElementById('previewText');
-    previewText.textContent = selectedCodes.join(' ');
-}
-function toggleSegment(segment) {
-    if (segment.style.fill === 'red') {
-        segment.style.fill = '#FFFFFF';
-    } else {
-        segment.style.fill = 'red';
-    }
-    saveSegments();
-}
-       
-function saveSegments() {
-    const segments = document.querySelectorAll('.segment');
-    let selectedSegments = [];
-    segments.forEach((segment, index) => {
-        if (segment.style.fill === 'red') {
-            selectedSegments.push(index);
-        }
-    });
-    const toothNumber = currentTooth.getAttribute('data-tooth-number');
-    localStorage.setItem(`tooth_${toothNumber}_segments`, JSON.stringify(selectedSegments));
-}
-
-function loadSegments(toothNumber) {
-    const selectedSegments = JSON.parse(localStorage.getItem(`tooth_${toothNumber}_segments`)) || [];
-    const segments = document.querySelectorAll('.segment');
-    segments.forEach((segment, index) => {
-        segment.style.fill = selectedSegments.includes(index) ? 'red' : '#FFFFFF';
-    });
-}
-
-// Click Function to change the display value of the input
-
-            function clickMe() {
-                let input = document.getElementById("popup");
-
-                 if (input.style.display == "none") {
-                  input.style.display = "block";
-                    } else {
-                     input.style.display = "none";
-                    }
-            }
-            document.querySelectorAll('.legend input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', function () {
-                    const checkedBoxes = document.querySelectorAll('.legend input[type="checkbox"]:checked');
-                    const preview = document.getElementById('preview');
-
-                    if (checkedBoxes.length > 4) {
-                        this.checked = false;
-                        return;
-                    }
-                });
+            sidebarTab.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                mainContent.classList.toggle('shifted');
+                sidebarTab.style.display = 'none';
             });
 
-    document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('enter-diagnosis').style.display = 'block';
-    const sidebar = document.getElementById('sidebar');
-    const sidebarTab = document.getElementById('sidebarTab');
-    const mainContent = document.querySelector('.main-content');
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    mainContent.classList.remove('shifted');
+                    sidebarTab.style.display = 'block';
+                }
+            });
 
-    sidebarTab.addEventListener('click', function () {
-        sidebar.classList.toggle('show');
-        mainContent.classList.toggle('shifted');
-        sidebarTab.style.display = 'none';
-    });
-    document.addEventListener('click', function (event) {
-        if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
-            sidebar.classList.remove('show');
-            mainContent.classList.remove('shifted');
-            sidebarTab.style.display = 'block';
-        }
-    });
-  
-     // Dropdown functionality
-     const dropdowns = document.querySelectorAll('.dropdown');
-    dropdowns.forEach(dropdown => {
-        const btn = dropdown.querySelector('.ellipsis-btn');
-        const content = dropdown.querySelector('.dropdown-content');
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                const btn = dropdown.querySelector('a');
+                const content = dropdown.querySelector('.dropdown-content');
 
-        btn.addEventListener('click', function (event) {
-            event.stopPropagation();
-            content.classList.toggle('show');
+                btn.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    content.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function () {
+                    content.classList.remove('show');
+                });
+            });
         });
 
-        document.addEventListener('click', function () {
-            content.classList.remove('show');
-            
-        });   
-     });
-    });
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        document.getElementById('addItemForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = {
+                name: document.getElementById('name').value,
+                category: document.getElementById('category').value,
+                variations: document.getElementById('variations').value,
+                stocked_quantity: document.getElementById('stocked_quantity').value,
+                seller: document.getElementById('seller').value,
+                price_min: document.getElementById('price_min').value,
+                price_max: document.getElementById('price_max').value,
+                low_stock_threshold: document.getElementById('low_stock_threshold').value
+            };
+
+            fetch('{{ url_for("submit_add_item") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{{ url_for("inventory") }}';
+                } else {
+                    alert('Failed to add item: ' + data.error);
+                }
+            });
+        });
+
+        function disableItem(itemId) {
+            if (confirm('Are you sure you want to disable this item?')) {
+                fetch(`{{ url_for('disable_inventory', item_id=itemId) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ item_id: itemId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to disable item.');
+                    }
+                });
+            }
+        }
+
+        function searchItems() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const inventoryList = document.querySelector('.inventory-list');
+            const items = inventoryList.getElementsByClassName('item');
+
+            for (let i = 0; i < items.length; i++) {
+                const itemInfo = items[i].getElementsByClassName('item-info')[0];
+                if (itemInfo) {
+                    const textValue = itemInfo.textContent || itemInfo.innerText;
+                    if (textValue.toLowerCase().indexOf(filter) > -1) {
+                        items[i].style.display = '';
+                    } else {
+                        items[i].style.display = 'none';
+                    }
+                }
+            }
+        }
     </script>
 </body>
 </html>

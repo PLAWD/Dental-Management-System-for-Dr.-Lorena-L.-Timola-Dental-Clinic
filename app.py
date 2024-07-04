@@ -581,18 +581,11 @@ def overview(patient_id):
 def get_patient_details():
     patient_id = request.args.get('patient_id')
     conn = get_db_connection()
-    patient_details = conn.execute('''
-        SELECT p.patient_id, p.first_name, p.middle_name, p.last_name, p.dob, p.sex, p.address, p.city, p.occupation, p.phone, p.email, p.next_appointment, p.last_appointment, m.medical_history, m.heart_disease_specify, m.blood_pressure, m.allergic_anesthetic_specify, m.extraction_date, m.pregnant_specify, m.hospitalization_specify, m.medicine_specify
-        FROM patients p
-        LEFT JOIN medical_history m ON p.patient_id = m.patient_id
-        WHERE p.patient_id = ?
-    ''', (patient_id,)).fetchone()
+    patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
     conn.close()
-
-    if patient_details:
-        patient_details = dict(patient_details)
-
-    return jsonify(patient_details)
+    if patient:
+        return jsonify(dict(patient))
+    return jsonify(error="Patient not found"), 404
 
 
 @app.route('/add_patient', methods=['POST'])
@@ -669,7 +662,6 @@ def submit_add_patient():
     except Exception as e:
         return jsonify(success=False, error=str(e))
 
-
 @app.route('/submit_edit_patient', methods=['POST'])
 def submit_edit_patient():
     data = request.get_json()
@@ -697,6 +689,37 @@ def submit_edit_patient():
         return jsonify(success=True)
     except Exception as e:
         return jsonify(success=False, error=str(e))
+    
+
+
+@app.route('/submit_medical_history', methods=['POST'])
+def submit_medical_history():
+    try:
+        # Retrieve the patient ID and form data for the medical history
+        patient_id = request.form['patient_id']
+        medical_history = request.form.getlist('medical_history[]')
+        heart_disease_specify = request.form.get('heart_disease_specify')
+        blood_pressure = request.form.get('blood_pressure')
+        allergic_anesthetic_specify = request.form.get('allergic_anesthetic_specify')
+        extraction_date = request.form.get('extraction_date')
+        pregnant_specify = request.form.get('pregnant_specify')
+        hospitalization_specify = request.form.get('hospitalization_specify')
+        medicine_specify = request.form.get('medicine_specify')
+
+        # Save the medical history information to the database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO medical_history (patient_id, medical_history, heart_disease_specify, blood_pressure, allergic_anesthetic_specify, extraction_date, pregnant_specify, hospitalization_specify, medicine_specify)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (patient_id, ','.join(medical_history), heart_disease_specify, blood_pressure, allergic_anesthetic_specify, extraction_date, pregnant_specify, hospitalization_specify, medicine_specify))
+        conn.commit()
+        conn.close()
+
+        # Redirect back to the patients page
+        return redirect(url_for('patients'))
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/update_patient', methods=['POST'])
 def update_patient():
@@ -735,6 +758,7 @@ def disable_patient():
     except Exception as e:
         return jsonify(success=False, error=str(e))
 
+
 @app.route('/patient_records')
 def patient_records():
     conn = get_db_connection()
@@ -771,13 +795,18 @@ def treatments():
     conn.close()
     return render_template('treatments.html', patients=patients)
 
-@app.route('/intraoral_exam/<int:patient_id>')
-def intraoral_exam(patient_id):
+@app.route('/intraoral_exams/<int:patient_id>')
+def intraoral_exams(patient_id):
     conn = get_db_connection()
     patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
-    if patient:
-        return jsonify(dict(patient))
-    return jsonify(error="Patient not found"), 404
+    if not patient:
+        flash('Patient not found!')
+        return redirect(url_for('patients'))
+    
+    intraoral_exams = conn.execute('SELECT * FROM intraoral_exams WHERE patient_id = ?', (patient_id,)).fetchall()
+    conn.close()
+    return render_template('intraoral_exam.html', patient=patient, intraoral_exams=intraoral_exams)
+
 
 @app.route('/logout')
 def logout():
@@ -789,9 +818,37 @@ def logout():
 @role_required([1, 2])  # Both admin and user can access
 def inventory():
     conn = get_db_connection()
-    inventory_items = conn.execute('SELECT * FROM inventory').fetchall()
+    inventory_items = conn.execute('''
+        SELECT item_id, name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold
+        FROM inventory
+        WHERE is_disabled = 0
+    ''').fetchall()
     conn.close()
     return render_template('inventory.html', inventory_items=inventory_items)
+
+@app.route('/submit_add_item', methods=['POST'])
+def submit_add_item():
+    data = request.get_json()
+    name = data['name']
+    category = data['category']
+    variations = data['variations']
+    stocked_quantity = data['stocked_quantity']
+    seller = data['seller']
+    price_min = data['price_min']
+    price_max = data['price_max']
+    low_stock_threshold = data['low_stock_threshold']
+
+    try:
+        conn = get_db_connection()
+        conn.execute('''
+            INSERT INTO inventory (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold))
+        conn.commit()
+        conn.close()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
 
 
 @app.route('/register_item', methods=['GET', 'POST'])
@@ -799,16 +856,18 @@ def register_item():
     if request.method == 'POST':
         name = request.form['name']
         category = request.form['category']
-        price = request.form['price']
-        stock = request.form['stock']
         variations = request.form['variations']
+        stocked_quantity = request.form['stocked_quantity']
         seller = request.form['seller']
+        price_min = request.form['price_min']
+        price_max = request.form['price_max']
+        low_stock_threshold = request.form['low_stock_threshold']
 
         conn = get_db_connection()
         conn.execute('''
-            INSERT INTO inventory (name, category, price, stock, variations, seller)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (name, category, price, stock, variations, seller))
+            INSERT INTO inventory (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold))
         conn.commit()
         conn.close()
 
@@ -820,43 +879,50 @@ def register_item():
 @app.route('/item/<int:item_id>')
 def view_item(item_id):
     conn = get_db_connection()
-    item = conn.execute('SELECT * FROM inventory WHERE id = ?', (item_id,)).fetchone()
+    item = conn.execute('SELECT * FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
     conn.close()
     if item is None:
         flash('Item not found!')
         return redirect(url_for('inventory'))
     return render_template('view_item.html', item=item)
 
-
-@app.route('/edit_item/<int:item_id>', methods=['GET', 'POST'])
-def edit_item(item_id):
+@app.route('/edit_inventory/<int:item_id>', methods=['GET', 'POST'])
+@role_required([1])  # Assuming only admin can edit
+def edit_inventory(item_id):
     conn = get_db_connection()
-    item = conn.execute('SELECT * FROM inventory WHERE id = ?', (item_id,)).fetchone()
-
     if request.method == 'POST':
         name = request.form['name']
         category = request.form['category']
-        price = request.form['price']
-        stock = request.form['stock']
         variations = request.form['variations']
+        stocked_quantity = request.form['stocked_quantity']
         seller = request.form['seller']
+        price_min = request.form['price_min']
+        price_max = request.form['price_max']
+        low_stock_threshold = request.form['low_stock_threshold']
 
         conn.execute('''
             UPDATE inventory
-            SET name = ?, category = ?, price = ?, stock = ?, variations = ?, seller = ?
-            WHERE id = ?
-        ''', (name, category, price, stock, variations, seller, item_id))
+            SET name = ?, category = ?, variations = ?, stocked_quantity = ?, seller = ?, price_min = ?, price_max = ?, low_stock_threshold = ?
+            WHERE item_id = ?
+        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, item_id))
         conn.commit()
         conn.close()
-
-        flash('Item updated successfully.')
         return redirect(url_for('inventory'))
 
+    item = conn.execute('SELECT * FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
     conn.close()
-    if item is None:
-        flash('Item not found!')
-        return redirect(url_for('inventory'))
-    return render_template('edit_item.html', item=item)
+    return render_template('edit_inventory.html', item=item)
+
+@app.route('/disable_inventory/<int:item_id>')
+@role_required([1])  # Assuming only admin can disable
+def disable_inventory(item_id):
+    conn = get_db_connection()
+    item = conn.execute('SELECT is_disabled FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
+    new_status = not item['is_disabled']
+    conn.execute('UPDATE inventory SET is_disabled = ? WHERE item_id = ?', (new_status, item_id))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('inventory'))
 
 @app.route('/reports')
 @role_required([1, 2])  # Both admin and user can access
