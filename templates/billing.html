@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="sidebar-tab" id="sidebarTab">☰</div>
+    <div id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('profile') }}">Profile</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+            <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
+            <li class="dropdown">
+                <a href="#">Records</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('patients') }}">Patient Records</a>
+                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                    <a href="#">Treatment Records</a>
+                </div>
+            </li>
+            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
+            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+            <li><a href="{{ url_for('reports') }}">Reports</a></li>
+            <li><a href="{{ url_for('payments') }}">Payments</a></li>
+            <br><br><br><br><br><br>
+            <li><a href="{{ url_for('help') }}">Help</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <div class="container">
+            <h1>Billing for {{ billing['date_of_billing'] }}</h1>
+            <h2>Patient: {{ patient['first_name'] }} {{ patient['last_name'] }}</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tooth Number</th>
+                        <th>Condition</th>
+                        <th>Treatment</th>
+                        <th>Cost</th>
+                        <th>Date of Diagnosis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for diagnosis in diagnoses %}
+                    <tr>
+                        <td>{{ diagnosis['tooth_number'] }}</td>
+                        <td>{{ diagnosis['condition'] }}</td>
+                        <td>{{ diagnosis['treatment'] }}</td>
+                        <td>₱{{ diagnosis['cost'] }}</td>
+                        <td>{{ diagnosis['date_of_diagnosis'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h3>Total Cost: ₱{{ billing['total_cost'] }}</h3>
+            
+            <button onclick="window.print()">Print Bill</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarTab = document.getElementById('sidebarTab');
+            const mainContent = document.querySelector('.main-content');
+
+            sidebarTab.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                mainContent.classList.toggle('shifted');
+                sidebarTab.style.display = 'none';
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    mainContent.classList.remove('shifted');
+                    sidebarTab.style.display = 'block';
+                }
+            });
+
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                const btn = dropdown.querySelector('a');
+                const content = dropdown.querySelector('.dropdown-content');
+
+                btn.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    content.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function () {
+                    content.classList.remove('show');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
