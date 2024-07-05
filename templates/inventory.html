@@ -86,69 +86,90 @@
         .submit-group button:hover {
             background-color: #D2691E;
         }
+
+        .low-stock {
+            background-color: #ffdddd;
+        }
+
+        .low-stock-badge {
+            color: red;
+            font-weight: bold;
+        }
+
+        .ellipsis-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .options-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="sidebar-tab" id="sidebarTab">☰</div>
-        <div id="sidebar" class="sidebar">
-            <ul>
-                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                <li><a href="{{ url_for('profile') }}">Profile</a></li>
-                <li><a href="{{ url_for('users') }}">Users</a></li>
-                <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
-                <li class="dropdown">
-                    <a href="#">Records</a>
-                    <div class="dropdown-content">
-                        <a href="{{ url_for('patients') }}">Patient Records</a>
-                        <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                        <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
-                    </div>
-                </li>
-                <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
-                <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
-                <li><a href="{{ url_for('reports') }}">Reports</a></li>
-                <li><a href="{{ url_for('payments') }}">Payments</a></li>
-                <br>
-                <br>
-                <br>
-                <br>
-                <br>
-                <br>
-                <li><a href="{{ url_for('help') }}">Help</a></li>
-                <li><a href="{{ url_for('about') }}">About</a></li>
-                <li><a href="{{ url_for('logout') }}">Logout</a></li>
-            </ul>
+    <div class="sidebar-tab" id="toggleSidebar">☰</div>
+    <div id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('profile') }}">Profile</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+            <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
+            <li class="dropdown">
+                <a href="#">Records</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('patients') }}">Patient Records</a>
+                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                    <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
+                </div>
+            </li>
+            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
+            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+            <li><a href="{{ url_for('reports') }}">Reports</a></li>
+            <li><a href="{{ url_for('payments') }}">Payments</a></li>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <li><a href="{{ url_for('help') }}">Help</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <div class="header">
+            <h1>Inventory</h1>
         </div>
-        <div class="main-content">
-            <div class="header">
-                <h1>Inventory</h1>
+        <div class="filter-container">
+            <div class="search-form">
+                <input type="text" placeholder="Type here to search by name, seller, date, or category">
+                <button class="register-item-btn" onclick="openModal('registerItemModal')">Register Item</button>
             </div>
-            <div class="filter-container">
-                <div class="search-form">
-                    <input type="text" placeholder="Type here to search by name, seller, date, or category">
-                    <button class="register-item-btn" onclick="openModal('registerItemModal')">Register Item</button>
-                </div>
-            </div>
-            <div class="inventory-list">
-                {% for item in inventory_items %}
-                <div class="item {{ 'low-stock' if item['stocked_quantity'] <= item['low_stock_threshold'] else '' }}">
-                    <div class="item-info">
-                        <div class="item-details">
-                            <h2>{{ item['name'] }}</h2>
-                            <p>{{ item['variations'] }} variations • {{ item['category'] }} • Stocked product: {{ item['stocked_quantity'] }} 
-                            {% if item['stocked_quantity'] <= item['low_stock_threshold'] %}
-                            <span class="low-stock-badge">Low stock</span>
-                            {% endif %}
-                            </p>
-                            <p>Seller: {{ item['seller'] }}</p>
-                            <p>Price: ₱{{ item['price_min'] }} ~ ₱{{ item['price_max'] }}</p>
-                        </div>
+        </div>
+        <div class="inventory-list">
+            {% for item in inventory_items %}
+            <div class="item {{ 'low-stock' if item['stocked_quantity'] <= item['low_stock_threshold'] else '' }}">
+                <div class="item-info">
+                    <div class="item-details">
+                        <h2>{{ item['name'] }}</h2>
+                        <p>{{ item['variations'] }} variations • {{ item['category'] }} • Stocked product: {{ item['stocked_quantity'] }} 
+                        {% if item['stocked_quantity'] <= item['low_stock_threshold'] %}
+                        <span class="low-stock-badge">Low stock</span>
+                        {% endif %}
+                        </p>
+                        <p>Seller: {{ item['seller'] }}</p>
+                        <p>Price: ₱{{ item['price_min'] }} ~ ₱{{ item['price_max'] }}</p>
                     </div>
-                    <button class="options-btn">⋮</button>
                 </div>
-                {% endfor %}
+                <button class="options-btn">⋮</button>
             </div>
+            {% endfor %}
         </div>
     </div>
 
@@ -200,20 +221,20 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
-            const sidebarTab = document.getElementById('sidebarTab');
+            const toggleSidebar = document.getElementById('toggleSidebar');
             const mainContent = document.querySelector('.main-content');
 
-            sidebarTab.addEventListener('click', function () {
+            toggleSidebar.addEventListener('click', function () {
                 sidebar.classList.toggle('show');
                 mainContent.classList.toggle('shifted');
-                sidebarTab.style.display = 'none';
+                toggleSidebar.style.display = 'none';
             });
 
             document.addEventListener('click', function (event) {
-                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
                     sidebar.classList.remove('show');
                     mainContent.classList.remove('shifted');
-                    sidebarTab.style.display = 'block';
+                    toggleSidebar.style.display = 'block';
                 }
             });
 
@@ -274,3 +295,4 @@
     </script>
 </body>
 </html>
+

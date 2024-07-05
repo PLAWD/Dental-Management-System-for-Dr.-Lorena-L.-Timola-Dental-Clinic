@@ -88,11 +88,11 @@
     </style>
 </head>
 <body class="patients-page">
-    <div class="sidebar-tab" id="sidebarTab">☰</div>
+    <div class="sidebar-tab" id="toggleSidebar">☰</div>
     <div id="sidebar" class="sidebar">
         <ul>
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li><a href="#">Profile</a></li>
+            <li><a href="{{ url_for('profile') }}">Profile</a></li>
             <li><a href="{{ url_for('users') }}">Users</a></li>
             <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
             <li class="dropdown">
@@ -100,19 +100,14 @@
                 <div class="dropdown-content">
                     <a href="{{ url_for('patients') }}">Patient Records</a>
                     <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                    <a href="#">Treatment Records</a>
+                    <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
                 </div>
             </li>
-            <li><a href="#">Maintenance</a></li>
+            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
             <li><a href="{{ url_for('payments') }}">Payments</a></li>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
+            <br><br><br><br><br><br>
             <li><a href="{{ url_for('help') }}">Help</a></li>
             <li><a href="{{ url_for('about') }}">About</a></li>
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
@@ -241,65 +236,16 @@
                     <label for="email">Email:</label>
                     <input type="email" id="email" name="email" required>
                 </div>
-                <div class="submit-group">
-                    <button type="submit">Submit</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit Patient Modal -->
-    <div id="editPatientModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('editPatientModal')">&times;</span>
-            <h2 class="register-user-title">Edit Patient</h2>
-            <form id="editPatientForm" action="javascript:void(0);" method="POST">
-                <input type="hidden" id="edit_patient_id" name="patient_id">
                 <div class="form-group">
-                    <label for="edit_first_name">First Name:</label>
-                    <input type="text" id="edit_first_name" name="first_name" required>
+                    <label for="next_appointment">Next Appointment:</label>
+                    <input type="date" id="next_appointment" name="next_appointment">
                 </div>
                 <div class="form-group">
-                    <label for="edit_middle_name">Middle Name:</label>
-                    <input type="text" id="edit_middle_name" name="middle_name">
-                </div>
-                <div class="form-group">
-                    <label for="edit_last_name">Last Name:</label>
-                    <input type="text" id="edit_last_name" name="last_name" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_dob">Date of Birth:</label>
-                    <input type="date" id="edit_dob" name="dob" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_sex">Sex:</label>
-                    <select id="edit_sex" name="sex" required>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="edit_address">Address:</label>
-                    <input type="text" id="edit_address" name="address" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_city">City:</label>
-                    <input type="text" id="edit_city" name="city" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_occupation">Occupation:</label>
-                    <input type="text" id="edit_occupation" name="occupation">
-                </div>
-                <div class="form-group">
-                    <label for="edit_mobile_number">Mobile Number:</label>
-                    <input type="text" id="edit_mobile_number" name="mobile_number" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_email">Email:</label>
-                    <input type="email" id="edit_email" name="email" required>
+                    <label for="last_appointment">Last Appointment:</label>
+                    <input type="date" id="last_appointment" name="last_appointment">
                 </div>
                 <div class="submit-group">
-                    <button type="submit">Submit</button>
+                    <button type="submit">Add Patient</button>
                 </div>
             </form>
         </div>
@@ -308,36 +254,38 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
-            const sidebarTab = document.getElementById('sidebarTab');
+            const toggleSidebar = document.getElementById('toggleSidebar');
             const mainContent = document.querySelector('.main-content');
 
-            sidebarTab.addEventListener('click', function () {
+            toggleSidebar.addEventListener('click', function () {
                 sidebar.classList.toggle('show');
                 mainContent.classList.toggle('shifted');
-                sidebarTab.style.display = 'none';
+                toggleSidebar.style.display = 'none';
             });
 
             document.addEventListener('click', function (event) {
-                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
                     sidebar.classList.remove('show');
                     mainContent.classList.remove('shifted');
-                    sidebarTab.style.display = 'block';
+                    toggleSidebar.style.display = 'block';
                 }
             });
 
-            // Dropdown functionality
-            const dropdowns = document.querySelectorAll('.dropdown');
-            dropdowns.forEach(dropdown => {
-                const btn = dropdown.querySelector('.ellipsis-btn');
-                const content = dropdown.querySelector('.dropdown-content');
-
-                btn.addEventListener('click', function (event) {
-                    event.stopPropagation();
-                    content.classList.toggle('show');
-                });
-
-                document.addEventListener('click', function () {
-                    content.classList.remove('show');
+            document.getElementById('addPatientForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                const formData = new FormData(this);
+                fetch('{{ url_for("add_patient") }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Patient added successfully');
+                        location.reload();
+                    } else {
+                        alert('Failed to add patient: ' + data.error);
+                    }
                 });
             });
         });
@@ -350,138 +298,34 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
-        document.getElementById('addPatientForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = {
-                first_name: document.getElementById('first_name').value,
-                middle_name: document.getElementById('middle_name').value,
-                last_name: document.getElementById('last_name').value,
-                dob: document.getElementById('dob').value,
-                sex: document.getElementById('sex').value,
-                address: document.getElementById('address').value,
-                city: document.getElementById('city').value,
-                occupation: document.getElementById('occupation').value,
-                mobile_number: document.getElementById('mobile_number').value,
-                email: document.getElementById('email').value
-            };
-
-            fetch('{{ url_for("submit_add_patient") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = '{{ url_for("patients") }}';
-                } else {
-                    alert('Failed to add patient: ' + data.error);
-                }
-            });
-        });
-
-        document.getElementById('editPatientForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = {
-                patient_id: document.getElementById('edit_patient_id').value,
-                first_name: document.getElementById('edit_first_name').value,
-                middle_name: document.getElementById('edit_middle_name').value,
-                last_name: document.getElementById('edit_last_name').value,
-                dob: document.getElementById('edit_dob').value,
-                sex: document.getElementById('edit_sex').value,
-                address: document.getElementById('edit_address').value,
-                city: document.getElementById('edit_city').value,
-                occupation: document.getElementById('edit_occupation').value,
-                mobile_number: document.getElementById('edit_mobile_number').value,
-                email: document.getElementById('edit_email').value
-            };
-
-            fetch('{{ url_for("submit_edit_patient") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = '{{ url_for("patients") }}';
-                } else {
-                    alert('Failed to edit patient: ' + data.error);
-                }
-            });
-        });
-
-        function editPatient(patientId) {
-            fetch(`{{ url_for('get_patient_details') }}?patient_id=${patientId}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('edit_patient_id').value = data.patient_id;
-                    document.getElementById('edit_first_name').value = data.first_name;
-                    document.getElementById('edit_middle_name').value = data.middle_name;
-                    document.getElementById('edit_last_name').value = data.last_name;
-                    document.getElementById('edit_dob').value = data.dob;
-                    document.getElementById('edit_sex').value = data.sex;
-                    document.getElementById('edit_address').value = data.address;
-                    document.getElementById('edit_city').value = data.city;
-                    document.getElementById('edit_occupation').value = data.occupation;
-                    document.getElementById('edit_mobile_number').value = data.mobile_number;
-                    document.getElementById('edit_email').value = data.email;
-                    openModal('editPatientModal');
-                });
-        }
-
-        function disablePatient(patientId) {
-            if (confirm('Are you sure you want to disable this patient?')) {
-                fetch('/disable_patient', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ patient_id: patientId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Failed to disable patient.');
-                    }
-                });
-            }
-        }
-
         function filterPatients() {
             const filterValue = document.getElementById('filterPatients').value;
-            // Implement the filter logic here
+            // Implement filtering logic here
         }
 
         function sortPatients() {
             const sortValue = document.getElementById('sortPatients').value;
-            // Implement the sort logic here
+            // Implement sorting logic here
         }
 
         function searchPatients() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase();
-            const table = document.querySelector('.user-table tbody');
-            const rows = table.getElementsByTagName('tr');
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('.user-table tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const match = Array.from(cells).some(cell => cell.textContent.toLowerCase().includes(searchValue));
+                row.style.display = match ? '' : 'none';
+            });
+        }
 
-            for (let i = 0; i < rows.length; i++) {
-                const td = rows[i].getElementsByTagName('td')[0];
-                if (td) {
-                    const txtValue = td.textContent || td.innerText;
-                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                        rows[i].style.display = '';
-                    } else {
-                        rows[i].style.display = 'none';
-                    }
-                }
-            }
+        function editPatient(patientId) {
+            // Implement edit logic here
+        }
+
+        function disablePatient(patientId) {
+            // Implement disable logic here
         }
     </script>
 </body>
 </html>
+

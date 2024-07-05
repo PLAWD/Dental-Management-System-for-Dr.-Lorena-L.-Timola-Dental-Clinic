@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='maintenance.css') }}">
 </head>
 <body>
-    <div class="sidebar-tab" id="sidebarTab">☰</div>
+    <div class="sidebar-tab" id="toggleSidebar">☰</div>
     <div id="sidebar" class="sidebar">
         <ul>
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
@@ -23,7 +23,7 @@
                     <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
                 </div>
             </li>
-            <li><a href="{{ url_for('maintenance') }}s">Maintenance</a></li>
+            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
             <li><a href="{{ url_for('payments') }}">Payments</a></li>
@@ -38,13 +38,6 @@
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
         </ul>
     </div>
-    <header>
-        <div class="header-left">
-            <h2>‎ ‎ ‎ ‎ ‎ ‎ ‎Maintenance</h2>
-        </div>
-        <div class="header-center">
-        </div>
-    </header>
     <div class="main-content">
         <div class="maintenance-container">
             <h2 class="maintenance-header">System Maintenance</h2>
@@ -116,20 +109,20 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
-            const sidebarTab = document.getElementById('sidebarTab');
+            const toggleSidebar = document.getElementById('toggleSidebar');
             const mainContent = document.querySelector('.main-content');
 
-            sidebarTab.addEventListener('click', function () {
+            toggleSidebar.addEventListener('click', function () {
                 sidebar.classList.toggle('show');
                 mainContent.classList.toggle('shifted');
-                sidebarTab.style.display = 'none';
+                toggleSidebar.style.display = 'none';
             });
 
             document.addEventListener('click', function (event) {
-                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
                     sidebar.classList.remove('show');
                     mainContent.classList.remove('shifted');
-                    sidebarTab.style.display = 'block';
+                    toggleSidebar.style.display = 'block';
                 }
             });
         });

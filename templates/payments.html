@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='payments.css') }}">
 </head>
 <body>
-    <div class="sidebar-tab" id="sidebarTab">☰</div>
+    <div class="sidebar-tab" id="toggleSidebar">☰</div>
     <div id="sidebar" class="sidebar">
         <ul>
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
@@ -38,14 +38,14 @@
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
         </ul>
     </div>
-    <header>
-        <div class="header-left">
-            <h2>Payments</h2>
-        </div>
-        <div class="header-center">
-        </div>
-    </header>
     <div class="main-content">
+        <header>
+            <div class="header-left">
+                <h2>Payments</h2>
+            </div>
+            <div class="header-center">
+            </div>
+        </header>
         <div class="payments-container">
             <h2 class="payments-header">Process Payment</h2>
             <form id="paymentForm" method="POST">
@@ -179,20 +179,20 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
-            const sidebarTab = document.getElementById('sidebarTab');
+            const toggleSidebar = document.getElementById('toggleSidebar');
             const mainContent = document.querySelector('.main-content');
 
-            sidebarTab.addEventListener('click', function () {
+            toggleSidebar.addEventListener('click', function () {
                 sidebar.classList.toggle('show');
                 mainContent.classList.toggle('shifted');
-                sidebarTab.style.display = 'none';
+                toggleSidebar.style.display = 'none';
             });
 
             document.addEventListener('click', function (event) {
-                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
                     sidebar.classList.remove('show');
                     mainContent.classList.remove('shifted');
-                    sidebarTab.style.display = 'block';
+                    toggleSidebar.style.display = 'block';
                 }
             });
         });
