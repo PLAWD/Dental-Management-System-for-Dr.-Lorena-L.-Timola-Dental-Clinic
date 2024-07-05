@@ -828,7 +828,36 @@ def submit_add_item():
         return jsonify(success=True)
     except Exception as e:
         return jsonify(success=False, error=str(e))
+    
+@app.route('/add_stock', methods=['POST'])
+def add_stock():
+    data = request.get_json()
+    item_id = data['item_id']
+    additional_stock = data['additional_stock']
 
+    try:
+        conn = get_db_connection()
+        conn.execute('UPDATE inventory SET stocked_quantity = stocked_quantity + ? WHERE item_id = ?', (additional_stock, item_id))
+        conn.commit()
+        conn.close()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
+
+    
+@app.route('/deactivate_item', methods=['POST'])
+def deactivate_item():
+    data = request.get_json()
+    item_id = data['item_id']
+
+    try:
+        conn = get_db_connection()
+        conn.execute('UPDATE inventory SET is_disabled = 1 WHERE item_id = ?', (item_id,))
+        conn.commit()
+        conn.close()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
 
 @app.route('/register_item', methods=['GET', 'POST'])
 def register_item():

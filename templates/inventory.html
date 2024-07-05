@@ -101,6 +101,7 @@
             border: none;
             font-size: 24px;
             cursor: pointer;
+            color: #888; /* Change the color of the ellipsis */
         }
 
         .options-btn {
@@ -108,6 +109,30 @@
             border: none;
             font-size: 24px;
             cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .show {
+            display: block;
         }
     </style>
 </head>
@@ -167,7 +192,11 @@
                         <p>Price: ₱{{ item['price_min'] }} ~ ₱{{ item['price_max'] }}</p>
                     </div>
                 </div>
-                <button class="options-btn">⋮</button>
+                <button class="options-btn" onclick="toggleDropdown({{ item['item_id'] }})">⋮</button>
+                <div id="dropdown-{{ item['item_id'] }}" class="dropdown-content">
+                    <a href="#" onclick="openStockItemModal({{ item['item_id'] }}, '{{ item['name'] }}', {{ item['stocked_quantity'] }})">Stock Item</a>
+                    <a href="#" onclick="deactivateItem({{ item['item_id'] }})">Deactivate Item</a>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -218,6 +247,25 @@
         </div>
     </div>
 
+    <!-- Stock Item Modal -->
+    <div id="stockItemModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('stockItemModal')">&times;</span>
+            <h2>Stock Item</h2>
+            <p id="stock-item-name"></p>
+            <p>Current Stock: <span id="stock-item-current"></span></p>
+            <form id="stockItemForm" action="javascript:void(0);" method="POST">
+                <div class="form-group">
+                    <label for="new_stock_quantity">New Stock Quantity:</label>
+                    <input type="number" id="new_stock_quantity" name="new_stock_quantity" required>
+                </div>
+                <div class="submit-group">
+                    <button type="submit">Update Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
@@ -262,6 +310,78 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
+        function toggleDropdown(itemId) {
+            const dropdown = document.getElementById(`dropdown-${itemId}`);
+            dropdown.classList.toggle('show');
+        }
+
+        function openStockItemModal(itemId, itemName, currentStock) {
+            document.getElementById('stock-item-name').textContent = itemName;
+            document.getElementById('stock-item-current').textContent = currentStock;
+            document.getElementById('stockItemForm').onsubmit = function(event) {
+                event.preventDefault();
+                addStock(itemId);
+            };
+            openModal('stockItemModal');
+        }
+
+        function addStock(itemId) {
+            const additionalStock = parseInt(document.getElementById('new_stock_quantity').value);
+
+            fetch('{{ url_for("add_stock") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    item_id: itemId,
+                    additional_stock: additionalStock
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal('stockItemModal');
+                    location.reload(); // Reload the page to update the stock display
+                } else {
+                    alert('Failed to add stock: ' + data.error);
+                }
+            });
+        }
+
+        function deactivateItem(itemId) {
+            if (confirm('Are you sure you want to deactivate this item?')) {
+                fetch('{{ url_for("deactivate_item") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ item_id: itemId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload(); // Reload the page to update the item display
+                    } else {
+                        alert('Failed to deactivate item: ' + data.error);
+                    }
+                });
+            }
+        }
+
+        function alertLowStock() {
+            document.querySelectorAll('.item').forEach(item => {
+                const stockedQuantity = parseInt(item.querySelector('.item-details p span').textContent);
+                const lowStockThreshold = parseInt(item.dataset.lowStockThreshold);
+
+                if (stockedQuantity <= lowStockThreshold) {
+                    item.classList.add('low-stock');
+                } else {
+                    item.classList.remove('low-stock');
+                }
+            });
+        }
+
         document.getElementById('registerItemForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const formData = {
@@ -285,14 +405,15 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Redirect to the inventory page
                     window.location.href = '{{ url_for("inventory") }}';
                 } else {
                     alert('Failed to add item: ' + data.error);
                 }
             });
         });
+
+        // Call alertLowStock function when the page loads
+        document.addEventListener('DOMContentLoaded', alertLowStock);
     </script>
 </body>
 </html>
-
