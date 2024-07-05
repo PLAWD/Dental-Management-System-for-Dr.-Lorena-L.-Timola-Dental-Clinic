@@ -765,36 +765,7 @@ def disable_patient():
         return jsonify(success=True)
     except Exception as e:
         return jsonify(success=False, error=str(e))
-
-
-@app.route('/patient_records')
-def patient_records():
-    conn = get_db_connection()
-    patient_records = conn.execute('SELECT * FROM patients').fetchall()
-    conn.close()
-    return render_template('patients.html', records=patient_records)
-
-@app.route('/records')
-@role_required([1])  # Only admin can access
-def records():
-    return render_template('records.html')
-
-@app.route('/get_records/<record_type>')
-def get_records(record_type):
-    conn = get_db_connection()
-    if record_type == 'appointments':
-        data = conn.execute('SELECT * FROM appointments').fetchall()
-    elif record_type == 'financial':
-        data = conn.execute('SELECT * FROM financial_records').fetchall()
-    elif record_type == 'operational':
-        data = conn.execute('SELECT * FROM operational_records').fetchall()
-    elif record_type == 'communication':
-        data = conn.execute('SELECT * FROM communication_records').fetchall()
-    else:
-        conn.close()
-        return jsonify([])
-
-    conn.close()
+    
     
 @app.route('/treatments')
 def treatments():
@@ -1253,7 +1224,7 @@ def appointment_records():
         FROM appointments a
         JOIN patients p ON a.patient_id = p.patient_id
         JOIN dentists d ON a.dentist_id = d.dentist_id
-        JOIN AppointmentStatus s ON a.status_id = s.status_id  # Ensure this join is correct
+        LEFT JOIN AppointmentStatus s ON a.status_id = s.status_id
     ''').fetchall()
 
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
@@ -1266,6 +1237,7 @@ def appointment_records():
                            patients=patients, 
                            dentists=dentists, 
                            statuses=statuses)
+
 
 @app.route('/submit_appointment', methods=['POST'])
 def submit_appointment():
