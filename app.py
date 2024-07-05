@@ -110,7 +110,7 @@ def do_login():
         else:
             failed_attempts = user['failed_attempts'] + 1
             is_locked = 0
-            if failed_attempts >= 5:
+            if failed_attempts >= 3:
                 is_locked = 1
                 conn.execute('UPDATE users SET failed_attempts = ?, is_locked = ?, userstat_id = 6 WHERE user_id = ?',
                              (failed_attempts, is_locked, user['user_id']))
@@ -648,9 +648,6 @@ def submit_add_patient():
 
     conn = get_db_connection()
     existing_patient = conn.execute('SELECT * FROM patients WHERE email = ?', (email,)).fetchone()
-    if existing_patient:
-        conn.close()
-    return jsonify(success=False, error='Patient with this email already exists.')
     try:
         conn.execute('''
             INSERT INTO patients (first_name, middle_name, last_name, dob, sex, address, city, occupation, mobile_number, email)
@@ -1261,9 +1258,9 @@ def appointment_records():
 
 @app.route('/submit_appointment', methods=['POST'])
 def submit_appointment():
-    data = request.json  
+    data = request.json  # Ensure JSON data is used
 
-    # Ensure JSON data is used
+    # Ensure JSON data is provided
     if not data:
         return jsonify({'success': False, 'message': 'No data provided'}), 400
 
@@ -1276,7 +1273,7 @@ def submit_appointment():
         chief_complaints = data['chief_complaints']
         procedures = data['procedures']
         dentist_id = data['dentist_id']
-        status_id = data['status_id']
+        status_name = data['status_name']
     except KeyError as e:
         return jsonify({'success': False, 'message': f'Missing key: {str(e)}'}), 400
 
@@ -1287,7 +1284,7 @@ def submit_appointment():
         SELECT a.*, 
                p.first_name || " " || p.middle_name || " " || p.last_name AS patient_name,
                d.first_name || " " || d.last_name AS dentist_name
-        FROM appointments a
+        FROM Appointments a
         JOIN patients p ON a.patient_id = p.patient_id
         JOIN dentists d ON a.dentist_id = d.dentist_id
         WHERE a.dentist_id = ? AND a.appointment_date = ? AND (
@@ -1302,11 +1299,11 @@ def submit_appointment():
         return jsonify({'success': False, 'conflict': dict(conflict)})
 
     conn.execute('''
-        INSERT INTO appointments (patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id) 
+        INSERT INTO Appointments (patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_name) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id,
-        status_id))
+        status_name))
 
     # Update the patient's next appointment
     conn.execute('UPDATE patients SET next_appointment = ? WHERE patient_id = ?', (appointment_date, patient_id))
@@ -1420,6 +1417,7 @@ def send_new_email_otp():
     session['otp_stage'] = 'new_email'
     session['new_email'] = new_email
     return jsonify({'success': True})
+
 @app.route('/verify_otp_for_email_change', methods=['POST'])
 def verify_otp_for_email_change():
     if 'user_id' not in session:
@@ -1465,7 +1463,46 @@ def verify_otp_for_password_reset():
         return redirect(url_for('verify_otp_for_password_reset'))
     return render_template('verify_otp.html')
 
+@app.route('/generate_billing/<int:patient_id>')
+@role_required([1, 2])  # Both admin and user can access
+def generate_billing(patient_id):
+    conn = get_db_connection()
+    
+    # Fetch diagnosis details for the patient
+    diagnoses = conn.execute('''
+        SELECT * FROM diagnosis WHERE patient_id = ?
+    ''', (patient_id,)).fetchall()
+
+    # Calculate total cost
+    total_cost = sum(d['cost'] for d in diagnoses)
+    
+    # Insert billing record
+    conn.execute('''
+        INSERT INTO billing (patient_id, total_cost, date_of_billing)
+        VALUES (?, ?, DATE('now'))
+    ''', (patient_id, total_cost))
+    conn.commit()
+
+    # Fetch the latest billing record
+    billing = conn.execute('''
+        SELECT * FROM billing WHERE patient_id = ? ORDER BY date_of_billing DESC LIMIT 1
+    ''', (patient_id,)).fetchone()
+
+    # Fetch patient details
+    patient = conn.execute('''
+        SELECT * FROM patients WHERE patient_id = ?
+    ''', (patient_id,)).fetchone()
+
+    conn.close()
+
+    return render_template('billing.html', diagnoses=diagnoses, billing=billing, patient=patient)
+
+
+    return render_template('billing.html', diagnoses=diagnoses, billing=billing)
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
+#    app.run(host='192.168.170.72', port=5000, debug=True) <-- LANinator
 

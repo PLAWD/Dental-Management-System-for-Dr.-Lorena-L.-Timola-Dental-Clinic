@@ -31,12 +31,7 @@
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
             <li><a href="{{ url_for('payments') }}">Payments</a></li>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
+            <br><br><br><br><br><br>
             <li><a href="{{ url_for('help') }}">Help</a></li>
             <li><a href="{{ url_for('about') }}">About</a></li>
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
@@ -87,9 +82,9 @@
             </select>
             <label for="status_id">Status:</label>
             <select id="status_id" name="status_id" required>
-                {% for status in statuses %}
-                <option value="{{ status.status_id }}">{{ status.status_name }}</option>
-                {% endfor %}
+                <option value="Scheduled">Scheduled</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
             </select>
             <button type="submit">Create</button>
         </form>
@@ -151,58 +146,58 @@
                 </select>
                 <label for="edit_status_id">Status:</label>
                 <select id="edit_status_id" name="status_id" required>
-                    {% for status in statuses %}
-                    <option value="{{ status.status_id }}">{{ status.status_name }}</option>
-                    {% endfor %}
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
                 </select>
                 <button type="submit">Update</button>
             </form>
         </div>
     </div>
     <script>
-        function submitAppointment(event) {
-            event.preventDefault();
-            const formData = {
-                patient_id: document.getElementById('patient_id').value,
-                appointment_date: document.getElementById('appointment_date').value,
-                start_time: document.getElementById('start_time').value,
-                end_time: document.getElementById('end_time').value,
-                appointment_type: document.getElementById('appointment_type').value,
-                chief_complaints: document.getElementById('chief_complaints').value,
-                procedures: document.getElementById('procedures').value,
-                dentist_id: document.getElementById('dentist_id').value,
-                status_id: document.getElementById('status_id').value
-            };
+function submitAppointment(event) {
+    event.preventDefault();
+    const formData = {
+        patient_id: document.getElementById('patient_id').value,
+        appointment_date: document.getElementById('appointment_date').value,
+        start_time: document.getElementById('start_time').value,
+        end_time: document.getElementById('end_time').value,
+        appointment_type: document.getElementById('appointment_type').value,
+        chief_complaints: document.getElementById('chief_complaints').value,
+        procedures: document.getElementById('procedures').value,
+        dentist_id: document.getElementById('dentist_id').value,
+        status_name: document.getElementById('status_name').value
+    };
 
-            $.ajax({
-                url: '{{ url_for("submit_appointment") }}',
-                method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(formData),
-                success: function (data) {
-                    if (data.success) {
-                        $('#calendar').fullCalendar('refetchEvents');
-                        closeCreateAppointmentModal();
-                        showModal('successModal', 'Appointment created successfully.');
-                    } else {
-                        if (data.conflict) {
-                            const conflictMessage = `Conflict with appointment:
-                                Patient: ${data.conflict.patient_name},
-                                Dentist: ${data.conflict.dentist_name},
-                                Date: ${data.conflict.appointment_date},
-                                Start Time: ${data.conflict.start_time},
-                                End Time: ${data.conflict.end_time}`;
-                            showModal('errorModal', conflictMessage);
-                        } else {
-                            showModal('errorModal', 'Failed to create appointment.');
-                        }
-                    }
-                },
-                error: function (xhr, status, error) {
-                    showModal('errorModal', 'Failed to create appointment: ' + error);
+    $.ajax({
+        url: '{{ url_for("submit_appointment") }}',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function (data) {
+            if (data.success) {
+                $('#calendar').fullCalendar('refetchEvents');
+                closeCreateAppointmentModal();
+                showModal('successModal', 'Appointment created successfully.');
+            } else {
+                if (data.conflict) {
+                    const conflictMessage = `Conflict with appointment:
+                        Patient: ${data.conflict.patient_name},
+                        Dentist: ${data.conflict.dentist_name},
+                        Date: ${data.conflict.appointment_date},
+                        Start Time: ${data.conflict.start_time},
+                        End Time: ${data.conflict.end_time}`;
+                    showModal('errorModal', conflictMessage);
+                } else {
+                    showModal('errorModal', 'Failed to create appointment.');
                 }
-            });
+            }
+        },
+        error: function (xhr, status, error) {
+            showModal('errorModal', 'Failed to create appointment: ' + error);
         }
+    });
+}
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -252,26 +247,8 @@
                             case 'Completed':
                                 element.css('background-color', '#006400');
                                 break;
-                            case 'Canceled':
+                            case 'Cancelled':
                                 element.css('background-color', '#FF0000');
-                                break;
-                            case 'No show':
-                                element.css('background-color', '#8B0000');
-                                break;
-                            case 'Rescheduled':
-                                element.css('background-color', '#800080');
-                                break;
-                            case 'Pending':
-                                element.css('background-color', '#FFFF00');
-                                break;
-                            case 'Follow-up Needed':
-                                element.css('background-color', '#008080');
-                                break;
-                            case 'Emergency':
-                                element.css('background-color', '#FF8C00');
-                                break;
-                            case 'Waitlisted':
-                                element.css('background-color', '#D3D3D3');
                                 break;
                         }
                     },
@@ -319,7 +296,7 @@
                 document.getElementById('edit_chief_complaints').value = data.chief_complaints;
                 document.getElementById('edit_procedures').value = data.procedures;
                 document.getElementById('edit_dentist_id').value = data.dentist_id;
-                document.getElementById('edit_status_id').value = data.status_id;
+                document.getElementById('edit_status_id').value = data.status;
                 document.getElementById('viewAppointmentModal').style.display = 'none';
                 document.getElementById('editAppointmentModal').style.display = 'block';
             });
@@ -380,7 +357,7 @@
                 chief_complaints: document.getElementById('chief_complaints').value,
                 procedures: document.getElementById('procedures').value,
                 dentist_id: document.getElementById('dentist_id').value,
-                status_id: document.getElementById('status_id').value
+                status: document.getElementById('status_id').value
             };
 
             $.ajax({
@@ -423,7 +400,7 @@
                 chief_complaints: document.getElementById('edit_chief_complaints').value,
                 procedures: document.getElementById('edit_procedures').value,
                 dentist_id: document.getElementById('edit_dentist_id').value,
-                status_id: document.getElementById('edit_status_id').value
+                status: document.getElementById('edit_status_id').value
             };
 
             $.ajax({

@@ -103,7 +103,7 @@
                     <p>Appliances: {{ examination.appliances }}</p>
                     <p>TMD: {{ examination.tmd }}</p>
                     <p>X-ray taken: {{ examination.xray }}</p>
-                    <a href="{{ url_for('intraoral_exam', patient_id=patient.patient_id) }}" class="view-all-btn">View All</a>
+                    <a href="{{ url_for('intraoral_exams', patient_id=patient.patient_id) }}" class="view-all-btn">View All</a>
                 </div>
             </div>
             <div class="section">

@@ -64,7 +64,7 @@
         function updateFormAction() {
             const patientId = document.getElementById('patient').value;
             const form = document.getElementById('treatmentForm');
-            form.action = `/intraoral_exam/${patientId}`;
+            form.action = `/intraoral_exams/${patientId}`;
         }
 
         document.addEventListener('DOMContentLoaded', function () {
