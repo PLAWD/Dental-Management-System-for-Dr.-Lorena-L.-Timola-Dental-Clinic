@@ -383,12 +383,22 @@ def get_appointments():
     events = [dict(row) for row in appointments]
     return jsonify(events)
 
-
-
 @app.route('/search', methods=['GET'])
 def search():
     query = request.args.get('query')
     return f"Search results for: {query}"
+
+@app.route('/update_schema')
+def update_schema():
+    conn = get_db_connection()
+    try:
+        conn.execute('ALTER TABLE Appointments ADD COLUMN status_id INTEGER;')
+        conn.commit()
+    except sqlite3.OperationalError as e:
+        return str(e)
+    finally:
+        conn.close()
+    return 'Schema updated successfully'
 
 
 
@@ -397,7 +407,7 @@ def search():
 def users():
     conn = get_db_connection()
     users = conn.execute('''
-        SELECT u.user_id, u.first_name || " " || u.last_name AS name, u.date_created, r.role_name AS role, us.userStatus AS status
+        SELECT u.user_id, u.first_name || " " || u.last_name AS name, u.date_created, r.role_name AS role, us.userStatus AS status, u.user_number
         FROM users u
         JOIN roles r ON u.role_id = r.role_id
         JOIN userStatus us ON u.userstat_id = us.userstat_id
@@ -416,7 +426,7 @@ def get_user_details():
     user_id = request.args.get('user_id')
     conn = get_db_connection()
     user = conn.execute('''
-        SELECT u.user_id, u.first_name, u.last_name, u.username, u.email, u.role_id, u.userstat_id, r.role_name, us.userStatus, u.date_created
+        SELECT u.user_id, u.first_name, u.last_name, u.username, u.email, u.role_id, u.userstat_id, r.role_name, us.userStatus, u.date_created, u.user_number
         FROM users u
         JOIN roles r ON u.role_id = r.role_id
         JOIN userStatus us ON u.userstat_id = us.userstat_id
@@ -435,16 +445,14 @@ def get_user_details():
             'userstat_id': user['userstat_id'],
             'role_name': user['role_name'],
             'userStatus': user['userStatus'],
-            'date_created': user['date_created']
+            'date_created': user['date_created'],
+            'user_number': user['user_number']
         }
         return jsonify(user_details)
     else:
         return jsonify({'error': 'User not found'}), 404
 
-def generate_user_number(role_name):
-    prefix = 'U-'
-    random_number = random.randint(100000, 999999)
-    return f"{prefix}{random_number}"
+
 
 @app.route('/disable_user', methods=['POST'])
 def disable_user():
@@ -457,18 +465,6 @@ def disable_user():
     conn.close()
 
     return jsonify({'success': True})
-
-@app.route('/update_schema')
-def update_schema():
-    conn = get_db_connection()
-    try:
-        conn.execute('ALTER TABLE Appointments ADD COLUMN status_id INTEGER;')
-        conn.commit()
-    except sqlite3.OperationalError as e:
-        return str(e)
-    finally:
-        conn.close()
-    return 'Schema updated successfully'
 
 @app.route('/update_user', methods=['POST'])
 def update_user():
@@ -492,18 +488,6 @@ def update_user():
 
     return jsonify({'success': True})
 
-def get_user_status(userstat_id):
-    conn = get_db_connection()
-    status = conn.execute('SELECT userStatus FROM userStatus WHERE userstat_id = ?', (userstat_id,)).fetchone()
-    conn.close()
-    return status['userStatus'] if status else 'Unknown'
-
-def get_role_name(role_id):
-    conn = get_db_connection()
-    role = conn.execute('SELECT role_name FROM roles WHERE role_id = ?', (role_id,)).fetchone()
-    conn.close()
-    return role['role_name'] if role else 'Unknown'
-
 @app.route('/register_user')
 def register_user():
     conn = get_db_connection()
@@ -512,6 +496,11 @@ def register_user():
     conn.close()
     return render_template('register_user.html', roles=roles, statuses=statuses)
 
+def generate_user_number(role_name):
+    prefix = 'A-' if role_name == 'Admin' else 'E-'
+    random_number = random.randint(100000, 999999)
+    return f"{prefix}{random_number}"
+
 @app.route('/submit_register_user', methods=['POST'])
 def submit_register_user():
     required_fields = ['first_name', 'last_name', 'username', 'email', 'role_id', 'userstat_id']
@@ -519,7 +508,7 @@ def submit_register_user():
     for field in required_fields:
         if field not in request.form:
             flash(f'Missing required field: {field}', 'error')
-            return redirect(url_for('register_user'))
+            return redirect(url_for('users'))
 
     first_name = request.form['first_name']
     last_name = request.form['last_name']
@@ -535,7 +524,7 @@ def submit_register_user():
     # Generate user number based on role
     conn = get_db_connection()
     role = conn.execute('SELECT role_name FROM roles WHERE role_id = ?', (role_id,)).fetchone()
-    
+
     if role is None:
         flash('Role not found', 'error')
         return redirect(url_for('users'))
@@ -559,6 +548,7 @@ def submit_register_user():
 
     flash('User registered successfully. The password has been sent to the user\'s email.', 'success')
     return redirect(url_for('users'))
+
 
 @app.route('/patients')
 @role_required([1, 2])  # Both admin and user can access
@@ -1243,19 +1233,40 @@ def about():
 
 @app.route('/profile')
 def profile():
-    if 'user_id' not in session:
+    user_id = session.get('user_id')  # Assuming user_id is stored in the session
+    if not user_id:
+        flash('User not logged in', 'error')
         return redirect(url_for('login'))
-    user_id = session['user_id']
+
     conn = get_db_connection()
     user = conn.execute('''
-        SELECT users.*, userStatus.userStatus AS user_status, Roles.role_name AS role_name
-        FROM users
-        LEFT JOIN userStatus ON users.userstat_id = userStatus.userstat_id
-        LEFT JOIN Roles ON users.role_id = Roles.role_id
-        WHERE users.user_id = ?
+        SELECT u.user_id, u.first_name, u.last_name, u.username, u.email, u.role_id, u.userstat_id, r.role_name, us.userStatus, u.date_created, u.user_number
+        FROM users u
+        JOIN roles r ON u.role_id = r.role_id
+        JOIN userStatus us ON u.userstat_id = us.userstat_id
+        WHERE u.user_id = ?
     ''', (user_id,)).fetchone()
     conn.close()
-    return render_template('profile.html', user=user)
+
+    if user:
+        user_details = {
+            'user_id': user['user_id'],
+            'first_name': user['first_name'],
+            'last_name': user['last_name'],
+            'username': user['username'],
+            'email': user['email'],
+            'role_id': user['role_id'],
+            'userstat_id': user['userstat_id'],
+            'role_name': user['role_name'],
+            'userStatus': user['userStatus'],
+            'date_created': user['date_created'],
+            'user_number': user['user_number']
+        }
+        return render_template('profile.html', user=user_details)
+    else:
+        flash('User not found', 'error')
+        return redirect(url_for('dashboard'))
+
 
 @app.route('/appointment_records')
 @role_required([1, 2])  # Both admin and user can access
@@ -1517,6 +1528,6 @@ def generate_billing(patient_id):
 
 
 if __name__ == '__main__':
-#   app.run(debug=True)
-    app.run(host='192.168.183.72', port=5000, debug=True)
+   app.run(debug=True)
+#    app.run(host='192.168.183.72', port=5000, debug=True)
 
