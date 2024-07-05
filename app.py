@@ -441,7 +441,10 @@ def get_user_details():
     else:
         return jsonify({'error': 'User not found'}), 404
 
-
+def generate_user_number(role_name):
+    prefix = 'U-'
+    random_number = random.randint(100000, 999999)
+    return f"{prefix}{random_number}"
 
 @app.route('/disable_user', methods=['POST'])
 def disable_user():
@@ -467,10 +470,9 @@ def update_schema():
         conn.close()
     return 'Schema updated successfully'
 
-
 @app.route('/update_user', methods=['POST'])
 def update_user():
-    data = request.json  # Ensure JSON data is used
+    data = request.json
     user_id = data.get('user_id')
     first_name = data.get('first_name')
     last_name = data.get('last_name')
@@ -490,8 +492,6 @@ def update_user():
 
     return jsonify({'success': True})
 
-
-
 def get_user_status(userstat_id):
     conn = get_db_connection()
     status = conn.execute('SELECT userStatus FROM userStatus WHERE userstat_id = ?', (userstat_id,)).fetchone()
@@ -504,8 +504,6 @@ def get_role_name(role_id):
     conn.close()
     return role['role_name'] if role else 'Unknown'
 
-
-
 @app.route('/register_user')
 def register_user():
     conn = get_db_connection()
@@ -514,9 +512,15 @@ def register_user():
     conn.close()
     return render_template('register_user.html', roles=roles, statuses=statuses)
 
-
 @app.route('/submit_register_user', methods=['POST'])
 def submit_register_user():
+    required_fields = ['first_name', 'last_name', 'username', 'email', 'role_id', 'userstat_id']
+
+    for field in required_fields:
+        if field not in request.form:
+            flash(f'Missing required field: {field}', 'error')
+            return redirect(url_for('register_user'))
+
     first_name = request.form['first_name']
     last_name = request.form['last_name']
     username = request.form['username']
@@ -528,21 +532,33 @@ def submit_register_user():
     password = generate_strong_password()
     hashed_password = generate_password_hash(password)
 
-    # Save user to the database
+    # Generate user number based on role
     conn = get_db_connection()
+    role = conn.execute('SELECT role_name FROM roles WHERE role_id = ?', (role_id,)).fetchone()
+    
+    if role is None:
+        flash('Role not found', 'error')
+        return redirect(url_for('users'))
+
+    user_number = generate_user_number(role['role_name'])
+
+    # Ensure user_number is unique
+    while conn.execute('SELECT 1 FROM users WHERE user_number = ?', (user_number,)).fetchone():
+        user_number = generate_user_number(role['role_name'])
+
+    # Save user to the database
     conn.execute('''
-        INSERT INTO users (first_name, last_name, username, email, password_hash, role_id, userstat_id, date_created)
-        VALUES (?, ?, ?, ?, ?, ?, ?, DATE('now'))
-    ''', (first_name, last_name, username, email, hashed_password, role_id, userstat_id))
+        INSERT INTO users (first_name, last_name, username, email, password_hash, role_id, userstat_id, user_number, date_created)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, DATE('now'))
+    ''', (first_name, last_name, username, email, hashed_password, role_id, userstat_id, user_number))
     conn.commit()
     conn.close()
 
     # Send the generated password to the user's email
     send_email(email, 'Your Account Details', f'Your account has been created. Your password is: {password}')
 
-    flash('User registered successfully. The password has been sent to the user\'s email.')
+    flash('User registered successfully. The password has been sent to the user\'s email.', 'success')
     return redirect(url_for('users'))
-
 
 @app.route('/patients')
 @role_required([1, 2])  # Both admin and user can access
@@ -642,6 +658,7 @@ def add_patient():
 
     flash('Patient added successfully.')
     return redirect(url_for('patients'))
+
 
 @app.route('/submit_add_patient', methods=['POST'])
 def submit_add_patient():
@@ -1208,7 +1225,7 @@ def restore_system():
         return jsonify({"success": False, "error": "No file provided"}), 400
 
     restore_file = request.files['restore_file']
-    restore_path = os.path.join('DMSDB.db')
+    restore_path = os.path.join('instance/DMSDB.db')
     
     try:
         restore_file.save(restore_path)
@@ -1500,6 +1517,6 @@ def generate_billing(patient_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
-#    app.run(host='192.168.170.72', port=5000, debug=True) <-- LANinator
+#   app.run(debug=True)
+    app.run(host='192.168.183.72', port=5000, debug=True)
 

@@ -199,6 +199,10 @@
             <h2 class="register-user-title">Add Patient</h2>
             <form id="addPatientForm" action="javascript:void(0);" method="POST">
                 <div class="form-group">
+                    <label>Patient Number:</label>
+                    <p id="patient_number"></p>
+                </div>
+                <div class="form-group">
                     <label for="first_name">First Name:</label>
                     <input type="text" id="first_name" name="first_name" required>
                 </div>
@@ -255,6 +259,10 @@
             <h2 class="register-user-title">Edit Patient</h2>
             <form id="editPatientForm" action="javascript:void(0);" method="POST">
                 <input type="hidden" id="edit_patient_id" name="patient_id">
+                <div class="form-group">
+                    <label>Patient Number:</label>
+                    <p id="edit_patient_number"></p>
+                </div>
                 <div class="form-group">
                     <label for="edit_first_name">First Name:</label>
                     <input type="text" id="edit_first_name" name="first_name" required>
@@ -343,6 +351,9 @@
         });
 
         function openModal(modalId) {
+            if (modalId === 'addPatientModal') {
+                document.getElementById('patient_number').innerText = generatePatientNumber();
+            }
             document.getElementById(modalId).style.display = 'block';
         }
 
@@ -350,9 +361,15 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
+        function generatePatientNumber() {
+            const randomNum = Math.floor(Math.random() * 10000000);
+            return 'P-' + randomNum.toString().padStart(7, '0');
+        }
+
         document.getElementById('addPatientForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const formData = {
+                patient_number: document.getElementById('patient_number').innerText,
                 first_name: document.getElementById('first_name').value,
                 middle_name: document.getElementById('middle_name').value,
                 last_name: document.getElementById('last_name').value,
@@ -420,6 +437,7 @@
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('edit_patient_id').value = data.patient_id;
+                    document.getElementById('edit_patient_number').innerText = data.patient_number;
                     document.getElementById('edit_first_name').value = data.first_name;
                     document.getElementById('edit_middle_name').value = data.middle_name;
                     document.getElementById('edit_last_name').value = data.last_name;

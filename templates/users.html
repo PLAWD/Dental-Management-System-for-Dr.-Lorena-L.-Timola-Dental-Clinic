@@ -9,28 +9,7 @@
 <body class="users-page">
     <div class="sidebar-tab" id="sidebarTab">☰</div>
     <div id="sidebar" class="sidebar">
-        <ul>
-            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li><a href="{{ url_for('profile') }}">Profile</a></li>
-            <li><a href="{{ url_for('users') }}">Users</a></li>
-            <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
-            <li class="dropdown">
-                <a href="#">Records</a>
-                <div class="dropdown-content">
-                    <a href="{{ url_for('patients') }}">Patient Records</a>
-                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                    <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
-                </div>
-            </li>
-            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
-            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
-            <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <li><a href="{{ url_for('payments') }}">Payments</a></li>
-            <br><br><br><br><br><br>
-            <li><a href="{{ url_for('help') }}">Help</a></li>
-            <li><a href="{{ url_for('about') }}">About</a></li>
-            <li><a href="{{ url_for('logout') }}">Logout</a></li>
-        </ul>
+        <!-- Sidebar content -->
     </div>
     <header>
         <div class="header-left">
@@ -59,6 +38,7 @@
                         {% for user in users %}
                         <tr>
                             <td class="user-info">
+                                <p>{{ user.user_number }}</p>
                                 <a href="#" class="name" onclick="viewUser({{ user.user_id }})">{{ user.name }}</a>
                                 <span class="email">{{ user.email }}</span>
                             </td>
@@ -97,6 +77,8 @@
             <span class="close" onclick="closeModal()">&times;</span>
             <h2 class="register-user-title">Register User</h2>
             <form action="{{ url_for('submit_register_user') }}" method="POST">
+                <label>User Number:</label>
+                <p id="user_number">{{ user_number }}</p>
                 <label for="first_name">First Name:</label>
                 <input type="text" id="first_name" name="first_name" required>
                 <label for="last_name">Last Name:</label>
@@ -138,6 +120,8 @@
             <h2>Edit User</h2>
             <form id="editUserForm">
                 <input type="hidden" id="edit_user_id" name="user_id">
+                <label>User Number:</label>
+                <p id="edit_user_number"></p>
                 <label for="edit_first_name">First Name:</label>
                 <input type="text" id="edit_first_name" name="first_name" required>
                 <label for="edit_last_name">Last Name:</label>
@@ -201,6 +185,7 @@
         });
 
         function openModal() {
+            document.getElementById('user_number').innerText = generateUserNumber();
             document.getElementById('userModal').style.display = 'block';
         }
 
@@ -222,6 +207,7 @@
                 .then(data => {
                     const userDetails = document.getElementById('userDetails');
                     userDetails.innerHTML = `
+                        <p><strong>User Number:</strong> ${data.user_number}</p>
                         <p><strong>First Name:</strong> ${data.first_name}</p>
                         <p><strong>Last Name:</strong> ${data.last_name}</p>
                         <p><strong>Username:</strong> ${data.username}</p>
@@ -239,6 +225,7 @@
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('edit_user_id').value = data.user_id;
+                    document.getElementById('edit_user_number').innerText = data.user_number;
                     document.getElementById('edit_first_name').value = data.first_name;
                     document.getElementById('edit_last_name').value = data.last_name;
                     document.getElementById('edit_username').value = data.username;
@@ -319,6 +306,13 @@
         }
 
         document.getElementById('searchInput').addEventListener('input', searchUsers);
+
+        function generateUserNumber() {
+            const role = document.getElementById('role_id').value;
+            const prefix = role == 1 ? 'A-' : 'E-'; // Assuming 1 is for Admin
+            const random_number = Math.floor(Math.random() * 900000) + 100000;
+            return `${prefix}${random_number}`;
+        }
     </script>
 </body>
 </html>
