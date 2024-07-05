@@ -41,8 +41,8 @@
         <div class="container">
             <div class="header-actions">
                 <button class="add-user-btn" onclick="openModal()">Add User</button>
-                <form class="search-form" action="{{ url_for('search') }}" method="get">
-                    <input type="text" name="query" placeholder="Search...">
+                <form class="search-form" onsubmit="event.preventDefault();">
+                    <input type="text" id="searchInput" placeholder="Search..." onkeyup="searchUsers()">
                 </form>
             </div>
             <div class="table-container">
@@ -55,7 +55,7 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="userTableBody">
                         {% for user in users %}
                         <tr>
                             <td class="user-info">
@@ -194,117 +194,131 @@
                     content.classList.toggle('show');
                 });
 
-                document                    .addEventListener('click', function () {
-                        content.classList.remove('show');
-                    });
+                document.addEventListener('click', function () {
+                    content.classList.remove('show');
                 });
             });
+        });
 
-            function openModal() {
-                document.getElementById('userModal').style.display = 'block';
-            }
+        function openModal() {
+            document.getElementById('userModal').style.display = 'block';
+        }
 
-            function closeModal() {
-                document.getElementById('userModal').style.display = 'none';
-            }
+        function closeModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
 
-            function closeViewUserModal() {
-                document.getElementById('viewUserModal').style.display = 'none';
-            }
+        function closeViewUserModal() {
+            document.getElementById('viewUserModal').style.display = 'none';
+        }
 
-            function closeEditUserModal() {
-                document.getElementById('editUserModal').style.display = 'none';
-            }
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').style.display = 'none';
+        }
 
-            function viewUser(userId) {
-                fetch(`{{ url_for('get_user_details') }}?user_id=${userId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const userDetails = document.getElementById('userDetails');
-                        userDetails.innerHTML = `
-                            <p><strong>First Name:</strong> ${data.first_name}</p>
-                            <p><strong>Last Name:</strong> ${data.last_name}</p>
-                            <p><strong>Username:</strong> ${data.username}</p>
-                            <p><strong>Email:</strong> ${data.email}</p>
-                            <p><strong>Role:</strong> ${data.role_name}</p>
-                            <p><strong>Status:</strong> ${data.userStatus}</p>
-                            <p><strong>Date Created:</strong> ${data.date_created}</p>
-                        `;
-                        document.getElementById('viewUserModal').style.display = 'block';
-                    });
-            }
+        function viewUser(userId) {
+            fetch(`{{ url_for('get_user_details') }}?user_id=${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const userDetails = document.getElementById('userDetails');
+                    userDetails.innerHTML = `
+                        <p><strong>First Name:</strong> ${data.first_name}</p>
+                        <p><strong>Last Name:</strong> ${data.last_name}</p>
+                        <p><strong>Username:</strong> ${data.username}</p>
+                        <p><strong>Email:</strong> ${data.email}</p>
+                        <p><strong>Role:</strong> ${data.role_name}</p>
+                        <p><strong>Status:</strong> ${data.userStatus}</p>
+                        <p><strong>Date Created:</strong> ${data.date_created}</p>
+                    `;
+                    document.getElementById('viewUserModal').style.display = 'block';
+                });
+        }
 
-            function editUser(userId) {
-                fetch(`{{ url_for('get_user_details') }}?user_id=${userId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('edit_user_id').value = data.user_id;
-                        document.getElementById('edit_first_name').value = data.first_name;
-                        document.getElementById('edit_last_name').value = data.last_name;
-                        document.getElementById('edit_username').value = data.username;
-                        document.getElementById('edit_email').value = data.email;
-                        document.getElementById('edit_role_id').value = data.role_id;
-                        document.getElementById('edit_userstat_id').value = data.userstat_id;
-                        document.getElementById('editUserModal').style.display = 'block';
-                    });
-            }
+        function editUser(userId) {
+            fetch(`{{ url_for('get_user_details') }}?user_id=${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('edit_user_id').value = data.user_id;
+                    document.getElementById('edit_first_name').value = data.first_name;
+                    document.getElementById('edit_last_name').value = data.last_name;
+                    document.getElementById('edit_username').value = data.username;
+                    document.getElementById('edit_email').value = data.email;
+                    document.getElementById('edit_role_id').value = data.role_id;
+                    document.getElementById('edit_userstat_id').value = data.userstat_id;
+                    document.getElementById('editUserModal').style.display = 'block';
+                });
+        }
 
-            document.getElementById('editUserForm').addEventListener('submit', function (event) {
-                event.preventDefault();
-                const userId = document.getElementById('edit_user_id').value;
-                const firstName = document.getElementById('edit_first_name').value;
-                const lastName = document.getElementById('edit_last_name').value;
-                const username = document.getElementById('edit_username').value;
-                const email = document.getElementById('edit_email').value;
-                const roleId = document.getElementById('edit_role_id').value;
-                const userstatId = document.getElementById('edit_userstat_id').value;
+        document.getElementById('editUserForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const userId = document.getElementById('edit_user_id').value;
+            const firstName = document.getElementById('edit_first_name').value;
+            const lastName = document.getElementById('edit_last_name').value;
+            const username = document.getElementById('edit_username').value;
+            const email = document.getElementById('edit_email').value;
+            const roleId = document.getElementById('edit_role_id').value;
+            const userstatId = document.getElementById('edit_userstat_id').value;
 
-                fetch(`{{ url_for('update_user') }}`, {
+            fetch(`{{ url_for('update_user') }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    first_name: firstName,
+                    last_name: lastName,
+                    username: username,
+                    email: email,
+                    role_id: roleId,
+                    userstat_id: userstatId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to update user.');
+                }
+            });
+        });
+
+        function disableUser(userId) {
+            if (confirm('Are you sure you want to disable this user?')) {
+                fetch(`{{ url_for('disable_user') }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        user_id: userId,
-                        first_name: firstName,
-                        last_name: lastName,
-                        username: username,
-                        email: email,
-                        role_id: roleId,
-                        userstat_id: userstatId
-                    })
+                    body: JSON.stringify({ user_id: userId })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         location.reload();
                     } else {
-                        alert('Failed to update user.');
+                        alert('Failed to disable user.');
                     }
                 });
-            });
-
-            function disableUser(userId) {
-                if (confirm('Are you sure you want to disable this user?')) {
-                    fetch(`{{ url_for('disable_user') }}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ user_id: userId })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            location.reload();
-                        } else {
-                            alert('Failed to disable user.');
-                        }
-                    });
-                }
             }
-        
+        }
+
+        function searchUsers() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('.user-table tbody tr');
+            rows.forEach(row => {
+                const name = row.querySelector('.name').textContent.toLowerCase();
+                const email = row.querySelector('.email').textContent.toLowerCase();
+                if (name.includes(query) || email.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', searchUsers);
     </script>
 </body>
 </html>
-
