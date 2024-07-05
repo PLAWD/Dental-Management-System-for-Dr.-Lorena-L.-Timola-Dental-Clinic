@@ -251,11 +251,15 @@ def dashboard():
     appointments = conn.execute('SELECT p.first_name || " " || p.last_name AS patient_name, a.appointment_date, a.start_time, a.end_time FROM appointments a JOIN patients p ON a.patient_id = p.patient_id').fetchall()
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
-    statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()  # Add this line
+    statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
+    appointmentTypes = conn.execute('SELECT type_id, type_name FROM AppointmentType').fetchall()  # Add this line
     conn.close()
 
     first_name = session.get('first_name')
-    return render_template('dashboard.html', first_name=first_name, appointments=appointments, patients=patients, dentists=dentists, statuses=statuses)
+    return render_template('dashboard.html', first_name=first_name, appointments=appointments, patients=patients, dentists=dentists, statuses=statuses, appointmentTypes=appointmentTypes)  # Add this to pass appointment types to the template
+
+
+
 
 
 @app.route('/create_appointment', methods=['GET'])
@@ -278,11 +282,12 @@ def view_appointment():
                p.first_name || " " || p.middle_name || " " || p.last_name AS patient_name,
                d.first_name || " " || d.last_name AS dentist_name,
                s.status_name,
-               s.status_id
+               t.type_name
         FROM appointments a
         JOIN patients p ON a.patient_id = p.patient_id
         JOIN dentists d ON a.dentist_id = d.dentist_id
         JOIN AppointmentStatus s ON a.status_id = s.status_id
+        JOIN AppointmentType t ON a.type_id = t.type_id
         WHERE a.appointment_id = ?
     ''', (appointment_id,)).fetchone()
     conn.close()
@@ -292,6 +297,7 @@ def view_appointment():
     return jsonify({'error': 'Appointment not found'}), 404
 
 
+
 @app.route('/update_appointment', methods=['POST'])
 def update_appointment():
     data = request.get_json()
@@ -299,11 +305,11 @@ def update_appointment():
     appointment_date = data.get('appointment_date')
     start_time = data.get('start_time')
     end_time = data.get('end_time')
-    appointment_type = data.get('appointment_type')
+    type_id = data.get('type_id')  # Ensure this line is included and correct
     chief_complaints = data.get('chief_complaints')
     procedures = data.get('procedures')
     dentist_id = data.get('dentist_id')
-    status_id = data.get('status_id')
+    status_id = data.get('status_id')  # Ensure this line is included and correct
 
     conn = get_db_connection()
 
@@ -326,9 +332,9 @@ def update_appointment():
 
     conn.execute('''
         UPDATE appointments 
-        SET appointment_date = ?, start_time = ?, end_time = ?, appointment_type = ?, chief_complaints = ?, procedures = ?, dentist_id = ?, status_id = ?
+        SET appointment_date = ?, start_time = ?, end_time = ?, type_id = ?, chief_complaints = ?, procedures = ?, dentist_id = ?, status_id = ?
         WHERE appointment_id = ?
-    ''', (appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id, appointment_id))
+    ''', (appointment_date, start_time, end_time, type_id, chief_complaints, procedures, dentist_id, status_id, appointment_id))
 
     conn.commit()
     conn.close()
@@ -342,7 +348,7 @@ def cancel_appointment():
     conn.execute('DELETE FROM appointments WHERE appointment_id = ?', (appointment_id,))
     conn.commit()
     conn.close()
-    return jsonify({'success': True})
+    return jsonify({'success': True, 'message': 'Appointment cancelled successfully.'})
 
 # Other imports and configurations remain the same
 
@@ -358,7 +364,7 @@ def complete_appointment():
         conn.execute('DELETE FROM appointments WHERE appointment_id = ?', (appointment_id,))
         conn.commit()
         conn.close()
-        return jsonify({'success': True})
+        return jsonify({'success': True, 'message': 'Appointment completed successfully.'})
     conn.close()
     return jsonify({'success': False, 'message': 'Appointment not found'})
 
@@ -1252,7 +1258,7 @@ def submit_appointment():
         appointment_date = data['appointment_date']
         start_time = data['start_time']
         end_time = data['end_time']
-        appointment_type = data['appointment_type']
+        type_id = data['type_id']  # Ensure this line is included and correct
         chief_complaints = data['chief_complaints']
         procedures = data['procedures']
         dentist_id = data['dentist_id']
@@ -1267,7 +1273,7 @@ def submit_appointment():
         SELECT a.*, 
                p.first_name || " " || p.middle_name || " " || p.last_name AS patient_name,
                d.first_name || " " || d.last_name AS dentist_name
-        FROM appointments a
+        FROM Appointments a
         JOIN patients p ON a.patient_id = p.patient_id
         JOIN dentists d ON a.dentist_id = d.dentist_id
         WHERE a.dentist_id = ? AND a.appointment_date = ? AND (
@@ -1277,15 +1283,15 @@ def submit_appointment():
         )
     ''', (dentist_id, appointment_date, start_time, start_time, end_time, end_time, start_time, end_time)).fetchone()
 
-    if (conflict):
+    if conflict:
         conn.close()
         return jsonify({'success': False, 'conflict': dict(conflict)})
 
     conn.execute('''
-        INSERT INTO appointments (patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id) 
+        INSERT INTO Appointments (patient_id, appointment_date, start_time, end_time, type_id, chief_complaints, procedures, dentist_id, status_id) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
-        patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id))
+        patient_id, appointment_date, start_time, end_time, type_id, chief_complaints, procedures, dentist_id, status_id))
 
     # Update the patient's next appointment
     conn.execute('UPDATE patients SET next_appointment = ? WHERE patient_id = ?', (appointment_date, patient_id))
@@ -1293,6 +1299,7 @@ def submit_appointment():
     conn.close()
 
     return jsonify({'success': True})
+
 
 
 
