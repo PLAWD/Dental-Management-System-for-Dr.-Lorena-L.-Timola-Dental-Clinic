@@ -88,6 +88,10 @@
             color: #aaa;
             cursor: pointer;
         }
+        .modal .message {
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -183,7 +187,7 @@
         <div class="modal-content">
             <span class="modal-close" onclick="document.getElementById('changePasswordModal').style.display='none'">&times;</span>
             <h2>Change Password</h2>
-            <form method="POST" action="{{ url_for('change_password') }}">
+            <form id="changePasswordForm">
                 <label for="current_password">Current Password:</label>
                 <input type="password" id="current_password" name="current_password" required>
                 <label for="new_password">New Password:</label>
@@ -192,6 +196,14 @@
                 <input type="password" id="confirm_password" name="confirm_password" required>
                 <button type="submit" class="btn">Update Password</button>
             </form>
+        </div>
+    </div>
+
+    <div id="incorrectPasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="document.getElementById('incorrectPasswordModal').style.display='none'">&times;</span>
+            <h2>Incorrect Password</h2>
+            <p class="message">The current password you entered is incorrect. Please try again.</p>
         </div>
     </div>
 
@@ -294,7 +306,30 @@
                 }
             });
         });
+
+        document.getElementById('changePasswordForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('{{ url_for("change_password") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    document.getElementById('changePasswordModal').style.display = 'none';
+                } else {
+                    if (data.message === 'Current password is incorrect') {
+                        document.getElementById('incorrectPasswordModal').style.display = 'block';
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            });
+        });
     });
 </script>
 </body>
 </html>
+

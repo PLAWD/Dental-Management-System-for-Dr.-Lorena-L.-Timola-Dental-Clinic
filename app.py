@@ -1425,8 +1425,7 @@ def treatment_records():
 @app.route('/change_password', methods=['POST'])
 def change_password():
     if 'user_id' not in session:
-        flash('User not logged in', 'error')
-        return redirect(url_for('login'))
+        return jsonify({'success': False, 'message': 'User not logged in'}), 403
 
     user_id = session['user_id']
     current_password = request.form['current_password']
@@ -1434,24 +1433,29 @@ def change_password():
     confirm_password = request.form['confirm_password']
 
     if new_password != confirm_password:
-        flash('New password and confirm password do not match', 'error')
-        return redirect(url_for('profile'))
+        return jsonify({'success': False, 'message': 'New password and confirm password do not match'}), 400
 
     conn = get_db_connection()
     user = conn.execute('SELECT password_hash FROM users WHERE user_id = ?', (user_id,)).fetchone()
 
     if not user or not check_password_hash(user['password_hash'], current_password):
-        flash('Current password is incorrect', 'error')
         conn.close()
-        return redirect(url_for('profile'))
+        return jsonify({'success': False, 'message': 'Current password is incorrect'}), 400
+
+    previous_passwords = conn.execute('SELECT password_hash FROM password_history WHERE user_id = ? ORDER BY changed_at DESC LIMIT 5', (user_id,)).fetchall()
+
+    for prev_password in previous_passwords:
+        if check_password_hash(prev_password['password_hash'], new_password):
+            conn.close()
+            return jsonify({'success': False, 'message': 'You cannot use your previous 5 passwords. Please choose a different password.'}), 400
 
     hashed_new_password = generate_password_hash(new_password)
     conn.execute('UPDATE users SET password_hash = ? WHERE user_id = ?', (hashed_new_password, user_id))
+    conn.execute('INSERT INTO password_history (user_id, password_hash) VALUES (?, ?)', (user_id, hashed_new_password))
     conn.commit()
     conn.close()
 
-    flash('Password updated successfully', 'success')
-    return redirect(url_for('profile'))
+    return jsonify({'success': True, 'message': 'Password updated successfully'}), 200
 
 
 @app.route('/change_email', methods=['POST'])
