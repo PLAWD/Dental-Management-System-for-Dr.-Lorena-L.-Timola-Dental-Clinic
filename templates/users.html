@@ -15,6 +15,37 @@
             color: #aaa;
             cursor: pointer;
         }
+        .modal-content {
+            position: relative; /* Ensure the modal content is the positioning context */
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+        }
+        .modal button {
+            background-color: #5d74e2;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="users-page">
@@ -30,7 +61,7 @@
                 <div class="dropdown-content">
                     <a href="{{ url_for('patients') }}">Patient Records</a>
                     <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                    <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
+                    <a href="#">Treatment Records</a>
                 </div>
             </li>
             <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
@@ -68,7 +99,7 @@
                     </thead>
                     <tbody id="userTableBody">
                         {% for user in users %}
-                        <tr>
+                        <tr data-user-id="{{ user.user_id }}">
                             <td class="user-info">
                                 <p>{{ user.user_number }}</p>
                                 <a href="#" class="name" onclick="viewUser({{ user.user_id }})">{{ user.name }}</a>
@@ -80,7 +111,7 @@
                                 <button class="ellipsis-btn">⋮</button>
                                 <div class="dropdown-content">
                                     <a href="#" onclick="editUser({{ user.user_id }})">Edit User</a>
-                                    <a href="#" onclick="disableUser({{ user.user_id }})">Disable User</a>
+                                    <a href="#" onclick="confirmDisableUser({{ user.user_id }})">Disable User</a>
                                 </div>
                             </td>
                         </tr>
@@ -103,7 +134,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Register User Modal -->
     <div id="userModal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal('userModal')">&times;</span>
@@ -121,6 +152,7 @@
                 <input type="email" id="email" name="email" required>
                 <label for="role_id">Role:</label>
                 <select id="role_id" name="role_id" onchange="updateUserNumber()" required>
+                    <option value="" selected disabled>Select Role</option>
                     {% for role in roles %}
                         <option value="{{ role.role_id }}">{{ role.role_name }}</option>
                     {% endfor %}
@@ -179,6 +211,27 @@
         </div>
     </div>
 
+    <!-- Disable User Confirmation Modal -->
+    <div id="disableUserModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('disableUserModal')">&times;</span>
+            <h2>Disable User</h2>
+            <p>Are you sure you want to disable this user?</p>
+            <button id="confirmDisableBtn">Yes</button>
+            <button onclick="closeModal('disableUserModal')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Disable User Success Modal -->
+    <div id="disableSuccessModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('disableSuccessModal')">&times;</span>
+            <h2>User Disabled</h2>
+            <p>The user has been successfully disabled.</p>
+            <button onclick="closeModal('disableSuccessModal')">Ok</button>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
@@ -217,9 +270,6 @@
         });
 
         function openModal(modalId) {
-            if (modalId === 'userModal') {
-                updateUserNumber();
-            }
             document.getElementById(modalId).style.display = 'block';
         }
 
@@ -245,7 +295,7 @@
                 .then(data => {
                     const userDetails = document.getElementById('userDetails');
                     userDetails.innerHTML = `
-                        <p><strong>User Number:</strong> ${data.user_number}</p>
+                        <p><strong>User ID:</strong> ${data.user_number}</p>
                         <p><strong>First Name:</strong> ${data.first_name}</p>
                         <p><strong>Last Name:</strong> ${data.last_name}</p>
                         <p><strong>Username:</strong> ${data.username}</p>
@@ -254,7 +304,7 @@
                         <p><strong>Status:</strong> ${data.userStatus}</p>
                         <p><strong>Date Created:</strong> ${data.date_created}</p>
                     `;
-                    document.getElementById('viewUserModal').style.display = 'block';
+                    openModal('viewUserModal');
                 });
         }
 
@@ -270,7 +320,7 @@
                     document.getElementById('edit_email').value = data.email;
                     document.getElementById('edit_role_id').value = data.role_id;
                     document.getElementById('edit_userstat_id').value = data.userstat_id;
-                    document.getElementById('editUserModal').style.display = 'block';
+                    openModal('editUserModal');
                 });
         }
 
@@ -309,24 +359,35 @@
             });
         });
 
+        function confirmDisableUser(userId) {
+            const confirmDisableBtn = document.getElementById('confirmDisableBtn');
+            confirmDisableBtn.onclick = function() {
+                disableUser(userId);
+            };
+            openModal('disableUserModal');
+        }
+
         function disableUser(userId) {
-            if (confirm('Are you sure you want to disable this user?')) {
-                fetch(`{{ url_for('disable_user') }}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ user_id: userId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Failed to disable user.');
+            fetch(`{{ url_for('disable_user') }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user_id: userId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const userRow = document.querySelector(`tr[data-user-id="${userId}"]`);
+                    if (userRow) {
+                        userRow.remove();
                     }
-                });
-            }
+                    closeModal('disableUserModal');
+                    openModal('disableSuccessModal');
+                } else {
+                    alert('Failed to disable user.');
+                }
+            });
         }
 
         function searchUsers() {

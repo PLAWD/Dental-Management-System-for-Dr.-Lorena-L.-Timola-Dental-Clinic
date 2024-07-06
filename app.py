@@ -79,10 +79,19 @@ def generate_strong_password(length=12):
     password = ''.join(random.choices(characters, k=length))
     return password
 
+def log_activity(activity):
+    user_number = session.get('user_number')  # Assuming you store the user's number in the session
+    user_name = session.get('first_name')  # Assuming you store the user's name in the session
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_message = f"{user_number} {current_time}: {activity}"
+    conn = get_db_connection()
+    conn.execute('INSERT INTO user_logs (user_number, user_name, activity) VALUES (?, ?, ?)', (user_number, user_name, log_message))
+    conn.commit()
+    conn.close()
+
 @app.route('/')
 def login():
     return render_template('login.html')
-
 
 @app.route('/do_login', methods=['POST'])
 def do_login():
@@ -94,6 +103,7 @@ def do_login():
 
     if user:
         if user['is_locked']:
+            log_activity(f'Login attempt failed for locked user: {login}')
             conn.close()
             return jsonify({'success': False, 'message': 'Account locked due to too many failed login attempts.'})
 
@@ -107,6 +117,8 @@ def do_login():
             session['role_id'] = user['role_id']
             session['first_name'] = user['first_name']
             session['user_email'] = user['email']
+            session['user_number'] = user['user_number']  # Ensure this is also stored in session
+            log_activity(f'User {login} logged in successfully')
             return jsonify({'success': True, 'redirect_url': url_for('dashboard')})
         else:
             failed_attempts = user['failed_attempts'] + 1
@@ -123,13 +135,15 @@ def do_login():
             conn.close()
 
             if is_locked:
+                log_activity(f'User {login} account locked due to too many failed login attempts')
                 return jsonify({'success': False, 'message': 'Account locked due to too many failed login attempts.'})
             else:
+                log_activity(f'Invalid login attempt for user: {login}')
                 return jsonify({'success': False, 'message': 'Invalid credentials. Please try again.'})
     else:
+        log_activity(f'Invalid login attempt for non-existing user: {login}')
         conn.close()
         return jsonify({'success': False, 'message': 'Invalid credentials. Please try again.'})
-
 
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
@@ -146,16 +160,16 @@ def forgot_password():
             session['otp_attempts'] = 0
             session['otp_sent_time'] = datetime.now().isoformat()
             send_email(email, 'Password Reset OTP', f'Your OTP for password reset is {otp}')
+            log_activity(f'Password reset OTP sent to {email}')
             flash('Password reset OTP has been sent to your email.')
             return redirect(url_for('verify_otp'))
         else:
+            log_activity(f'Password reset requested for non-existing email: {email}')
             flash('Email address not found.')
 
         conn.close()
         return redirect(url_for('forgot_password'))
     return render_template('forgot_password.html')
-
-
 
 # Route to resend OTP for password reset
 @app.route('/resend_otp', methods=['POST'])
@@ -166,6 +180,7 @@ def resend_otp():
 
         if otp_sent_time and datetime.now(timezone.utc) - otp_sent_time < timedelta(seconds=session.get('resend_timer', 60)):
             remaining_time = timedelta(seconds=session.get('resend_timer', 60)) - (datetime.now(timezone.utc) - otp_sent_time)
+            log_activity('Attempt to resend OTP before timer expiration')
             return jsonify({'success': False, 'message': f'Please wait {remaining_time.seconds} seconds before resending OTP.'})
 
     otp = generate_otp()
@@ -173,11 +188,9 @@ def resend_otp():
     session['otp_sent_time'] = datetime.now(timezone.utc).isoformat()
     session['resend_timer'] = session.get('resend_timer', 60) + 60
     send_email(session['reset_email'], 'Password Reset OTP', f'Your OTP for password reset is {otp}')
+    log_activity('OTP resent successfully')
     return jsonify({'success': True, 'new_timer': session['resend_timer']})
 
-
-
-# Route to verify OTP for password reset
 @app.route('/verify_otp', methods=['GET', 'POST'])
 def verify_otp():
     if request.method == 'POST':
@@ -185,16 +198,20 @@ def verify_otp():
         if 'otp' in session:
             if session.get('otp_attempts', 0) >= 3:
                 flash('You have reached the maximum number of attempts. Please try again later.')
+                log_activity('Maximum OTP attempts reached')
                 return redirect(url_for('forgot_password'))
             if otp == session['otp']:
                 flash('OTP verified successfully.')
                 session.pop('otp_attempts', None)
+                log_activity('OTP verified successfully')
                 return redirect(url_for('reset_password'))
             else:
                 session['otp_attempts'] = session.get('otp_attempts', 0) + 1
                 flash('Invalid OTP. Please try again.')
+                log_activity('Invalid OTP attempt')
         else:
             flash('OTP session expired. Please request a new OTP.')
+            log_activity('OTP session expired')
         return redirect(url_for('verify_otp'))
     return render_template('verify_otp.html')
 
@@ -219,6 +236,7 @@ def reset_password():
 
         if password != confirm_password:
             flash('Passwords do not match. Please try again.')
+            log_activity('Failed password reset attempt: Passwords do not match')
             return redirect(url_for('reset_password'))
 
         hashed_password = generate_password_hash(password)
@@ -230,6 +248,7 @@ def reset_password():
         for prev_password in previous_passwords:
             if check_password_hash(prev_password['password_hash'], password):
                 flash('You cannot use your previous 5 passwords. Please choose a different password.')
+                log_activity(f'Failed password reset attempt: Password reused for email {email}')
                 return redirect(url_for('reset_password'))
 
         # Update the user's password and set their status to active (assuming active status id is 1)
@@ -241,25 +260,27 @@ def reset_password():
         session.pop('otp', None)
         session.pop('reset_email', None)
         flash('Your password has been reset successfully. Please login with your new password.')
+        log_activity(f'Password reset successfully for email {email}')
         return redirect(url_for('login'))
     return render_template('reset_password.html')
-
 
 @app.route('/dashboard')
 def dashboard():
     if 'role_id' not in session:
+        log_activity('Unauthorized access attempt to dashboard')
         return redirect(url_for('login'))
 
     conn = get_db_connection()
     appointments = conn.execute('SELECT p.first_name || " " || p.last_name AS patient_name, a.appointment_date, a.start_time, a.end_time FROM appointments a JOIN patients p ON a.patient_id = p.patient_id').fetchall()
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
-    statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()  # Add this line
+    statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
     conn.close()
 
     first_name = session.get('first_name')
+    user_number = session.get('user_number')
+    log_activity(f'Dashboard accessed by {first_name}')
     return render_template('dashboard.html', first_name=first_name, appointments=appointments, patients=patients, dentists=dentists, statuses=statuses)
-
 
 @app.route('/create_appointment', methods=['GET'])
 def create_appointment():
@@ -268,9 +289,9 @@ def create_appointment():
     dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
     statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
     conn.close()
+    user_number = session.get('user_number')
+    log_activity(f'{user_number} {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Create appointment page accessed')
     return render_template('create_appointment.html', patients=patients, dentists=dentists, statuses=statuses)
-
-from flask import request, jsonify
 
 @app.route('/view_appointment')
 def view_appointment():
@@ -290,10 +311,13 @@ def view_appointment():
     ''', (appointment_id,)).fetchone()
     conn.close()
 
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if appointment:
+        log_activity(f'{user_number} {current_time}: Viewed appointment {appointment_id}')
         return jsonify(dict(appointment))
+    log_activity(f'{user_number} {current_time}: Failed to view appointment {appointment_id} - not found')
     return jsonify({'error': 'Appointment not found'}), 404
-
 
 @app.route('/update_appointment', methods=['POST'])
 def update_appointment():
@@ -308,9 +332,18 @@ def update_appointment():
     dentist_id = data.get('dentist_id')
     status_id = data.get('status_id')
 
+    selected_date = datetime.strptime(appointment_date, '%Y-%m-%d')
+    current_date = datetime.now()
+
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    if selected_date < current_date:
+        log_activity(f'{user_number} {current_time}: Failed to update appointment {appointment_id} - past date selected')
+        return jsonify({'success': False, 'message': 'Cannot select a date that has already passed.'})
+
     conn = get_db_connection()
 
-    # Check for conflicts with other appointments
     conflict = conn.execute('''
         SELECT * FROM appointments 
         WHERE appointment_date = ? 
@@ -325,6 +358,7 @@ def update_appointment():
 
     if conflict:
         conn.close()
+        log_activity(f'{user_number} {current_time}: Failed to update appointment {appointment_id} - conflict detected')
         return jsonify({'success': False, 'message': 'Conflict detected with another appointment.'})
 
     conn.execute('''
@@ -336,7 +370,9 @@ def update_appointment():
     conn.commit()
     conn.close()
 
+    log_activity(f'{user_number} {current_time}: Updated appointment {appointment_id}')
     return jsonify({'success': True, 'message': 'Appointment updated successfully.'})
+
 
 @app.route('/cancel_appointment', methods=['POST'])
 def cancel_appointment():
@@ -345,15 +381,23 @@ def cancel_appointment():
     conn.execute('DELETE FROM appointments WHERE appointment_id = ?', (appointment_id,))
     conn.commit()
     conn.close()
+
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Cancelled appointment {appointment_id}')
+
     return jsonify({'success': True})
 
-# Other imports and configurations remain the same
 
 @app.route('/complete_appointment', methods=['POST'])
 def complete_appointment():
     appointment_id = request.form['id']
     conn = get_db_connection()
-    appointment = conn.execute('SELECT patient_id, appointment_date FROM appointments WHERE appointment_id = ?', (appointment_id,)).fetchone()
+    appointment = conn.execute('SELECT patient_id, appointment_date FROM appointments WHERE appointment_id = ?',
+                               (appointment_id,)).fetchone()
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     if appointment:
         patient_id = appointment['patient_id']
         appointment_date = appointment['appointment_date']
@@ -361,8 +405,11 @@ def complete_appointment():
         conn.execute('DELETE FROM appointments WHERE appointment_id = ?', (appointment_id,))
         conn.commit()
         conn.close()
+        log_activity(f'{user_number} {current_time}: Completed appointment {appointment_id}')
         return jsonify({'success': True})
+
     conn.close()
+    log_activity(f'{user_number} {current_time}: Failed to complete appointment {appointment_id} - not found')
     return jsonify({'success': False, 'message': 'Appointment not found'})
 
 @app.route('/get_appointments')
@@ -384,26 +431,16 @@ def get_appointments():
     conn.close()
 
     events = [dict(row) for row in appointments]
+    log_activity('Retrieved list of appointments')
     return jsonify(events)
 
 @app.route('/search', methods=['GET'])
 def search():
     query = request.args.get('query')
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Search performed with query: {query}')
     return f"Search results for: {query}"
-
-@app.route('/update_schema')
-def update_schema():
-    conn = get_db_connection()
-    try:
-        conn.execute('ALTER TABLE Appointments ADD COLUMN status_id INTEGER;')
-        conn.commit()
-    except sqlite3.OperationalError as e:
-        return str(e)
-    finally:
-        conn.close()
-    return 'Schema updated successfully'
-
-
 
 @app.route('/users')
 @role_required([1])  # Only admin can access
@@ -421,7 +458,9 @@ def users():
     statuses = conn.execute('SELECT userstat_id, userStatus FROM userStatus').fetchall()
 
     conn.close()
-
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Accessed users page')
     return render_template('users.html', users=users, total_users=total_users, roles=roles, statuses=statuses)
 
 @app.route('/get_user_details')
@@ -437,6 +476,9 @@ def get_user_details():
     ''', (user_id,)).fetchone()
     conn.close()
 
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     if user:
         user_details = {
             'user_id': user['user_id'],
@@ -451,11 +493,11 @@ def get_user_details():
             'date_created': user['date_created'],
             'user_number': user['user_number']
         }
+        log_activity(f'{user_number} {current_time}: Viewed details for user ID {user_id}')
         return jsonify(user_details)
     else:
+        log_activity(f'{user_number} {current_time}: Failed to view details for user ID {user_id} - not found')
         return jsonify({'error': 'User not found'}), 404
-
-
 
 @app.route('/disable_user', methods=['POST'])
 def disable_user():
@@ -463,11 +505,19 @@ def disable_user():
     user_id = data['user_id']
 
     conn = get_db_connection()
-    conn.execute('UPDATE users SET userstat_id = ? WHERE user_id = ?', (7, user_id))
-    conn.commit()
-    conn.close()
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    return jsonify({'success': True})
+    try:
+        conn.execute('UPDATE users SET userstat_id = ? WHERE user_id = ?', (7, user_id))
+        conn.commit()
+        log_activity(f'{user_number} {current_time}: Disabled user ID {user_id}')
+        return jsonify({'success': True})
+    except Exception as e:
+        log_activity(f'{user_number} {current_time}: Failed to disable user ID {user_id} - {str(e)}')
+        return jsonify({'success': False, 'error': str(e)})
+    finally:
+        conn.close()
 
 @app.route('/update_user', methods=['POST'])
 def update_user():
@@ -489,6 +539,9 @@ def update_user():
     conn.commit()
     conn.close()
 
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Updated user ID {user_id}')
     return jsonify({'success': True})
 
 @app.route('/register_user')
@@ -497,7 +550,11 @@ def register_user():
     roles = conn.execute('SELECT role_id, role_name FROM roles').fetchall()
     statuses = conn.execute('SELECT userstat_id, userStatus FROM userStatus').fetchall()
     conn.close()
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Accessed user registration page')
     return render_template('register_user.html', roles=roles, statuses=statuses)
+
 
 def generate_user_number(role_name):
     prefix = 'A-' if role_name == 'Admin' else 'E-'
@@ -549,9 +606,11 @@ def submit_register_user():
     # Send the generated password to the user's email
     send_email(email, 'Your Account Details', f'Your account has been created. Your password is: {password}')
 
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     flash('User registered successfully. The password has been sent to the user\'s email.', 'success')
+    log_activity(f'{user_number} {current_time}: Registered new user {username} with role ID {role_id}')
     return redirect(url_for('users'))
-
 
 @app.route('/patients')
 @role_required([1, 2])  # Both admin and user can access
@@ -565,8 +624,10 @@ def patients():
     total_patients = conn.execute('SELECT COUNT(*) as count FROM patients WHERE is_active = 1').fetchone()['count']
     conn.close()
 
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Accessed patients page')
     return render_template('patients.html', patients=patients, total_patients=total_patients)
-
 
 @app.route('/overview/<int:patient_id>')
 def overview(patient_id):
@@ -590,11 +651,14 @@ def overview(patient_id):
     medical_history = conn.execute('SELECT * FROM medical_history WHERE patient_id = ?', (patient_id,)).fetchone()
     conn.close()
 
-    return render_template('overview.html', 
-                           patient=patient, 
-                           appointments=appointments, 
-                           treatment=treatment or {}, 
-                           examination=examination or {}, 
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Viewed overview for patient ID {patient_id}')
+    return render_template('overview.html',
+                           patient=patient,
+                           appointments=appointments,
+                           treatment=treatment or {},
+                           examination=examination or {},
                            medical_history=medical_history or {})
 
 @app.route('/get_patient_details', methods=['GET'])
@@ -603,10 +667,15 @@ def get_patient_details():
     conn = get_db_connection()
     patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
     conn.close()
-    if patient:
-        return jsonify(dict(patient))
-    return jsonify(error="Patient not found"), 404
 
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    if patient:
+        log_activity(f'{user_number} {current_time}: Viewed details for patient ID {patient_id}')
+        return jsonify(dict(patient))
+    log_activity(f'{user_number} {current_time}: Failed to view details for patient ID {patient_id} - not found')
+    return jsonify(error="Patient not found"), 404
 
 @app.route('/add_patient', methods=['POST'])
 def add_patient():
@@ -639,8 +708,7 @@ def add_patient():
           medical_conditions, current_medication, employment_status, other_employment_detail, occupation))
     patient_id = cur.lastrowid
 
-    for name, relationship, phone in zip(emergency_contact_names, emergency_contact_relationships,
-                                         emergency_contact_phones):
+    for name, relationship, phone in zip(emergency_contact_names, emergency_contact_relationships, emergency_contact_phones):
         cur.execute('''
             INSERT INTO emergency_contacts (patient_id, contact_name, relationship, contact_phone) 
             VALUES (?, ?, ?, ?)
@@ -649,6 +717,9 @@ def add_patient():
     conn.commit()
     conn.close()
 
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Added new patient {first_name} {last_name}')
     flash('Patient added successfully.')
     return redirect(url_for('patients'))
 
@@ -669,6 +740,9 @@ def submit_add_patient():
 
     conn = get_db_connection()
     existing_patient = conn.execute('SELECT * FROM patients WHERE email = ?', (email,)).fetchone()
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     try:
         conn.execute('''
             INSERT INTO patients (first_name, middle_name, last_name, dob, sex, address, city, occupation, mobile_number, email)
@@ -676,8 +750,10 @@ def submit_add_patient():
         ''', (first_name, middle_name, last_name, dob, sex, address, city, occupation, mobile_number, email))
         conn.commit()
         conn.close()
+        log_activity(f'{user_number} {current_time}: Submitted new patient {first_name} {last_name}')
         return jsonify(success=True)
     except Exception as e:
+        log_activity(f'{user_number} {current_time}: Failed to submit new patient {first_name} {last_name} - {str(e)}')
         return jsonify(success=False, error=str(e))
 
 @app.route('/submit_edit_patient', methods=['POST'])
@@ -696,6 +772,9 @@ def submit_edit_patient():
     email = data['email']
 
     conn = get_db_connection()
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     try:
         conn.execute('''
             UPDATE patients
@@ -704,11 +783,11 @@ def submit_edit_patient():
         ''', (first_name, middle_name, last_name, dob, sex, address, city, occupation, mobile_number, email, patient_id))
         conn.commit()
         conn.close()
+        log_activity(f'{user_number} {current_time}: Edited patient ID {patient_id}')
         return jsonify(success=True)
     except Exception as e:
+        log_activity(f'{user_number} {current_time}: Failed to edit patient ID {patient_id} - {str(e)}')
         return jsonify(success=False, error=str(e))
-    
-
 
 @app.route('/submit_medical_history', methods=['POST'])
 def submit_medical_history():
@@ -734,9 +813,15 @@ def submit_medical_history():
         conn.commit()
         conn.close()
 
+        user_number = session.get('user_number')
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_activity(f'{user_number} {current_time}: Submitted medical history for patient ID {patient_id}')
         # Redirect back to the patients page
         return redirect(url_for('patients'))
     except Exception as e:
+        user_number = session.get('user_number')
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_activity(f'{user_number} {current_time}: Failed to submit medical history for patient ID {patient_id} - {str(e)}')
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/update_patient', methods=['POST'])
@@ -762,26 +847,36 @@ def update_patient():
     conn.commit()
     conn.close()
 
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Updated patient ID {patient_id}')
     return jsonify({'success': True})
 
 @app.route('/disable_patient', methods=['POST'])
 def disable_patient():
     patient_id = request.form['patient_id']
     conn = get_db_connection()
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     try:
         conn.execute('UPDATE patients SET is_active = 0 WHERE patient_id = ?', (patient_id,))
         conn.commit()
         conn.close()
+        log_activity(f'{user_number} {current_time}: Disabled patient ID {patient_id}')
         return jsonify(success=True)
     except Exception as e:
+        log_activity(f'{user_number} {current_time}: Failed to disable patient ID {patient_id} - {str(e)}')
         return jsonify(success=False, error=str(e))
-    
-    
+
 @app.route('/treatments')
 def treatments():
     conn = get_db_connection()
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     conn.close()
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Accessed treatments page')
     return render_template('treatments.html', patients=patients)
 
 @app.route('/intraoral_exams/<int:patient_id>')
@@ -791,17 +886,21 @@ def intraoral_exams(patient_id):
     if not patient:
         flash('Patient not found!')
         return redirect(url_for('patients'))
-    
+
     intraoral_exams = conn.execute('SELECT * FROM intraoral_exams WHERE patient_id = ?', (patient_id,)).fetchall()
     conn.close()
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Viewed intraoral exams for patient ID {patient_id}')
     return render_template('intraoral_exam.html', patient=patient, intraoral_exams=intraoral_exams)
-
 
 @app.route('/logout')
 def logout():
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: User logged out')
     session.clear()
     return redirect(url_for('login'))
-
 
 @app.route('/inventory')
 @role_required([1, 2])  # Both admin and user can access
@@ -813,6 +912,9 @@ def inventory():
         WHERE is_disabled = 0
     ''').fetchall()
     conn.close()
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Accessed inventory page')
     return render_template('inventory.html', inventory_items=inventory_items)
 
 @app.route('/submit_add_item', methods=['POST'])
@@ -827,6 +929,9 @@ def submit_add_item():
     price_max = data['price_max']
     low_stock_threshold = data['low_stock_threshold']
 
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     try:
         conn = get_db_connection()
         conn.execute('''
@@ -835,42 +940,57 @@ def submit_add_item():
         ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold))
         conn.commit()
         conn.close()
+        log_activity(f'{user_number} {current_time}: Added new item to inventory: {name}')
         return jsonify(success=True)
     except Exception as e:
+        log_activity(f'{user_number} {current_time}: Failed to add new item to inventory: {name} - {str(e)}')
         return jsonify(success=False, error=str(e))
-    
+
 @app.route('/add_stock', methods=['POST'])
 def add_stock():
     data = request.get_json()
     item_id = data['item_id']
     additional_stock = data['additional_stock']
 
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     try:
         conn = get_db_connection()
-        conn.execute('UPDATE inventory SET stocked_quantity = stocked_quantity + ? WHERE item_id = ?', (additional_stock, item_id))
+        conn.execute('UPDATE inventory SET stocked_quantity = stocked_quantity + ? WHERE item_id = ?',
+                     (additional_stock, item_id))
         conn.commit()
         conn.close()
+        log_activity(f'{user_number} {current_time}: Added stock to item ID {item_id}: {additional_stock} units')
         return jsonify(success=True)
     except Exception as e:
+        log_activity(f'{user_number} {current_time}: Failed to add stock to item ID {item_id}: {additional_stock} units - {str(e)}')
         return jsonify(success=False, error=str(e))
 
-    
 @app.route('/deactivate_item', methods=['POST'])
 def deactivate_item():
     data = request.get_json()
     item_id = data['item_id']
+
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     try:
         conn = get_db_connection()
         conn.execute('UPDATE inventory SET is_disabled = 1 WHERE item_id = ?', (item_id,))
         conn.commit()
         conn.close()
+        log_activity(f'{user_number} {current_time}: Deactivated item with ID {item_id}')
         return jsonify(success=True)
     except Exception as e:
+        log_activity(f'{user_number} {current_time}: Failed to deactivate item with ID {item_id} - {str(e)}')
         return jsonify(success=False, error=str(e))
 
 @app.route('/register_item', methods=['GET', 'POST'])
 def register_item():
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     if request.method == 'POST':
         name = request.form['name']
         category = request.form['category']
@@ -888,11 +1008,10 @@ def register_item():
         ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold))
         conn.commit()
         conn.close()
-
+        log_activity(f'{user_number} {current_time}: Registered new item: {name}')
         flash('Item registered successfully.')
         return redirect(url_for('inventory'))
     return render_template('register_item.html')
-
 
 @app.route('/item/<int:item_id>')
 def view_item(item_id):
@@ -902,12 +1021,19 @@ def view_item(item_id):
     if item is None:
         flash('Item not found!')
         return redirect(url_for('inventory'))
+
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Viewed item with ID {item_id}')
     return render_template('view_item.html', item=item)
 
 @app.route('/edit_inventory/<int:item_id>', methods=['GET', 'POST'])
 @role_required([1])  # Assuming only admin can edit
 def edit_inventory(item_id):
     conn = get_db_connection()
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     if request.method == 'POST':
         name = request.form['name']
         category = request.form['category']
@@ -925,6 +1051,7 @@ def edit_inventory(item_id):
         ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, item_id))
         conn.commit()
         conn.close()
+        log_activity(f'{user_number} {current_time}: Edited item with ID {item_id}')
         return redirect(url_for('inventory'))
 
     item = conn.execute('SELECT * FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
@@ -940,11 +1067,18 @@ def disable_inventory(item_id):
     conn.execute('UPDATE inventory SET is_disabled = ? WHERE item_id = ?', (new_status, item_id))
     conn.commit()
     conn.close()
+
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Disabled item with ID {item_id}')
     return redirect(url_for('inventory'))
 
 @app.route('/reports')
 @role_required([1, 2])  # Both admin and user can access
 def reports():
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Accessed reports page')
     return render_template('reports.html')
 
 
@@ -955,6 +1089,9 @@ def generate_report(report_type):
 
     # Retrieve logged-in user information from the session
     user_id = session.get('user_id')
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     if not user_id:
         return 'User not logged in', 401
 
@@ -1074,45 +1211,20 @@ def generate_report(report_type):
     buffer.seek(0)
     filename = f"{report_type}_{now.strftime('%Y%m%d_%H%M%S')}.pdf"
     conn.close()
+
+    # Log the activity
+    log_activity(f'{user_number} {current_time}: Generated {report_type} report from {start_date} to {end_date}')
+
     return send_file(buffer, as_attachment=True, download_name=filename)
-
-@app.route('/get_report/<report_type>')
-def get_report(report_type):
-    conn = get_db_connection()
-    if report_type == 'appointments':
-        data = conn.execute('SELECT * FROM appointments').fetchall()
-        conn.close()
-        return jsonify([dict(row) for row in data])
-    elif report_type == 'payments':
-        data = conn.execute('SELECT * FROM payments').fetchall()
-        conn.close()
-        return jsonify([dict(row) for row in data])
-    elif report_type == 'patients':
-        data = conn.execute('SELECT * FROM patients').fetchall()
-        conn.close()
-        return jsonify([dict(row) for row in data])
-    conn.close()
-    return 'Invalid report type', 400
-
-@app.route('/download_report/<report_id>')
-def download_report(report_id):
-    conn = get_db_connection()
-    report = conn.execute('SELECT * FROM reports WHERE report_id = ?', (report_id,)).fetchone()
-    conn.close()
-
-    if not report:
-        return 'Report not found', 404
-
-    report_details = json.loads(report['details'])
-    report_type = report['report_type']
-
-    return render_template('report_result.html', report_type=report_type, data=report_details)
 
 @app.route('/payments')
 def payments():
     conn = get_db_connection()
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     conn.close()
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Accessed payments page')
     return render_template('payments.html', patients=patients)
 
 @app.route('/process_payment', methods=['POST'])
@@ -1127,6 +1239,9 @@ def process_payment():
 
     # Retrieve logged-in user information from the session
     user_id = session.get('user_id')
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     if not user_id:
         return 'User not logged in', 401
 
@@ -1137,21 +1252,26 @@ def process_payment():
         return 'Invalid user ID', 400
     user_name = f"{user['first_name']} {user['last_name']}"
 
-    patient = conn.execute('SELECT email, last_name, first_name, middle_name FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
+    patient = conn.execute('SELECT email, last_name, first_name, middle_name FROM patients WHERE patient_id = ?',
+                           (patient_id,)).fetchone()
     if not patient:
         conn.close()
         return 'Invalid patient ID', 400
     patient_full_name = f"{patient['last_name']} {patient['first_name']} {patient['middle_name']}"
 
     payment_date = datetime.now().strftime('%Y-%m-%d')
-    conn.execute('INSERT INTO payments (patient_id, payment_method, amount, payment_date, reference_number, payment_type) VALUES (?, ?, ?, ?, ?, ?)',
-                 (patient_id, payment_method, amount, payment_date, reference_number, payment_type))
+    conn.execute(
+        'INSERT INTO payments (patient_id, payment_method, amount, payment_date, reference_number, payment_type) VALUES (?, ?, ?, ?, ?, ?)',
+        (patient_id, payment_method, amount, payment_date, reference_number, payment_type))
 
     for service in services:
         conn.execute('INSERT INTO services (patient_id, service_name, amount, payment_date) VALUES (?, ?, ?, ?)',
                      (patient_id, service['name'], service['amount'], payment_date))
 
     conn.commit()
+
+    # Log the activity
+    log_activity(f'{user_number} {current_time}: Processed payment for patient {patient_full_name} ({patient_id}), amount: {amount}, payment method: {payment_method}')
 
     # Generate the PDF receipt
     buffer = BytesIO()
@@ -1163,9 +1283,12 @@ def process_payment():
 
     p.setFont("Helvetica", 12)
     p.drawString(inch, height - 1.5 * inch, f"Date: {payment_date}")
-    p.drawString(inch, height - 2 * inch, f"RECEIVED from Dr. Lorena L. Timola Dental Clinic with TIN 912686393 address")
-    p.drawString(inch, height - 2.2 * inch, f"at Blk 1 Lot 4 Brookside Dr. Corner Columbus St Brookside Hills Gate 1, Brgy,")
-    p.drawString(inch, height - 2.4 * inch, f"Cainta, 1900 Rizal engaged with the business style of Dental Clinic the sum of")
+    p.drawString(inch, height - 2 * inch,
+                 f"RECEIVED from Dr. Lorena L. Timola Dental Clinic with TIN 912686393 address")
+    p.drawString(inch, height - 2.2 * inch,
+                 f"at Blk 1 Lot 4 Brookside Dr. Corner Columbus St Brookside Hills Gate 1, Brgy,")
+    p.drawString(inch, height - 2.4 * inch,
+                 f"Cainta, 1900 Rizal engaged with the business style of Dental Clinic the sum of")
     p.drawString(inch, height - 2.6 * inch, f"{amount} in {payment_type.lower()} payment for {patient_full_name}")
 
     p.drawString(inch, height - 3 * inch, "IN SETTLEMENT FOR THE FOLLOWING")
@@ -1185,30 +1308,51 @@ def process_payment():
     pdf_data = buffer.getvalue()
 
     # Send the email with the PDF receipt
-    send_email(patient['email'], "Payment Receipt", "Please find attached your payment receipt.", attachment=BytesIO(pdf_data), attachment_name="Receipt.pdf")
+    send_email(patient['email'], "Payment Receipt", "Please find attached your payment receipt.",
+               attachment=BytesIO(pdf_data), attachment_name="Receipt.pdf")
 
     conn.close()
     return jsonify({'success': True})
 
 @app.route('/maintenance')
 def maintenance():
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Accessed maintenance page')
     return render_template('maintenance.html')
 
 @app.route('/backup_system', methods=['GET'])
 def backup_system():
-    path = request.args.get('path')
-    name = request.args.get('name')
+    default_path = os.path.join(os.path.expanduser("~"), 'Desktop')
+    path = request.args.get('path', default_path)
+
     if not os.path.exists(path):
         return jsonify({"success": False, "error": "Invalid path"}), 400
-    
-    db_path = os.path.join(path, name)
+
+    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_name = f'backup_{current_time}.db'
+    backup_path = os.path.join(path, backup_name)
+
+    user_number = session.get('user_number')
+    log_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     try:
         conn = get_db_connection()
-        backup_conn = sqlite3.connect(db_path)
+        backup_conn = sqlite3.connect(backup_path)
         with backup_conn:
             conn.backup(backup_conn, pages=1, progress=None)
         backup_conn.close()
-        return jsonify({"success": True, "path": db_path})
+
+        try:
+            sqlite3.connect(backup_path).execute('SELECT 1').fetchall()
+        except sqlite3.DatabaseError:
+            os.remove(backup_path)
+            return jsonify({"success": False, "error": "Backup file is not a valid database"}), 500
+
+        # Log the activity
+        log_activity(f'{user_number} {log_time}: System backup created at {backup_path}')
+
+        return jsonify({"success": True, "path": backup_path})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -1219,20 +1363,50 @@ def restore_system():
 
     restore_file = request.files['restore_file']
     restore_path = os.path.join('instance/DMSDB.db')
-    
+
+    user_number = session.get('user_number')
+    log_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     try:
         restore_file.save(restore_path)
+
+        # Log the activity
+        log_activity(f'{user_number} {log_time}: System restored from {restore_file.filename}')
+
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-    
+
+@app.route('/user_log', methods=['GET'])
+def user_log():
+    try:
+        conn = get_db_connection()
+        logs = conn.execute('SELECT timestamp, activity FROM user_logs ORDER BY timestamp DESC').fetchall()
+        conn.close()
+        logs_list = [{'timestamp': log['timestamp'], 'activity': log['activity']} for log in logs]
+
+        user_number = session.get('user_number')
+        log_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_activity(f'{user_number} {log_time}: Accessed user log page')
+
+        return jsonify({"success": True, "logs": logs_list})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @app.route('/help')
 def help():
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Accessed help page')
     return render_template('help.html')
 
 @app.route('/about')
 def about():
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Accessed about page')
     return render_template('about.html')
+
 
 @app.route('/profile')
 def profile():
@@ -1254,6 +1428,11 @@ def profile():
     if user:
         user_details = dict(user)
         session['current_email'] = user['email']  # Save current email in the session
+
+        user_number = session.get('user_number')
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_activity(f'{user_number} {current_time}: Accessed profile page')
+
         return render_template('profile.html', user=user_details)
     else:
         flash('User not found', 'error')
@@ -1265,6 +1444,11 @@ def resend_otp_profile():
     session['otp'] = otp
     session['otp_sent_time'] = datetime.now().isoformat()
     send_email(session['current_email'], 'Email Change OTP', f'Your OTP for email change is {otp}')
+
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Resent OTP for profile email change')
+
     return jsonify({'success': True})
 
 @app.route('/verify_otp_profile', methods=['POST'])
@@ -1273,10 +1457,20 @@ def verify_otp_profile():
     if 'otp' in session:
         if session.get('otp_attempts', 0) >= 3:
             flash('You have reached the maximum number of attempts. Please try again later.')
+
+            user_number = session.get('user_number')
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            log_activity(f'{user_number} {current_time}: Reached maximum OTP attempts for profile email change')
+
             return redirect(url_for('profile'))
         if otp == session['otp']:
             session.pop('otp_attempts', None)
             session['otp_verified'] = True
+
+            user_number = session.get('user_number')
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            log_activity(f'{user_number} {current_time}: OTP verified for profile email change')
+
             return jsonify({'success': True, 'next_step': 'new_email'})
         else:
             session['otp_attempts'] = session.get('otp_attempts', 0) + 1
@@ -1294,6 +1488,11 @@ def send_new_email_otp_profile():
     session['new_email_otp_attempts'] = 0
     session['new_email'] = new_email
     send_email(new_email, 'Your OTP Code', f'Your OTP code is {otp}')
+
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Sent new email OTP for profile')
+
     return jsonify({'success': True})
 
 @app.route('/verify_new_email_otp_profile', methods=['POST'])
@@ -1314,12 +1513,18 @@ def verify_new_email_otp_profile():
             session.pop('new_email', None)
             session.pop('new_email_otp_attempts', None)
             session.pop('otp_verified', None)
+
+            user_number = session.get('user_number')
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            log_activity(f'{user_number} {current_time}: Verified new email OTP for profile')
+
             return jsonify({'success': True})
         else:
             session['new_email_otp_attempts'] = session.get('new_email_otp_attempts', 0) + 1
             return jsonify({'success': False, 'message': 'Invalid OTP. Please try again.'})
     else:
         return jsonify({'success': False, 'message': 'OTP session expired. Please request a new OTP.'})
+
 @app.route('/appointment_records')
 @role_required([1, 2])  # Both admin and user can access
 def appointment_records():
@@ -1341,12 +1546,15 @@ def appointment_records():
     statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
     conn.close()
 
-    return render_template('appointment_records.html', 
-                           records=appointment_records, 
-                           patients=patients, 
-                           dentists=dentists, 
-                           statuses=statuses)
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Accessed appointment records page')
 
+    return render_template('appointment_records.html',
+                           records=appointment_records,
+                           patients=patients,
+                           dentists=dentists,
+                           statuses=statuses)
 
 @app.route('/submit_appointment', methods=['POST'])
 def submit_appointment():
@@ -1365,7 +1573,7 @@ def submit_appointment():
         chief_complaints = data['chief_complaints']
         procedures = data['procedures']
         dentist_id = data['dentist_id']
-        status_id = data['status_id']  # Ensure this line is included and correct
+        status_id = data['status_id']
     except KeyError as e:
         return jsonify({'success': False, 'message': f'Missing key: {str(e)}'}), 400
 
@@ -1386,24 +1594,34 @@ def submit_appointment():
         )
     ''', (dentist_id, appointment_date, start_time, start_time, end_time, end_time, start_time, end_time)).fetchone()
 
-    if (conflict):
+    if conflict:
         conn.close()
-        return jsonify({'success': False, 'conflict': dict(conflict)})
+        conflict_details = {
+            'patient_name': conflict['patient_name'],
+            'dentist_name': conflict['dentist_name'],
+            'appointment_date': conflict['appointment_date'],
+            'start_time': conflict['start_time'],
+            'end_time': conflict['end_time']
+        }
+        return jsonify({'success': False, 'conflict': conflict_details})
 
     conn.execute('''
         INSERT INTO appointments (patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
-        patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id))
+        patient_id, appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id,
+        status_id))
 
     # Update the patient's next appointment
     conn.execute('UPDATE patients SET next_appointment = ? WHERE patient_id = ?', (appointment_date, patient_id))
     conn.commit()
     conn.close()
 
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Created appointment for patient ID {patient_id} on {appointment_date} from {start_time} to {end_time}')
+
     return jsonify({'success': True})
-
-
 
 @app.route('/treatment_records')
 @role_required([1, 2])  # Both admin and user can access
@@ -1420,8 +1638,11 @@ def treatment_records():
     ''').fetchall()
     conn.close()
 
-    return render_template('treatment_records.html', records=records)
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Accessed treatment records page')
 
+    return render_template('treatment_records.html', records=records)
 @app.route('/change_password', methods=['POST'])
 def change_password():
     if 'user_id' not in session:
@@ -1442,12 +1663,15 @@ def change_password():
         conn.close()
         return jsonify({'success': False, 'message': 'Current password is incorrect'}), 400
 
-    previous_passwords = conn.execute('SELECT password_hash FROM password_history WHERE user_id = ? ORDER BY changed_at DESC LIMIT 5', (user_id,)).fetchall()
+    previous_passwords = conn.execute(
+        'SELECT password_hash FROM password_history WHERE user_id = ? ORDER BY changed_at DESC LIMIT 5',
+        (user_id,)).fetchall()
 
     for prev_password in previous_passwords:
         if check_password_hash(prev_password['password_hash'], new_password):
             conn.close()
-            return jsonify({'success': False, 'message': 'You cannot use your previous 5 passwords. Please choose a different password.'}), 400
+            return jsonify({'success': False,
+                            'message': 'You cannot use your previous 5 passwords. Please choose a different password.'}), 400
 
     hashed_new_password = generate_password_hash(new_password)
     conn.execute('UPDATE users SET password_hash = ? WHERE user_id = ?', (hashed_new_password, user_id))
@@ -1455,8 +1679,11 @@ def change_password():
     conn.commit()
     conn.close()
 
-    return jsonify({'success': True, 'message': 'Password updated successfully'}), 200
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Changed password for user ID {user_id}')
 
+    return jsonify({'success': True, 'message': 'Password updated successfully'}), 200
 
 @app.route('/change_email', methods=['POST'])
 def change_email():
@@ -1480,9 +1707,14 @@ def change_email():
     conn.close()
 
     session['user_email'] = new_email
+
+    # Log the activity
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Changed email to {new_email}.')
+
     flash('Email changed successfully.')
     return redirect(url_for('profile'))
-
 
 @app.route('/send_new_email_otp', methods=['POST'])
 def send_new_email_otp():
@@ -1499,8 +1731,14 @@ def send_new_email_otp():
     send_email(new_email, 'Your OTP Code', f'Your OTP code is {otp}')
     session['otp_stage'] = 'new_email'
     session['new_email'] = new_email
+
+    # Log the activity
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Requested OTP for email change.')
+
     return jsonify({'success': True})
-    
+
 @app.route('/verify_otp_for_email_change', methods=['POST'])
 def verify_otp_for_email_change():
     if 'user_id' not in session:
@@ -1520,10 +1758,22 @@ def verify_otp_for_email_change():
         conn.execute('UPDATE users SET otp = NULL, otp_expiry = NULL, otp_attempts = 0 WHERE user_id = ?',
                      (user_id,))
         conn.commit()
+
+        # Log the activity
+        user_number = session.get('user_number')
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_activity(f'{user_number} {current_time}: Verified OTP for email change.')
+
         return jsonify({'success': True})
     else:
         conn.execute('UPDATE users SET otp_attempts = otp_attempts + 1 WHERE user_id = ?', (user_id,))
         conn.commit()
+
+        # Log the activity
+        user_number = session.get('user_number')
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_activity(f'{user_number} {current_time}: Failed OTP verification for email change.')
+
         return jsonify({'success': False, 'message': 'Invalid OTP'})
 
 @app.route('/verify_otp_for_password_reset', methods=['GET', 'POST'])
@@ -1537,6 +1787,12 @@ def verify_otp_for_password_reset():
             if otp == session['otp']:
                 flash('OTP verified successfully.')
                 session.pop('otp_attempts', None)
+
+                # Log the activity
+                user_number = session.get('user_number')
+                current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                log_activity(f'{user_number} {current_time}: Verified OTP for password reset.')
+
                 return redirect(url_for('reset_password'))
             else:
                 session['otp_attempts'] = session.get('otp_attempts', 0) + 1
@@ -1550,7 +1806,7 @@ def verify_otp_for_password_reset():
 @role_required([1, 2])  # Both admin and user can access
 def generate_billing(patient_id):
     conn = get_db_connection()
-    
+
     # Fetch diagnosis details for the patient
     diagnoses = conn.execute('''
         SELECT * FROM diagnosis WHERE patient_id = ?
@@ -1558,7 +1814,7 @@ def generate_billing(patient_id):
 
     # Calculate total cost
     total_cost = sum(d['cost'] for d in diagnoses)
-    
+
     # Insert billing record
     conn.execute('''
         INSERT INTO billing (patient_id, total_cost, date_of_billing)
@@ -1578,12 +1834,12 @@ def generate_billing(patient_id):
 
     conn.close()
 
+    # Log the activity
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Generated billing for patient ID {patient_id} with total cost {total_cost}.')
+
     return render_template('billing.html', diagnoses=diagnoses, billing=billing, patient=patient)
-
-
-    return render_template('billing.html', diagnoses=diagnoses, billing=billing)
-
-
 
 if __name__ == '__main__':
    app.run(debug=True)

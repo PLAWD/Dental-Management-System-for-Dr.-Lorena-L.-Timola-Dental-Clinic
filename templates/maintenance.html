@@ -41,42 +41,145 @@
     <div class="main-content">
         <div class="maintenance-container">
             <h2 class="maintenance-header">System Maintenance</h2>
-            <button onclick="backupSystem()">Backup System</button>
-            <button onclick="restoreSystem()">Restore System</button>
-            <div id="confirmation" style="display:none;">
-                <p>Are you sure you want to restore the system? This action will overwrite current data.</p>
-                <input type="file" id="restoreFile">
-                <button onclick="confirmRestore()">Yes</button>
-                <button onclick="cancelRestore()">No</button>
-            </div>
+            <button onclick="showBackupOptions()">Backup System</button>
+            <button onclick="showRestoreOptions()">Restore System</button>
+            <button onclick="viewUserLog()">View User Log</button>
         </div>
     </div>
-    <script>
-        function backupSystem() {
-            const now = new Date();
-            const date = now.toISOString().split('T')[0];
-            const time = now.toTimeString().split(' ')[0].replace(/:/g, '-');
-            const backupName = `backup_${date}_${time}.db`;
 
-            fetch(`/backup_system`)
-                .then(response => response.blob())
-                .then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = backupName;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
+    <!-- Backup Options Modal -->
+    <div id="backupOptionsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('backupOptionsModal')">&times;</span>
+            <h2>Select Backup Location</h2>
+            <label for="backupLocation">Enter folder path:</label>
+            <input type="text" id="backupLocation" placeholder="C:/Users/YourUsername/Desktop">
+            <button onclick="backupSystem()">Backup to Selected Folder</button>
+            <button onclick="backupSystem('desktop')">Backup to Default Location (Desktop)</button>
+        </div>
+    </div>
+
+    <!-- Backup Confirmation Modal -->
+    <div id="backupConfirmationModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('backupConfirmationModal')">&times;</span>
+            <h2>Confirm Backup</h2>
+            <p>Are you sure you want to backup the system?</p>
+            <button onclick="confirmBackup()">Yes</button>
+            <button onclick="closeModal('backupConfirmationModal')">No</button>
+        </div>
+    </div>
+
+    <!-- Backup Success Modal -->
+    <div id="backupSuccessModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('backupSuccessModal')">&times;</span>
+            <p id="backupSuccessMessage"></p>
+        </div>
+    </div>
+
+    <!-- Restore Options Modal -->
+    <div id="restoreOptionsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('restoreOptionsModal')">&times;</span>
+            <h2>Restore System</h2>
+            <label for="restoreFile">Select backup file:</label>
+            <input type="file" id="restoreFile">
+            <button onclick="showRestoreConfirmation()">Next</button>
+        </div>
+    </div>
+
+    <!-- Restore Confirmation Modal -->
+    <div id="restoreConfirmationModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('restoreConfirmationModal')">&times;</span>
+            <h2>Confirm Restore</h2>
+            <p>Are you sure you want to restore the system? This action will overwrite current data.</p>
+            <button onclick="confirmRestore()">Yes</button>
+            <button onclick="closeModal('restoreConfirmationModal')">No</button>
+        </div>
+    </div>
+
+    <!-- Restore Success Modal -->
+    <div id="restoreSuccessModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('restoreSuccessModal')">&times;</span>
+            <p id="restoreSuccessMessage"></p>
+        </div>
+    </div>
+
+    <!-- User Log Modal -->
+    <div id="userLogModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('userLogModal')">&times;</span>
+            <h2>User Log</h2>
+            <div id="userLogContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let backupPath = '';
+
+        function showBackupOptions() {
+            document.getElementById('backupOptionsModal').style.display = 'block';
+        }
+
+        function backupSystem(location = '') {
+            if (location === 'desktop') {
+                backupPath = ''; // Use default path on server-side
+                showConfirmationModal('backupConfirmationModal');
+            } else {
+                const inputPath = document.getElementById('backupLocation').value;
+                if (inputPath) {
+                    backupPath = inputPath;
+                    showConfirmationModal('backupConfirmationModal');
+                } else {
+                    alert('Please enter a folder path for the backup.');
+                }
+            }
+        }
+
+        function showConfirmationModal(modalId) {
+            closeModal('backupOptionsModal');
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function confirmBackup() {
+            closeModal('backupConfirmationModal');
+            fetch(`/backup_system?path=${encodeURIComponent(backupPath)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const successMessage = document.getElementById('backupSuccessMessage');
+                    if (data.success) {
+                        successMessage.innerHTML = `Backup successful: ${data.path}`;
+                    } else {
+                        successMessage.innerHTML = `Backup failed: ${data.error}`;
+                    }
+                    document.getElementById('backupSuccessModal').style.display = 'block';
                 })
                 .catch(error => {
-                    alert('Backup failed: ' + error.message);
+                    const successMessage = document.getElementById('backupSuccessMessage');
+                    successMessage.innerHTML = `Error: ${error}`;
+                    document.getElementById('backupSuccessModal').style.display = 'block';
                 });
         }
 
-        function restoreSystem() {
-            document.getElementById('confirmation').style.display = 'block';
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function showRestoreOptions() {
+            document.getElementById('restoreOptionsModal').style.display = 'block';
+        }
+
+        function showRestoreConfirmation() {
+            const restoreFile = document.getElementById('restoreFile').files[0];
+            if (restoreFile) {
+                closeModal('restoreOptionsModal');
+                document.getElementById('restoreConfirmationModal').style.display = 'block';
+            } else {
+                alert('Please select a file to restore.');
+            }
         }
 
         function confirmRestore() {
@@ -90,21 +193,38 @@
             })
             .then(response => response.json())
             .then(data => {
+                const successMessage = document.getElementById('restoreSuccessMessage');
                 if (data.success) {
-                    alert('System restored successfully');
+                    successMessage.innerHTML = 'System restored successfully';
                 } else {
-                    alert('System restore failed: ' + data.error);
+                    successMessage.innerHTML = 'System restore failed: ' + data.error;
                 }
-                document.getElementById('confirmation').style.display = 'none';
+                closeModal('restoreConfirmationModal');
+                document.getElementById('restoreSuccessModal').style.display = 'block';
             })
             .catch(error => {
-                alert('System restore failed: ' + error.message);
-                document.getElementById('confirmation').style.display = 'none';
+                const successMessage = document.getElementById('restoreSuccessMessage');
+                successMessage.innerHTML = 'System restore failed: ' + error.message;
+                closeModal('restoreConfirmationModal');
+                document.getElementById('restoreSuccessModal').style.display = 'block';
             });
         }
 
-        function cancelRestore() {
-            document.getElementById('confirmation').style.display = 'none';
+        function viewUserLog() {
+            fetch('/user_log')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const logContent = data.logs.map(log => `<p>${log.timestamp}: ${log.activity}</p>`).join('');
+                        document.getElementById('userLogContent').innerHTML = logContent;
+                        document.getElementById('userLogModal').style.display = 'block';
+                    } else {
+                        alert('Failed to load user logs: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Failed to load user logs: ' + error.message);
+                });
         }
 
         document.addEventListener('DOMContentLoaded', function () {
