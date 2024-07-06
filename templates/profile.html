@@ -188,6 +188,8 @@
                 <input type="password" id="current_password" name="current_password" required>
                 <label for="new_password">New Password:</label>
                 <input type="password" id="new_password" name="new_password" required>
+                <label for="confirm_password">Confirm New Password:</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
                 <button type="submit" class="btn">Update Password</button>
             </form>
         </div>
@@ -216,7 +218,7 @@
         document.getElementById('sendOtpForm').addEventListener('submit', function (event) {
             event.preventDefault();
             const formData = new FormData(this);
-            fetch('{{ url_for("resend_otp") }}', {
+            fetch('{{ url_for("resend_otp_profile") }}', {
                 method: 'POST',
                 body: formData
             })
@@ -235,7 +237,7 @@
         document.getElementById('verifyOtpForm').addEventListener('submit', function (event) {
             event.preventDefault();
             const formData = new FormData(this);
-            fetch('{{ url_for("verify_otp") }}', {
+            fetch('{{ url_for("verify_otp_profile") }}', {
                 method: 'POST',
                 body: formData
             })
@@ -258,7 +260,7 @@
         document.getElementById('sendNewEmailOtpForm').addEventListener('submit', function (event) {
             event.preventDefault();
             const formData = new FormData(this);
-            fetch('{{ url_for("send_new_email_otp") }}', {
+            fetch('{{ url_for("send_new_email_otp_profile") }}', {
                 method: 'POST',
                 body: formData
             })
@@ -277,7 +279,7 @@
         document.getElementById('verifyNewEmailOtpForm').addEventListener('submit', function (event) {
             event.preventDefault();
             const formData = new FormData(this);
-            fetch('{{ url_for("verify_otp") }}', {
+            fetch('{{ url_for("verify_new_email_otp_profile") }}', {
                 method: 'POST',
                 body: formData
             })

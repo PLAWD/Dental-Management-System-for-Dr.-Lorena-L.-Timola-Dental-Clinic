@@ -15,6 +15,7 @@ from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import os
+from random import randint
 
 app = Flask(__name__)
 app.config['DATABASE'] = 'instance/DMSDB.db'
@@ -156,24 +157,27 @@ def forgot_password():
 
 
 
+# Route to resend OTP for password reset
 @app.route('/resend_otp', methods=['POST'])
 def resend_otp():
     if 'otp_sent_time' in session:
         otp_sent_time_str = session['otp_sent_time']
         otp_sent_time = datetime.fromisoformat(otp_sent_time_str)
 
-        if otp_sent_time and datetime.now().astimezone() - otp_sent_time < timedelta(seconds=session.get('resend_timer', 60)):
-            remaining_time = timedelta(seconds=session.get('resend_timer', 60)) - (datetime.now().astimezone() - otp_sent_time)
+        if otp_sent_time and datetime.now(timezone.utc) - otp_sent_time < timedelta(seconds=session.get('resend_timer', 60)):
+            remaining_time = timedelta(seconds=session.get('resend_timer', 60)) - (datetime.now(timezone.utc) - otp_sent_time)
             return jsonify({'success': False, 'message': f'Please wait {remaining_time.seconds} seconds before resending OTP.'})
 
     otp = generate_otp()
     session['otp'] = otp
-    session['otp_sent_time'] = datetime.now().astimezone().isoformat()
+    session['otp_sent_time'] = datetime.now(timezone.utc).isoformat()
     session['resend_timer'] = session.get('resend_timer', 60) + 60
     send_email(session['reset_email'], 'Password Reset OTP', f'Your OTP for password reset is {otp}')
     return jsonify({'success': True, 'new_timer': session['resend_timer']})
 
 
+
+# Route to verify OTP for password reset
 @app.route('/verify_otp', methods=['GET', 'POST'])
 def verify_otp():
     if request.method == 'POST':
@@ -193,7 +197,6 @@ def verify_otp():
             flash('OTP session expired. Please request a new OTP.')
         return redirect(url_for('verify_otp'))
     return render_template('verify_otp.html')
-
 
 def is_password_in_history(user_id, new_password):
     conn = get_db_connection()
@@ -1233,7 +1236,7 @@ def about():
 
 @app.route('/profile')
 def profile():
-    user_id = session.get('user_id')  # Assuming user_id is stored in the session
+    user_id = session.get('user_id')
     if not user_id:
         flash('User not logged in', 'error')
         return redirect(url_for('login'))
@@ -1249,25 +1252,74 @@ def profile():
     conn.close()
 
     if user:
-        user_details = {
-            'user_id': user['user_id'],
-            'first_name': user['first_name'],
-            'last_name': user['last_name'],
-            'username': user['username'],
-            'email': user['email'],
-            'role_id': user['role_id'],
-            'userstat_id': user['userstat_id'],
-            'role_name': user['role_name'],
-            'userStatus': user['userStatus'],
-            'date_created': user['date_created'],
-            'user_number': user['user_number']
-        }
+        user_details = dict(user)
+        session['current_email'] = user['email']  # Save current email in the session
         return render_template('profile.html', user=user_details)
     else:
         flash('User not found', 'error')
         return redirect(url_for('dashboard'))
 
+@app.route('/resend_otp_profile', methods=['POST'])
+def resend_otp_profile():
+    otp = str(randint(100000, 999999))
+    session['otp'] = otp
+    session['otp_sent_time'] = datetime.now().isoformat()
+    send_email(session['current_email'], 'Email Change OTP', f'Your OTP for email change is {otp}')
+    return jsonify({'success': True})
 
+@app.route('/verify_otp_profile', methods=['POST'])
+def verify_otp_profile():
+    otp = request.form['otp']
+    if 'otp' in session:
+        if session.get('otp_attempts', 0) >= 3:
+            flash('You have reached the maximum number of attempts. Please try again later.')
+            return redirect(url_for('profile'))
+        if otp == session['otp']:
+            session.pop('otp_attempts', None)
+            session['otp_verified'] = True
+            return jsonify({'success': True, 'next_step': 'new_email'})
+        else:
+            session['otp_attempts'] = session.get('otp_attempts', 0) + 1
+            return jsonify({'success': False, 'message': 'Invalid OTP. Please try again.'})
+    else:
+        return jsonify({'success': False, 'message': 'OTP session expired. Please request a new OTP.'})
+
+@app.route('/send_new_email_otp_profile', methods=['POST'])
+def send_new_email_otp_profile():
+    if 'user_id' not in session or not session.get('otp_verified'):
+        return redirect(url_for('login'))
+    new_email = request.form['new_email']
+    otp = str(randint(100000, 999999))
+    session['new_email_otp'] = otp
+    session['new_email_otp_attempts'] = 0
+    session['new_email'] = new_email
+    send_email(new_email, 'Your OTP Code', f'Your OTP code is {otp}')
+    return jsonify({'success': True})
+
+@app.route('/verify_new_email_otp_profile', methods=['POST'])
+def verify_new_email_otp_profile():
+    new_email_otp = request.form['new_email_otp']
+    if 'new_email_otp' in session:
+        if session.get('new_email_otp_attempts', 0) >= 3:
+            return jsonify({'success': False, 'message': 'You have reached the maximum number of attempts.'})
+        if new_email_otp == session['new_email_otp']:
+            new_email = session['new_email']
+            user_id = session['user_id']
+            conn = get_db_connection()
+            conn.execute('UPDATE users SET email = ? WHERE user_id = ?', (new_email, user_id))
+            conn.commit()
+            conn.close()
+
+            session.pop('new_email_otp', None)
+            session.pop('new_email', None)
+            session.pop('new_email_otp_attempts', None)
+            session.pop('otp_verified', None)
+            return jsonify({'success': True})
+        else:
+            session['new_email_otp_attempts'] = session.get('new_email_otp_attempts', 0) + 1
+            return jsonify({'success': False, 'message': 'Invalid OTP. Please try again.'})
+    else:
+        return jsonify({'success': False, 'message': 'OTP session expired. Please request a new OTP.'})
 @app.route('/appointment_records')
 @role_required([1, 2])  # Both admin and user can access
 def appointment_records():
@@ -1372,33 +1424,35 @@ def treatment_records():
 
 @app.route('/change_password', methods=['POST'])
 def change_password():
+    if 'user_id' not in session:
+        flash('User not logged in', 'error')
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
     current_password = request.form['current_password']
     new_password = request.form['new_password']
     confirm_password = request.form['confirm_password']
 
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-
     if new_password != confirm_password:
-        flash('New passwords do not match. Please try again.')
+        flash('New password and confirm password do not match', 'error')
         return redirect(url_for('profile'))
 
-    user_id = session['user_id']
     conn = get_db_connection()
     user = conn.execute('SELECT password_hash FROM users WHERE user_id = ?', (user_id,)).fetchone()
 
-    if not check_password_hash(user['password_hash'], current_password):
-        flash('Current password is incorrect. Please try again.')
+    if not user or not check_password_hash(user['password_hash'], current_password):
+        flash('Current password is incorrect', 'error')
         conn.close()
         return redirect(url_for('profile'))
 
-    hashed_password = generate_password_hash(new_password)
-    conn.execute('UPDATE users SET password_hash = ? WHERE user_id = ?', (hashed_password, user_id))
+    hashed_new_password = generate_password_hash(new_password)
+    conn.execute('UPDATE users SET password_hash = ? WHERE user_id = ?', (hashed_new_password, user_id))
     conn.commit()
     conn.close()
 
-    flash('Password changed successfully.')
+    flash('Password updated successfully', 'success')
     return redirect(url_for('profile'))
+
 
 @app.route('/change_email', methods=['POST'])
 def change_email():
