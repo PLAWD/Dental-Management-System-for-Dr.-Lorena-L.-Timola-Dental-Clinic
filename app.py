@@ -932,33 +932,39 @@ def save_diagnosis():
     try:
         conn = get_db_connection()
         conn.execute('''
-            INSERT INTO diagnosis (patient_id, gingivitis, early_periodontitis, moderate_periodontitis, advanced_periodontitis, occlusion, appliances, tmd, xray_taken)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO intraoral_exams (
+                patient_id, periodontal_screening, occlusion_class, occlusion, appliances, tmd,
+                xray_taken, xray_periapical_tth_no, xray_occlusal, xray_others, exam_date
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, date('now'))
             ON CONFLICT(patient_id) DO UPDATE SET
-                gingivitis=excluded.gingivitis,
-                early_periodontitis=excluded.early_periodontitis,
-                moderate_periodontitis=excluded.moderate_periodontitis,
-                advanced_periodontitis=excluded.advanced_periodontitis,
+                periodontal_screening=excluded.periodontal_screening,
+                occlusion_class=excluded.occlusion_class,
                 occlusion=excluded.occlusion,
                 appliances=excluded.appliances,
                 tmd=excluded.tmd,
-                xray_taken=excluded.xray_taken
+                xray_taken=excluded.xray_taken,
+                xray_periapical_tth_no=excluded.xray_periapical_tth_no,
+                xray_occlusal=excluded.xray_occlusal,
+                xray_others=excluded.xray_others,
+                exam_date=date('now')
         ''', (
             data.get('patient_id'),
-            data.get('gingivitis', False),
-            data.get('early_periodontitis', False),
-            data.get('moderate_periodontitis', False),
-            data.get('advanced_periodontitis', False),
+            data.get('periodontal_screening'),
+            data.get('occlusion_class'),
             data.get('occlusion'),
             data.get('appliances'),
             data.get('tmd'),
-            data.get('xray_taken')
+            data.get('xray_taken'),
+            data.get('xray_periapical_tth_no'),
+            data.get('xray_occlusal'),
+            data.get('xray_others')
         ))
         conn.commit()
         conn.close()
         return jsonify(success=True)
     except Exception as e:
         return jsonify(success=False, error=str(e))
+
 
 @app.route('/update_patient', methods=['POST'])
 def update_patient():

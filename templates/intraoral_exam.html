@@ -264,6 +264,9 @@
     <input type="checkbox" id="epilepsy" name="epilepsy">
     <label for="epilepsy">Epilepsy</label>
 </div>
+     <div class="submit-group">
+         <button type="button" onclick="saveMedicalHistory()">Save Medical History</button>
+     </div>
 </form>
 </div>
 </div>
@@ -316,12 +319,15 @@
                                 <input type="checkbox" class="diagnosis-checkbox" data-code="PT"> Periapical Tth. No. <input type="text">
                                 <input type="checkbox" class="diagnosis-checkbox" data-code="O"> Occlusal <input type="text">
                             </div>
+                            <div class="submit-group">
+                                <button type="button" onclick="saveDiagnosis()">Save Diagnosis</button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-        
+
     <!-- Modal for teeth conditions -->
     <div id="conditionModal" class="modal">
         <div class="modal-content">
@@ -378,7 +384,6 @@
 
     <script>
         let currentTooth = null;
-        const patientId = 1; // Assume the patient ID is available from the context
 
         function openTab(evt, tabName) {
             var i, tabcontent, tablinks;
@@ -423,7 +428,7 @@
                 body: JSON.stringify({
                     tooth_number: toothNumber,
                     condition_code: selectedCodes.join(' '),
-                    patient_id: patientId
+                    patient_id: {{ patient.patient_id }}
                 })
             })
             .then(response => response.json())
@@ -451,7 +456,7 @@
         }
 
         function loadConditions(toothNumber) {
-            fetch(`/conditions?patient_id=${patientId}`)
+            fetch(`/conditions?patient_id={{ patient.patient_id }}`)
                 .then(response => response.json())
                 .then(data => {
                     const storedConditions = data.filter(condition => condition.tooth_number == toothNumber).map(condition => condition.condition_code);
@@ -502,30 +507,56 @@
             });
         }
 
-        // Click Function to change the display value of the input
-        function clickMe() {
-            let input = document.getElementById("popup");
-            if (input.style.display == "none") {
-                input.style.display = "block";
-            } else {
-                input.style.display = "none";
-            }
-        }
+        function saveMedicalHistory() {
+            const formData = new FormData(document.getElementById('medicalHistoryForm'));
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value === 'on';
+            });
 
-        document.querySelectorAll('.legend input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function () {
-                const checkedBoxes = document.querySelectorAll('.legend input[type="checkbox"]:checked');
-                const preview = document.getElementById('preview');
-
-                if (checkedBoxes.length > 4) {
-                    this.checked = false;
-                    return;
+            fetch('{{ url_for("save_medical_history") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Medical history saved successfully.');
+                } else {
+                    alert('Failed to save medical history: ' + data.error);
                 }
             });
-        });
+        }
+
+        function saveDiagnosis() {
+            const formData = new FormData(document.getElementById('diagnosisForm'));
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+            data['patient_id'] = {{ patient.patient_id }};
+
+            fetch('{{ url_for("save_diagnosis") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Diagnosis saved successfully.');
+                } else {
+                    alert('Failed to save diagnosis: ' + data.error);
+                }
+            });
+        }
 
         document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('enter-diagnosis').style.display = 'block';
             const sidebar = document.getElementById('sidebar');
             const sidebarTab = document.getElementById('sidebarTab');
             const mainContent = document.querySelector('.main-content');
@@ -535,6 +566,7 @@
                 mainContent.classList.toggle('shifted');
                 sidebarTab.style.display = 'none';
             });
+
             document.addEventListener('click', function (event) {
                 if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
                     sidebar.classList.remove('show');
@@ -543,7 +575,6 @@
                 }
             });
 
-            // Dropdown functionality
             const dropdowns = document.querySelectorAll('.dropdown');
             dropdowns.forEach(dropdown => {
                 const btn = dropdown.querySelector('.ellipsis-btn');
@@ -560,6 +591,5 @@
             });
         });
     </script>
-    </div>
 </body>
 </html>
