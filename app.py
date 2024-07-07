@@ -35,37 +35,34 @@ def role_required(roles):
                 return redirect(url_for('login'))
 
             user_role_id = session['role_id']
-            # Assuming role_id 1 is admin and role_id 2 is user
             if user_role_id not in roles:
                 flash('You do not have permission to access this page.')
                 return redirect(url_for('dashboard'))
             return f(*args, **kwargs)
-
         return decorated_function
-
     return decorator
 
+# Function to establish a database connection
 def get_db_connection():
-    conn = sqlite3.connect(app.config['DATABASE'], timeout=30)
-    conn.execute('PRAGMA journal_mode=WAL')
+    conn = sqlite3.connect(app.config['DATABASE'], timeout=10)  # Corrected access to the DATABASE config
     conn.row_factory = sqlite3.Row
     return conn
+
 
 def generate_otp():
     return ''.join(random.choices(string.digits, k=6))
 
+# Function to send emails
 def send_email(to_email, subject, body, attachment=None, attachment_name=None):
     msg = MIMEMultipart()
     msg['From'] = EMAIL_ADDRESS
     msg['To'] = to_email
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
-
     if attachment and attachment_name:
         part = MIMEApplication(attachment.read(), Name=attachment_name)
         part['Content-Disposition'] = f'attachment; filename="{attachment_name}"'
         msg.attach(part)
-
     with smtplib.SMTP('smtp.gmail.com', 587) as server:
         server.starttls()
         server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
@@ -97,24 +94,19 @@ def login():
 def do_login():
     login = request.form.get('login')
     password = request.form.get('password')
-
     conn = get_db_connection()
     user = conn.execute('SELECT * FROM users WHERE email = ? OR username = ?', (login, login)).fetchone()
-
     if user:
         if user['is_locked']:
             log_activity(f'Login attempt failed for locked user: {login}')
             conn.close()
             return jsonify({'success': False, 'message': 'Account locked due to too many failed login attempts.'})
-
         if check_password_hash(user['password_hash'], password):
-            # Reset failed attempts after successful login
             conn.execute('UPDATE users SET failed_attempts = 0, is_locked = 0 WHERE user_id = ?', (user['user_id'],))
             conn.commit()
             conn.close()
-
             session['user_id'] = user['user_id']
-            session['role_id'] = user['role_id']
+            session['role_id'] = user['role_id']  # Ensure role_id is stored in session
             session['first_name'] = user['first_name']
             session['user_email'] = user['email']
             session['user_number'] = user['user_number']  # Ensure this is also stored in session
@@ -130,10 +122,8 @@ def do_login():
             else:
                 conn.execute('UPDATE users SET failed_attempts = ? WHERE user_id = ?',
                              (failed_attempts, user['user_id']))
-
             conn.commit()
             conn.close()
-
             if is_locked:
                 log_activity(f'User {login} account locked due to too many failed login attempts')
                 return jsonify({'success': False, 'message': 'Account locked due to too many failed login attempts.'})
@@ -144,6 +134,7 @@ def do_login():
         log_activity(f'Invalid login attempt for non-existing user: {login}')
         conn.close()
         return jsonify({'success': False, 'message': 'Invalid credentials. Please try again.'})
+
 
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
@@ -269,14 +260,12 @@ def dashboard():
     if 'role_id' not in session:
         log_activity('Unauthorized access attempt to dashboard')
         return redirect(url_for('login'))
-
     conn = get_db_connection()
     appointments = conn.execute('SELECT p.first_name || " " || p.last_name AS patient_name, a.appointment_date, a.start_time, a.end_time FROM appointments a JOIN patients p ON a.patient_id = p.patient_id').fetchall()
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
     statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
     conn.close()
-
     first_name = session.get('first_name')
     user_number = session.get('user_number')
     log_activity(f'Dashboard accessed by {first_name}')
@@ -518,6 +507,8 @@ def disable_user():
         return jsonify({'success': False, 'error': str(e)})
     finally:
         conn.close()
+
+    # return jsonify({'success': True})
 
 @app.route('/update_user', methods=['POST'])
 def update_user():
