@@ -47,6 +47,9 @@
             </div>
 
             <div class="exam-form">
+                <div class="legend">
+                    <label><input type="checkbox" class="condition-checkbox" data-code="X"> Cleaning </label><br>
+                    </div>
                     <div class="teeth-diagram">
                         <div class="teeth-section">
                             <div class="teeth-header">Upper Temporary Teeth</div>
@@ -333,12 +336,12 @@
                 </div>
             </div>
 
-                        
-                                
 
-            
+
+
+
         </div>
-   
+
 
 
     <!-- Modal for teeth conditions -->
@@ -364,6 +367,7 @@
                 </div>
                 <div>
                     <h3>Restoration & Prosthetics</h3>
+                    <label><input type="checkbox" class="condition-checkbox" data-code="Cl"> Cl - Cleaning</label><br>
                     <label><input type="checkbox" class="condition-checkbox" data-code="Am"> Am - Amalgam Filling</label><br>
                     <label><input type="checkbox" class="condition-checkbox" data-code="Co"> Co - Composite Filling</label><br>
                     <label><input type="checkbox" class="condition-checkbox" data-code="JC"> JC - Jacket Crown</label><br>
@@ -379,12 +383,12 @@
             <h3>Preview</h3>
             <p id="selectedConditions"></p>
             <div id="preview">
-                  <text id="previewText" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
-                </div>
+                <text id="previewText" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
+            </div>
             <div>
-                 <svg viewBox="0 0 100 100" class="interactive-circle">
-                    <path class="segment" onclick="toggleSegment(this)" d="M50 50 L50 0 A50 50 0 0 1 100 50 z" ></path>
-                    <path class="segment" onclick="toggleSegment(this)" d="M50 50 L100 50 A50 50 0 0 1 50 100 z" ></path>
+                <svg viewBox="0 0 100 100" class="interactive-circle">
+                    <path class="segment" onclick="toggleSegment(this)" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                    <path class="segment" onclick="toggleSegment(this)" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
                     <path class="segment" onclick="toggleSegment(this)" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
                     <path class="segment" onclick="toggleSegment(this)" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
                     <circle class="segment" onclick="toggleSegment(this)" cx="50" cy="50" r="20"></circle>
@@ -396,161 +400,187 @@
 
     <script>
         let currentTooth = null;
+        const patientId = 1; // Assume the patient ID is available from the context
 
         function openTab(evt, tabName) {
-    var i, tabcontent, tablinks;
-    tabcontent = document.getElementsByClassName("tab-content");
-    for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-    tablinks = document.getElementsByClassName("tab");
-    for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-    document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
-}
-function openModal(toothElement, toothNumber) {
-    currentTooth = toothElement;
-    currentTooth.setAttribute('data-tooth-number', toothNumber);
-    document.getElementById('conditionModal').style.display = 'block';
-    loadConditions(toothNumber);
-    loadSegments(toothNumber);
-}
-function closeModal() {
-    document.getElementById('conditionModal').style.display = 'none';
-}
-function saveConditions() {
-    const checkboxes = document.querySelectorAll('.condition-checkbox');
-    let selectedCodes = [];
-    checkboxes.forEach((checkbox) => {
-        if (checkbox.checked) {
-            selectedCodes.push(checkbox.getAttribute('data-code'));
-        }
-    });
-    const toothNumber = currentTooth.getAttribute('data-tooth-number');
-    localStorage.setItem(`tooth_${toothNumber}_conditions`, JSON.stringify(selectedCodes));
-    displaySavedConditions(toothNumber, selectedCodes);
-    closeModal();
-}
-function displaySavedConditions(toothNumber, selectedCodes) {
-    const toothBox = document.querySelector(`.tooth-box[data-tooth-number="${toothNumber}"]`);
-    if (toothBox) {
-        let conditionText = toothBox.querySelector('.condition-text');
-        if (!conditionText) {
-            conditionText = document.createElement('div');
-            conditionText.className = 'condition-text';
-            toothBox.appendChild(conditionText);
-        }
-        conditionText.textContent = selectedCodes.join(' ');
-    }
-}
-function loadConditions(toothNumber) {
-    const storedConditions = JSON.parse(localStorage.getItem(`tooth_${toothNumber}_conditions`)) || [];
-    const checkboxes = document.querySelectorAll('.condition-checkbox');
-    checkboxes.forEach((checkbox) => {
-        checkbox.checked = storedConditions.includes(checkbox.getAttribute('data-code'));
-    });
-    updatePreview();
-}
-
-function updatePreview() {
-    const checkboxes = document.querySelectorAll('.condition-checkbox:checked');
-    let selectedCodes = [];
-    checkboxes.forEach((checkbox) => {
-        selectedCodes.push(checkbox.getAttribute('data-code'));
-    });
-    const previewText = document.getElementById('previewText');
-    previewText.textContent = selectedCodes.join(' ');
-}
-function toggleSegment(segment) {
-    if (segment.style.fill === 'red') {
-        segment.style.fill = '#FFFFFF';
-    } else {
-        segment.style.fill = 'red';
-    }
-    saveSegments();
-}
-       
-function saveSegments() {
-    const segments = document.querySelectorAll('.segment');
-    let selectedSegments = [];
-    segments.forEach((segment, index) => {
-        if (segment.style.fill === 'red') {
-            selectedSegments.push(index);
-        }
-    });
-    const toothNumber = currentTooth.getAttribute('data-tooth-number');
-    localStorage.setItem(`tooth_${toothNumber}_segments`, JSON.stringify(selectedSegments));
-}
-
-function loadSegments(toothNumber) {
-    const selectedSegments = JSON.parse(localStorage.getItem(`tooth_${toothNumber}_segments`)) || [];
-    const segments = document.querySelectorAll('.segment');
-    segments.forEach((segment, index) => {
-        segment.style.fill = selectedSegments.includes(index) ? 'red' : '#FFFFFF';
-    });
-}
-
-// Click Function to change the display value of the input
-
-            function clickMe() {
-                let input = document.getElementById("popup");
-
-                 if (input.style.display == "none") {
-                  input.style.display = "block";
-                    } else {
-                     input.style.display = "none";
-                    }
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
             }
-            document.querySelectorAll('.legend input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', function () {
-                    const checkedBoxes = document.querySelectorAll('.legend input[type="checkbox"]:checked');
-                    const preview = document.getElementById('preview');
-
-                    if (checkedBoxes.length > 4) {
-                        this.checked = false;
-                        return;
-                    }
-                });
-            });
-
-    document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('enter-diagnosis').style.display = 'block';
-    const sidebar = document.getElementById('sidebar');
-    const sidebarTab = document.getElementById('sidebarTab');
-    const mainContent = document.querySelector('.main-content');
-
-    sidebarTab.addEventListener('click', function () {
-        sidebar.classList.toggle('show');
-        mainContent.classList.toggle('shifted');
-        sidebarTab.style.display = 'none';
-    });
-    document.addEventListener('click', function (event) {
-        if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
-            sidebar.classList.remove('show');
-            mainContent.classList.remove('shifted');
-            sidebarTab.style.display = 'block';
+            tablinks = document.getElementsByClassName("tab");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
         }
-    });
-  
-     // Dropdown functionality
-     const dropdowns = document.querySelectorAll('.dropdown');
-    dropdowns.forEach(dropdown => {
-        const btn = dropdown.querySelector('.ellipsis-btn');
-        const content = dropdown.querySelector('.dropdown-content');
 
-        btn.addEventListener('click', function (event) {
-            event.stopPropagation();
-            content.classList.toggle('show');
+        function openModal(toothElement, toothNumber) {
+            currentTooth = toothElement;
+            currentTooth.setAttribute('data-tooth-number', toothNumber);
+            document.getElementById('conditionModal').style.display = 'block';
+            loadConditions(toothNumber);
+            loadSegments(toothNumber);
+        }
+
+        function closeModal() {
+            document.getElementById('conditionModal').style.display = 'none';
+        }
+
+        function saveConditions() {
+            const checkboxes = document.querySelectorAll('.condition-checkbox');
+            let selectedCodes = [];
+            checkboxes.forEach((checkbox) => {
+                if (checkbox.checked) {
+                    selectedCodes.push(checkbox.getAttribute('data-code'));
+                }
+            });
+            const toothNumber = currentTooth.getAttribute('data-tooth-number');
+            fetch('/conditions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tooth_number: toothNumber,
+                    condition_code: selectedCodes.join(' '),
+                    patient_id: patientId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displaySavedConditions(toothNumber, selectedCodes);
+                    closeModal();
+                } else {
+                    alert('Failed to save conditions');
+                }
+            });
+        }
+
+        function displaySavedConditions(toothNumber, selectedCodes) {
+            const toothBox = document.querySelector(`.tooth-box[data-tooth-number="${toothNumber}"]`);
+            if (toothBox) {
+                let conditionText = toothBox.querySelector('.condition-text');
+                if (!conditionText) {
+                    conditionText = document.createElement('div');
+                    conditionText.className = 'condition-text';
+                    toothBox.appendChild(conditionText);
+                }
+                conditionText.textContent = selectedCodes.join(' ');
+            }
+        }
+
+        function loadConditions(toothNumber) {
+            fetch(`/conditions?patient_id=${patientId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const storedConditions = data.filter(condition => condition.tooth_number == toothNumber).map(condition => condition.condition_code);
+                    const checkboxes = document.querySelectorAll('.condition-checkbox');
+                    checkboxes.forEach((checkbox) => {
+                        checkbox.checked = storedConditions.includes(checkbox.getAttribute('data-code'));
+                    });
+                    updatePreview();
+                });
+        }
+
+        function updatePreview() {
+            const checkboxes = document.querySelectorAll('.condition-checkbox:checked');
+            let selectedCodes = [];
+            checkboxes.forEach((checkbox) => {
+                selectedCodes.push(checkbox.getAttribute('data-code'));
+            });
+            const previewText = document.getElementById('previewText');
+            previewText.textContent = selectedCodes.join(' ');
+        }
+
+        function toggleSegment(segment) {
+            if (segment.style.fill === 'red') {
+                segment.style.fill = '#FFFFFF';
+            } else {
+                segment.style.fill = 'red';
+            }
+            saveSegments();
+        }
+
+        function saveSegments() {
+            const segments = document.querySelectorAll('.segment');
+            let selectedSegments = [];
+            segments.forEach((segment, index) => {
+                if (segment.style.fill === 'red') {
+                    selectedSegments.push(index);
+                }
+            });
+            const toothNumber = currentTooth.getAttribute('data-tooth-number');
+            localStorage.setItem(`tooth_${toothNumber}_segments`, JSON.stringify(selectedSegments));
+        }
+
+        function loadSegments(toothNumber) {
+            const selectedSegments = JSON.parse(localStorage.getItem(`tooth_${toothNumber}_segments`)) || [];
+            const segments = document.querySelectorAll('.segment');
+            segments.forEach((segment, index) => {
+                segment.style.fill = selectedSegments.includes(index) ? 'red' : '#FFFFFF';
+            });
+        }
+
+        // Click Function to change the display value of the input
+        function clickMe() {
+            let input = document.getElementById("popup");
+            if (input.style.display == "none") {
+                input.style.display = "block";
+            } else {
+                input.style.display = "none";
+            }
+        }
+
+        document.querySelectorAll('.legend input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                const checkedBoxes = document.querySelectorAll('.legend input[type="checkbox"]:checked');
+                const preview = document.getElementById('preview');
+
+                if (checkedBoxes.length > 4) {
+                    this.checked = false;
+                    return;
+                }
+            });
         });
 
-        document.addEventListener('click', function () {
-            content.classList.remove('show');
-            
-        });   
-     });
-    });
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('enter-diagnosis').style.display = 'block';
+            const sidebar = document.getElementById('sidebar');
+            const sidebarTab = document.getElementById('sidebarTab');
+            const mainContent = document.querySelector('.main-content');
+
+            sidebarTab.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                mainContent.classList.toggle('shifted');
+                sidebarTab.style.display = 'none';
+            });
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    mainContent.classList.remove('shifted');
+                    sidebarTab.style.display = 'block';
+                }
+            });
+
+            // Dropdown functionality
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                const btn = dropdown.querySelector('.ellipsis-btn');
+                const content = dropdown.querySelector('.dropdown-content');
+
+                btn.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    content.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function () {
+                    content.classList.remove('show');
+                });
+            });
+        });
     </script>
 </body>
 </html>

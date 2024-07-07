@@ -704,8 +704,46 @@ def submit_edit_patient():
         return jsonify(success=True)
     except Exception as e:
         return jsonify(success=False, error=str(e))
-    
 
+
+@app.route('/conditions', methods=['GET'])
+def get_conditions():
+    patient_id = request.args.get('patient_id')
+    if not patient_id:
+        return jsonify({'error': 'Missing patient_id'}), 400
+
+    with sqlite3.connect('database.db') as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM conditions WHERE patient_id=?", (patient_id,))
+        conditions = cur.fetchall()
+
+    return jsonify(conditions)
+
+
+@app.route('/conditions', methods=['POST'])
+def add_condition():
+    data = request.json
+    required_fields = ['tooth_number', 'condition_code', 'patient_id']
+    if not all(field in data for field in required_fields):
+        return jsonify({'error': 'Missing fields'}), 400
+
+    with sqlite3.connect('database.db') as conn:
+        cur = conn.cursor()
+        cur.execute("INSERT INTO conditions (tooth_number, condition_code, patient_id) VALUES (?, ?, ?)",
+                    (data['tooth_number'], data['condition_code'], data['patient_id']))
+        conn.commit()
+
+    return jsonify({'success': True}), 201
+
+
+@app.route('/conditions/<int:condition_id>', methods=['DELETE'])
+def delete_condition(condition_id):
+    with sqlite3.connect('database.db') as conn:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM conditions WHERE condition_id=?", (condition_id,))
+        conn.commit()
+
+    return jsonify({'success': True}), 200
 
 @app.route('/submit_medical_history', methods=['POST'])
 def submit_medical_history():
@@ -805,7 +843,7 @@ def logout():
 def inventory():
     conn = get_db_connection()
     inventory_items = conn.execute('''
-        SELECT item_id, name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold
+        SELECT item_id, name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, unit
         FROM inventory
         WHERE is_disabled = 0
     ''').fetchall()
@@ -823,13 +861,14 @@ def submit_add_item():
     price_min = data['price_min']
     price_max = data['price_max']
     low_stock_threshold = data['low_stock_threshold']
+    unit = data['unit']
 
     try:
         conn = get_db_connection()
         conn.execute('''
-            INSERT INTO inventory (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold)
+            INSERT INTO inventory (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, unit)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold))
+        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, unit))
         conn.commit()
         conn.close()
         return jsonify(success=True)
@@ -877,10 +916,11 @@ def register_item():
         price_min = request.form['price_min']
         price_max = request.form['price_max']
         low_stock_threshold = request.form['low_stock_threshold']
+        unit = data['unit']
 
         conn = get_db_connection()
         conn.execute('''
-            INSERT INTO inventory (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold)
+            INSERT INTO inventory (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, unit)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold))
         conn.commit()
@@ -914,12 +954,13 @@ def edit_inventory(item_id):
         price_min = request.form['price_min']
         price_max = request.form['price_max']
         low_stock_threshold = request.form['low_stock_threshold']
+        unit = data['unit']
 
         conn.execute('''
             UPDATE inventory
-            SET name = ?, category = ?, variations = ?, stocked_quantity = ?, seller = ?, price_min = ?, price_max = ?, low_stock_threshold = ?
+            SET name = ?, category = ?, variations = ?, stocked_quantity = ?, seller = ?, price_min = ?, price_max = ?, low_stock_threshold = ?, unit = ?
             WHERE item_id = ?
-        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, item_id))
+        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, item_id, unit))
         conn.commit()
         conn.close()
         return redirect(url_for('inventory'))
