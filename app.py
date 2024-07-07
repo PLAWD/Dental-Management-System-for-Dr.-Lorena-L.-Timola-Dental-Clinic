@@ -1807,7 +1807,7 @@ def inventory():
 def get_inventory():
     conn = get_db_connection()
     inventory = conn.execute('''
-        SELECT i.inventory_id, it.item_name, c.category_name, v.variation_name, i.stocked_quantity, s.seller_name, 
+        SELECT i.inventory_id, it.item_name, it.unique_item_id, c.category_name, v.variation_name, i.stocked_quantity, s.seller_name, 
                i.exact_price, i.low_stock_threshold, u.first_name || ' ' || u.last_name AS added_by, 
                i.added_by_role, i.date_added, i.time_added, i.is_disabled
         FROM Inventory i
@@ -1908,30 +1908,40 @@ def register_item():
     time_added = datetime.now().strftime('%H:%M:%S')
     
     conn = get_db_connection()
+    
+    # Fetch the category name based on category_id
+    category_name = conn.execute('SELECT category_name FROM Category WHERE category_id = ?', (category_id,)).fetchone()[0]
+    
+    unique_item_id = generate_unique_item_id(category_name)  # Generate unique item ID using category name
+
     try:
+        # Insert into Item table with the unique item ID
         conn.execute('''
-            INSERT INTO Item (item_name, category_id, variation_id)
-            VALUES (?, ?, ?)
-        ''', (item_name, category_id, variation_id))
+            INSERT INTO Item (item_name, category_id, variation_id, unique_item_id)
+            VALUES (?, ?, ?, ?)
+        ''', (item_name, category_id, variation_id, unique_item_id))
         
         item_id = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
         
+        # Insert into Inventory table
         conn.execute('''
             INSERT INTO Inventory (item_id, stocked_quantity, seller_id, exact_price, low_stock_threshold, added_by, added_by_id, added_by_role, date_added, time_added)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (item_id, stocked_quantity, seller_id, exact_price, low_stock_threshold, added_by_id, added_by_id, added_by_role, date_added, time_added))
         
+        # Insert into Price table
         conn.execute('''
             INSERT INTO Price (item_id, seller_id, price, date_added, time_added)
             VALUES (?, ?, ?, ?, ?)
         ''', (item_id, seller_id, exact_price, date_added, time_added))
         
         conn.commit()
-        return jsonify({'success': True})
+        return jsonify({'success': True, 'unique_item_id': unique_item_id})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
     finally:
         conn.close()
+
 
         
 @app.route('/update_variation_description', methods=['POST'])
@@ -2062,6 +2072,43 @@ def disable_item():
             SET is_disabled = 1
             WHERE inventory_id = ?
         ''', (inventory_id,))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
+
+def generate_unique_item_id(category_name):
+    prefix = category_name[:2].upper()  # Get the first two letters of the category name and convert to uppercase
+    number = random.randint(100000, 999999)  # Random 6-digit number
+    return f"{prefix}-{number}"
+
+@app.route('/get_item_details/<int:inventory_id>')
+def get_item_details(inventory_id):
+    conn = get_db_connection()
+    item = conn.execute('''
+        SELECT it.item_name, c.category_name, v.variation_name, i.stocked_quantity
+        FROM Inventory i
+        JOIN Item it ON i.item_id = it.item_id
+        JOIN Category c ON it.category_id = c.category_id
+        LEFT JOIN Variation v ON it.variation_id = v.variation_id
+        WHERE i.inventory_id = ?
+    ''', (inventory_id,)).fetchone()
+    conn.close()
+    if item:
+        return jsonify(dict(item))
+    else:
+        return jsonify({'error': 'Item not found'}), 404
+
+@app.route('/update_stock_quantity', methods=['POST'])
+def update_stock_quantity():
+    data = request.json
+    inventory_id = data['inventory_id']
+    stocked_quantity = data['stocked_quantity']
+    conn = get_db_connection()
+    try:
+        conn.execute('UPDATE Inventory SET stocked_quantity = ? WHERE inventory_id = ?', (stocked_quantity, inventory_id))
         conn.commit()
         return jsonify({'success': True})
     except Exception as e:

@@ -52,7 +52,7 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
         }
 
-        .modal-button {
+        .modal button {
             background-color: #593C3C;
             border: none;
             color: white;
@@ -84,6 +84,22 @@
             background-color: #f1f1f1;
         }
 
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .modal-close:hover,
+        .modal-close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="users-page">
@@ -203,20 +219,37 @@
                 <p><strong>Item Name:</strong> <span id="editDetailItemName"></span></p>
                 <p><strong>Category:</strong> <span id="editDetailCategory"></span></p>
                 <p><strong>Variation:</strong> <span id="editDetailVariation"></span></p>
-
+    
                 <label class="modal-label" for="edit_stocked_quantity">Stocked Quantity:</label>
                 <input class="modal-input" type="number" id="edit_stocked_quantity" name="stocked_quantity" required>
-
+    
                 <label class="modal-label" for="edit_seller_id">Seller:</label>
                 <select class="modal-select" id="edit_seller_id" name="seller_id" required></select>
-
+    
                 <label class="modal-label" for="edit_exact_price">Exact Price:</label>
                 <input class="modal-input" type="number" step="0.01" id="edit_exact_price" name="exact_price" required>
-
+    
                 <label class="modal-label" for="edit_low_stock_threshold">Low Stock Threshold:</label>
                 <input class="modal-input" type="number" id="edit_low_stock_threshold" name="low_stock_threshold" required>
                 <button class="modal-button" type="submit">Submit</button>
             </form>
+        </div>
+    </div>
+    
+
+    <!-- Stock Item Modal -->
+    <div id="stockItemModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeStockItemModal()">&times;</span>
+            <h2 class="modal-title">Stock Item</h2>
+            <p><strong>Item Name:</strong> <span id="stockItemName"></span></p>
+            <p><strong>Category:</strong> <span id="stockItemCategory"></span></p>
+            <p><strong>Variation:</strong> <span id="stockItemVariation"></span></p>
+            <p><strong>Current Quantity:</strong> <span id="stockItemQuantity"></span></p>
+            <div>
+                <button onclick="updateStockQuantity('decrease')">-</button>
+                <button onclick="updateStockQuantity('increase')">+</button>
+            </div>
         </div>
     </div>
 
@@ -233,39 +266,43 @@
             fetch('/get_inventory')
                 .then(response => response.json())
                 .then(data => {
-                    let table = '<table class="user-table"><thead><tr><th>Item Name</th><th>Category</th><th>Variation</th><th>Stocked Quantity</th><th>Seller</th><th>Exact Price</th><th>Low Stock Threshold</th><th>Added By</th><th>Role</th><th>Date Added</th><th>Time Added</th><th>Action</th></tr></thead><tbody>';
+                    let table = '<table class="user-table"><thead><tr><th>Item Number</th><th>Item Name</th><th>Category</th><th>Variation</th><th>Stocked Quantity</th><th>Seller</th><th>Exact Price</th><th>Added By</th><th>Role</th><th>Date Added</th><th>Time Added</th><th>Action</th></tr></thead><tbody>';
 
                     data.forEach(item => {
                         if (item.is_disabled !== 1) { // Check if the item is not disabled
                             const role = item.added_by_role === 1 ? 'Admin' : 'User';
+                            const isLowStock = item.stocked_quantity <= item.low_stock_threshold;
                             table += `<tr>
+                                <td>${item.unique_item_id || 'N/A'}</td>
                                 <td><a href="#" onclick="showItemDetails(${item.inventory_id})">${item.item_name}</a></td>
                                 <td>${item.category_name}</td>
                                 <td>${item.variation_name || 'No Variation'}</td>
-                                <td>${item.stocked_quantity}</td>
+                                <td>${item.stocked_quantity} ${isLowStock ? '<span class="low-stock-icon">⚠️</span>' : ''}</td>
                                 <td>${item.seller_name}</td>
                                 <td>${item.exact_price}</td>
-                                <td>${item.low_stock_threshold}</td>
                                 <td>${item.added_by}</td>
                                 <td>${role}</td>
                                 <td>${item.date_added}</td>
                                 <td>${item.time_added}</td>
-                                <td>
+                                <td class="dropdown">
                                     <div class="action-container">
-                                        <span class="ellipsis-icon">⋮</span>
-                                        <div class="action-dropdown">
+                                        <span class="ellipsis-btn">⋮</span>
+                                        <div class="dropdown-content">
                                             <div onclick="openEditItemModal(${item.inventory_id})">Edit Item</div>
                                             <div onclick="disableItem(${item.inventory_id})">Disable Item</div>
+                                            <div onclick="openStockItemModal(${item.inventory_id})">Stock Item</div>
                                         </div>
                                     </div>
                                 </td>
                             </tr>`;
                         }
                     });
+
                     table += '</tbody></table>';
                     document.getElementById('inventoryTable').innerHTML = table;
                 });
         }
+
 
         function filterTable() {
             const query = document.getElementById('searchInput').value.toLowerCase();
@@ -673,6 +710,63 @@
                 });
             });
         });
+
+        function openStockItemModal(inventory_id) {
+            fetch(`/get_item_details/${inventory_id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    document.getElementById('stockItemName').textContent = data.item_name;
+                    document.getElementById('stockItemCategory').textContent = data.category_name;
+                    document.getElementById('stockItemVariation').textContent = data.variation_name || 'No Variation';
+                    document.getElementById('stockItemQuantity').textContent = data.stocked_quantity;
+                    document.getElementById('stockItemModal').dataset.inventoryId = inventory_id;
+
+                    document.getElementById('stockItemModal').style.display = 'flex';
+                })
+                .catch(error => {
+                    console.error('Error fetching item details:', error);
+                });
+        }
+
+        function closeStockItemModal() {
+            document.getElementById('stockItemModal').style.display = 'none';
+        }
+
+        function updateStockQuantity(action) {
+            const inventory_id = document.getElementById('stockItemModal').dataset.inventoryId;
+            const currentQuantity = parseInt(document.getElementById('stockItemQuantity').textContent);
+
+            let newQuantity = currentQuantity;
+            if (action === 'increase') {
+                newQuantity += 1;
+            } else if (action === 'decrease' && currentQuantity > 0) {
+                newQuantity -= 1;
+            } else {
+                return;
+            }
+
+            fetch('/update_stock_quantity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ inventory_id: inventory_id, stocked_quantity: newQuantity })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('stockItemQuantity').textContent = newQuantity;
+                } else {
+                    alert('Failed to update stock quantity: ' + data.message);
+                }
+            });
+        }
+
     </script>
 </body>
 </html>
