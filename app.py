@@ -929,35 +929,26 @@ def save_medical_history():
 @app.route('/save_diagnosis', methods=['POST'])
 def save_diagnosis():
     data = request.get_json()
+    patient_id = data.get('patient_id')
+    periodontal_screening = ' '.join([key for key, value in data.items() if key in ['G', 'EP', 'MP', 'AP'] and value == 'on'])
+    occlusion_class = data.get('occlusion_class')
+    appliances = ' '.join([key for key, value in data.items() if key in ['O', 'S', 'OT'] and value == 'on'])
+    tmd = ' '.join([key for key, value in data.items() if key in ['C', 'CL', 'T', 'MS'] and value == 'on'])
+    xray_taken = ' '.join([key for key, value in data.items() if key in ['P', 'C', 'PT', 'O'] and value == 'on'])
+    xray_periapical_tth_no = data.get('xray_periapical_tth_no')
+    xray_occlusal = data.get('xray_occlusal')
+    xray_others = data.get('xray_others')
+
     try:
         conn = get_db_connection()
         conn.execute('''
             INSERT INTO intraoral_exams (
-                patient_id, periodontal_screening, occlusion_class, occlusion, appliances, tmd,
-                xray_taken, xray_periapical_tth_no, xray_occlusal, xray_others, exam_date
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, date('now'))
-            ON CONFLICT(patient_id) DO UPDATE SET
-                periodontal_screening=excluded.periodontal_screening,
-                occlusion_class=excluded.occlusion_class,
-                occlusion=excluded.occlusion,
-                appliances=excluded.appliances,
-                tmd=excluded.tmd,
-                xray_taken=excluded.xray_taken,
-                xray_periapical_tth_no=excluded.xray_periapical_tth_no,
-                xray_occlusal=excluded.xray_occlusal,
-                xray_others=excluded.xray_others,
-                exam_date=date('now')
+                patient_id, periodontal_screening, occlusion_class, appliances, tmd, xray_taken,
+                xray_periapical_tth_no, xray_occlusal, xray_others, exam_date
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, DATE('now'))
         ''', (
-            data.get('patient_id'),
-            data.get('periodontal_screening'),
-            data.get('occlusion_class'),
-            data.get('occlusion'),
-            data.get('appliances'),
-            data.get('tmd'),
-            data.get('xray_taken'),
-            data.get('xray_periapical_tth_no'),
-            data.get('xray_occlusal'),
-            data.get('xray_others')
+            patient_id, periodontal_screening, occlusion_class, appliances, tmd, xray_taken,
+            xray_periapical_tth_no, xray_occlusal, xray_others
         ))
         conn.commit()
         conn.close()
