@@ -153,32 +153,33 @@
         </div>
     </div>
 
- <!-- Edit Item Modal -->
-<div id="editItemModal" class="modal">
-    <div class="modal-content">
-        <span class="modal-close" onclick="closeEditItemModal()">&times;</span>
-        <h2 class="modal-title">Edit Item</h2>
-        <form id="edit-item-form" onsubmit="submitEditItem(event)">
-            <input type="hidden" id="edit_inventory_id" name="inventory_id">
-            <p><strong>Item Name:</strong> <span id="editDetailItemName"></span></p>
-            <p><strong>Category:</strong> <span id="editDetailCategory"></span></p>
-            <p><strong>Variation:</strong> <span id="editDetailVariation"></span></p>
+<!-- Edit Item Modal -->
+    <div id="editItemModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeEditItemModal()">&times;</span>
+            <h2 class="modal-title">Edit Item</h2>
+            <form id="edit-item-form" onsubmit="submitEditItem(event)">
+                <input type="hidden" id="edit_inventory_id" name="inventory_id">
+                <p><strong>Item Name:</strong> <span id="editDetailItemName"></span></p>
+                <p><strong>Category:</strong> <span id="editDetailCategory"></span></p>
+                <p><strong>Variation:</strong> <span id="editDetailVariation"></span></p>
 
-            <label class="modal-label" for="edit_stocked_quantity">Stocked Quantity:</label>
-            <input class="modal-input" type="number" id="edit_stocked_quantity" name="stocked_quantity" required>
+                <label class="modal-label" for="edit_stocked_quantity">Stocked Quantity:</label>
+                <input class="modal-input" type="number" id="edit_stocked_quantity" name="stocked_quantity" required>
 
-            <label class="modal-label" for="edit_seller_id">Seller:</label>
-            <select class="modal-select" id="edit_seller_id" name="seller_id" required></select>
+                <label class="modal-label" for="edit_seller_id">Seller:</label>
+                <select class="modal-select" id="edit_seller_id" name="seller_id" required></select>
 
-            <label class="modal-label" for="edit_exact_price">Exact Price:</label>
-            <input class="modal-input" type="number" step="0.01" id="edit_exact_price" name="exact_price" required>
+                <label class="modal-label" for="edit_exact_price">Exact Price:</label>
+                <input class="modal-input" type="number" step="0.01" id="edit_exact_price" name="exact_price" required>
 
-            <label class="modal-label" for="edit_low_stock_threshold">Low Stock Threshold:</label>
-            <input class="modal-input" type="number" id="edit_low_stock_threshold" name="low_stock_threshold" required>
-            <button class="modal-button" type="submit">Submit</button>
-        </form>
+                <label class="modal-label" for="edit_low_stock_threshold">Low Stock Threshold:</label>
+                <input class="modal-input" type="number" id="edit_low_stock_threshold" name="low_stock_threshold" required>
+                <button class="modal-button" type="submit">Submit</button>
+            </form>
+        </div>
     </div>
-</div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -193,19 +194,22 @@
             fetch('/get_inventory')
                 .then(response => response.json())
                 .then(data => {
-                    let table = '<table><tr><th>Item Name</th><th>Category</th><th>Variation</th><th>Stocked Quantity</th><th>Seller</th><th>Exact Price</th><th>Low Stock Threshold</th><th>Added By</th><th>Date Added</th><th>Time Added</th><th>Action</th></tr>';
+                    let table = '<table><tr><th>Item Name</th><th>Category</th><th>Variation</th><th>Stocked Quantity</th><th>Seller</th><th>Exact Price</th><th>Low Stock Threshold</th><th>Added By</th><th>Role</th><th>Date Added</th><th>Time Added</th><th>Action</th></tr>';
                     data.forEach(item => {
-                        table += `<tr>
-                            <td><a href="#" onclick="showItemDetails(${item.inventory_id})">${item.item_name}</a></td>
-                            <td>${item.category_name}</td>
-                            <td>${item.variation_name || 'No Variation'}</td>
-                            <td>${item.stocked_quantity}</td>
-                            <td>${item.seller_name}</td>
-                            <td>${item.exact_price}</td>
-                            <td>${item.low_stock_threshold}</td>
-                            <td>${item.added_by} (Role ID: ${item.added_by_role})</td>
-                            <td>${item.date_added}</td>
-                            <td>${item.time_added}</td>
+                        if (item.is_disabled !== 1) { // Check if the item is not disabled
+                            const role = item.added_by_role === 1 ? 'Admin' : 'User';
+                            table += `<tr>
+                                <td><a href="#" onclick="showItemDetails(${item.inventory_id})">${item.item_name}</a></td>
+                                <td>${item.category_name}</td>
+                                <td>${item.variation_name || 'No Variation'}</td>
+                                <td>${item.stocked_quantity}</td>
+                                <td>${item.seller_name}</td>
+                                <td>${item.exact_price}</td>
+                                <td>${item.low_stock_threshold}</td>
+                                <td>${item.added_by}</td>
+                                <td>${role}</td>
+                                <td>${item.date_added}</td>
+                                <td>${item.time_added}</td>
                                 <td>
                                     <div class="action-container">
                                         <span class="ellipsis-icon">⋮</span>
@@ -215,12 +219,15 @@
                                         </div>
                                     </div>
                                 </td>
-                        </tr>`;
+                            </tr>`;
+                        }
                     });
                     table += '</table>';
                     document.getElementById('inventoryTable').innerHTML = table;
                 });
         }
+
+
 
         function disableItem(inventory_id) {
             fetch('/disable_item', {
@@ -354,7 +361,6 @@
         }
 
         function openEditItemModal(inventory_id) {
-            console.log('openEditItemModal called with inventory_id:', inventory_id); // Add this line
             fetch(`/get_item/${inventory_id}`)
                 .then(response => response.json())
                 .then(data => {
@@ -391,12 +397,13 @@
                 .catch(error => {
                     console.error('Error fetching item details:', error);
                 });
-        }
+        }   
 
 
         function closeEditItemModal() {
             document.getElementById('editItemModal').style.display = 'none';
         }
+
 
         function submitEditItem(event) {
             event.preventDefault();

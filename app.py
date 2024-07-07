@@ -1380,7 +1380,7 @@ def get_inventory():
     inventory = conn.execute('''
         SELECT i.inventory_id, it.item_name, c.category_name, v.variation_name, i.stocked_quantity, s.seller_name, 
                i.exact_price, i.low_stock_threshold, u.first_name || ' ' || u.last_name AS added_by, 
-               i.added_by_role, i.date_added, i.time_added
+               i.added_by_role, i.date_added, i.time_added, i.is_disabled
         FROM Inventory i
         JOIN Item it ON i.item_id = it.item_id
         JOIN Category c ON it.category_id = c.category_id
