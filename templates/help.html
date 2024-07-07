@@ -93,6 +93,16 @@
             cursor: pointer;
             z-index: 1001;
         }
+        .add-faq-button {
+            display: none; /* Initially hidden */
+            margin: 20px 0;
+            padding: 10px 15px;
+            background-color: #8b4513;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
     <script>
         function showAnswer(question, answer) {
@@ -117,6 +127,11 @@
                     toggleSidebar.style.display = 'block';
                 }
             });
+
+            // Show add FAQ button for admins
+            {% if session['role_id'] == 1 %}
+            document.querySelector('.add-faq-button').style.display = 'block';
+            {% endif %}
         });
     </script>
 </head>
@@ -175,6 +190,9 @@
             </div>
             <label for="answer">Answer:</label>
             <textarea id="answer" rows="6" readonly></textarea>
+
+            <!-- Button to add new FAQ, visible only to admins -->
+            <button class="add-faq-button" onclick="location.href='{{ url_for('add_faq') }}'">Add FAQ</button>
         </div>
     </div>
 </body>
