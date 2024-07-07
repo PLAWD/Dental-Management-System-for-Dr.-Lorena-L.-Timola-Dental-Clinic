@@ -6,138 +6,88 @@
     <title>Inventory</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <style>
-        /* Specific styles for the Inventory page */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.4);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 10px;
+        .action-container {
             position: relative;
+            display: inline-block;
         }
 
-        .close {
-            position: absolute;
-            right: 20px;
-            top: 10px;
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .form-group input[type="text"],
-        .form-group input[type="number"],
-        .form-group input[type="email"],
-        .form-group select {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        .submit-group {
-            text-align: center;
-        }
-
-        .submit-group button {
-            padding: 10px 20px;
-            background-color: #8B4513;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .submit-group button:hover {
-            background-color: #D2691E;
-        }
-
-        .low-stock {
-            background-color: #ffdddd;
-        }
-
-        .low-stock-badge {
-            color: red;
-            font-weight: bold;
-        }
-
-        .ellipsis-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #888; /* Change the color of the ellipsis */
-        }
-
-        .options-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .dropdown-content {
+        .action-dropdown {
             display: none;
             position: absolute;
-            background-color: #f9f9f9;
-            min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            background-color: white;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
             z-index: 1;
         }
 
-        .dropdown-content a {
+        .action-dropdown div {
             color: black;
             padding: 12px 16px;
             text-decoration: none;
             display: block;
         }
 
-        .dropdown-content a:hover {
+        .action-dropdown div:hover {
+            background-color: #f1f1f1;
+            cursor: pointer;
+        }
+
+        .ellipsis-icon {
+            cursor: pointer;
+        }
+
+        .action-container:hover .action-dropdown {
+            display: block;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            overflow: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-button {
+            background-color: #593C3C;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .modal-button:hover {
+            background-color: darkgrey;
+        }
+
+        #itemDropdown {
+            display: none;
+            border: 1px solid #ccc;
+            max-height: 150px;
+            overflow-y: auto;
+            position: absolute;
+            z-index: 1000;
+            background: white;
+        }
+
+        #itemDropdown div {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        #itemDropdown div:hover {
             background-color: #f1f1f1;
         }
 
-        .show {
-            display: block;
-        }
     </style>
 </head>
-<body>
-    <div class="sidebar-tab" id="toggleSidebar">☰</div>
+<body class="users-page">
+    <div class="sidebar-tab" id="sidebarTab">☰</div>
     <div id="sidebar" class="sidebar">
         <ul>
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
@@ -156,150 +106,565 @@
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
             <li><a href="{{ url_for('payments') }}">Payments</a></li>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
+            <br><br><br><br><br><br>
             <li><a href="{{ url_for('help') }}">Help</a></li>
             <li><a href="{{ url_for('about') }}">About</a></li>
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
         </ul>
     </div>
+
     <div class="main-content">
-        <div class="header">
-            <h1>Inventory</h1>
-        </div>
-        <div class="filter-container">
-            <div class="search-form">
-                <input type="text" placeholder="Type here to search by name, seller, date, or category">
-                <button class="register-item-btn" onclick="openModal('registerItemModal')">Register Item</button>
+        <header>
+            <div class="header-left">
+                <h1>Total Inventory Items</h1>
             </div>
+   
+        </header>
+
+        <div class="header-actions">
+            <button class="add-user-btn" onclick="openRegisterItemModal()">Register Item</button>
+            <form class="search-form" onsubmit="event.preventDefault();">
+                <input type="text" id="searchInput" placeholder="Search for items..." onkeyup="filterTable()">
+            </form>
         </div>
-        <div class="inventory-list">
-            {% for item in inventory_items %}
-            <div class="item {{ 'low-stock' if item['stocked_quantity'] <= item['low_stock_threshold'] else '' }}">
-                <div class="item-info">
-                    <div class="item-details">
-                        <h2>{{ item['name'] }}</h2>
-                        <p>{{ item['variations'] }} variations • {{ item['category'] }} • Stocked product: {{ item['stocked_quantity'] }} 
-                        {% if item['stocked_quantity'] <= item['low_stock_threshold'] %}
-                        <span class="low-stock-badge">Low stock</span>
-                        {% endif %}
-                        </p>
-                        <p>Seller: {{ item['seller'] }}</p>
-                        <p>Price: ₱{{ item['price_min'] }} ~ ₱{{ item['price_max'] }}</p>
-                    </div>
-                </div>
-                <button class="options-btn" onclick="toggleDropdown({{ item['item_id'] }})">⋮</button>
-                <div id="dropdown-{{ item['item_id'] }}" class="dropdown-content">
-                    <a href="#" onclick="openStockItemModal({{ item['item_id'] }}, '{{ item['name'] }}', {{ item['stocked_quantity'] }})">Stock Item</a>
-                    <a href="#" onclick="deactivateItem({{ item['item_id'] }})">Deactivate Item</a>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+
+        <div id="inventoryTable"></div>
     </div>
 
     <!-- Register Item Modal -->
     <div id="registerItemModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal('registerItemModal')">&times;</span>
-            <h2 class="register-item-title">Register Item</h2>
-            <form id="registerItemForm" action="javascript:void(0);" method="POST">
-                <div class="form-group">
-                    <label for="name">Name:</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="category">Category:</label>
-                    <input type="text" id="category" name="category" required>
-                </div>
-                <div class="form-group">
-                    <label for="variations">Variations:</label>
-                    <input type="number" id="variations" name="variations" required>
-                </div>
-                <div class="form-group">
-                    <label for="stocked_quantity">Stocked Quantity:</label>
-                    <input type="number" id="stocked_quantity" name="stocked_quantity" required>
-                </div>
-                <div class="form-group">
-                    <label for="seller">Seller:</label>
-                    <input type="text" id="seller" name="seller" required>
-                </div>
-                <div class="form-group">
-                    <label for="price_min">Price Min:</label>
-                    <input type="number" step="0.01" id="price_min" name="price_min" required>
-                </div>
-                <div class="form-group">
-                    <label for="price_max">Price Max:</label>
-                    <input type="number" step="0.01" id="price_max" name="price_max" required>
-                </div>
-                <div class="form-group">
-                    <label for="low_stock_threshold">Low Stock Threshold:</label>
-                    <input type="number" id="low_stock_threshold" name="low_stock_threshold" required>
-                </div>
-                <div class="form-group">
-                    <label for="unit">Unit:</label>
-                    <select id="unit" name="unit" required>
-                        <option value="Pcs">Pcs</option>
-                        <option value="Undetermined">Undetermined</option>
-                    </select>
-                </div>
-                <div class="submit-group">
-                    <button type="submit">Submit</button>
-                </div>
+            <span class="modal-close" onclick="closeRegisterItemModal()">&times;</span>
+            <h2 class="modal-title">Register Item</h2>
+            <form id="register-item-form" onsubmit="submitRegisterItem(event)">
+                <label class="modal-label" for="item_name">Item Name:</label>
+                <input class="modal-input" type="text" id="item_name" name="item_name" onkeyup="filterItems()" required>
+                <div id="itemDropdown"></div>
+
+                <label class="modal-label" for="category_id">Category:</label>
+                <select class="modal-select" id="category_id" name="category_id" required></select>
+                <input class="modal-input" type="text" id="new_category" placeholder="New Category">
+                <button type="button" class="modal-button" onclick="addNewCategory()">Add Category</button>
+
+                <label class="modal-label" for="variation_id">Variation (optional):</label>
+                <select class="modal-select" id="variation_id" name="variation_id">
+                    <option value="">No Variation</option>
+                </select>
+                <input class="modal-input" type="text" id="new_variation" placeholder="New Variation">
+                <button type="button" class="modal-button" onclick="addNewVariation()">Add Variation</button>
+
+                <label class="modal-label" for="stocked_quantity">Stocked Quantity:</label>
+                <input class="modal-input" type="number" id="stocked_quantity" name="stocked_quantity" required>
+
+                <label class="modal-label" for="seller_id">Seller:</label>
+                <select class="modal-select" id="seller_id" name="seller_id" required></select>
+                <input class="modal-input" type="text" id="new_seller" placeholder="New Seller">
+                <button type="button" class="modal-button" onclick="addNewSeller()">Add Seller</button>
+
+                <label class="modal-label" for="exact_price">Exact Price:</label>
+                <input class="modal-input" type="number" step="0.01" id="exact_price" name="exact_price" required>
+
+                <label class="modal-label" for="low_stock_threshold">Low Stock Threshold:</label>
+                <input class="modal-input" type="number" id="low_stock_threshold" name="low_stock_threshold" required>
+                <button class="modal-button" type="submit">Submit</button>
             </form>
         </div>
     </div>
 
-    <!-- Stock Item Modal -->
-    <div id="stockItemModal" class="modal">
+    <!-- Item Details Modal -->
+    <div id="itemDetailsModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal('stockItemModal')">&times;</span>
-            <h2>Stock Item</h2>
-            <p id="stock-item-name"></p>
-            <p>Current Stock: <span id="stock-item-current"></span></p>
-            <form id="stockItemForm" action="javascript:void(0);" method="POST">
-                <div class="form-group">
-                    <label for="new_stock_quantity">New Stock Quantity:</label>
-                    <input type="number" id="new_stock_quantity" name="new_stock_quantity" required>
+            <span class="modal-close" onclick="closeItemDetailsModal()">&times;</span>
+            <h2 class="modal-title">Item Details</h2>
+            <div>
+                <p><strong>Item Name:</strong> <span id="detailItemName"></span></p>
+                <p><strong>Item Category:</strong> <span id="detailCategory"></span></p>
+                <p><strong>Variation Description:</strong> <span id="detailVariationDescription"></span></p>
+                <p><strong>Item Variation:</strong> <span id="detailVariation"></span></p>
+                <p><strong>Min Price:</strong> <span id="detailMinPrice"></span></p>
+                <p><strong>Max Price:</strong> <span id="detailMaxPrice"></span></p>
+                <input type="hidden" id="item_id" name="item_id">
+                <button class="modal-button" onclick="editVariationDescription()">Edit Variation Description</button>
+                <div id="editVariationDescriptionDiv" style="display: none;">
+                    <textarea id="editVariationDescriptionTextarea"></textarea>
+                    <button class="modal-button" onclick="saveVariationDescription()">Save Variation Description</button>
                 </div>
-                <div class="submit-group">
-                    <button type="submit">Update Stock</button>
-                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Item Modal -->
+    <div id="editItemModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeEditItemModal()">&times;</span>
+            <h2 class="modal-title">Edit Item</h2>
+            <form id="edit-item-form" onsubmit="submitEditItem(event)">
+                <input type="hidden" id="edit_inventory_id" name="inventory_id">
+                <p><strong>Item Name:</strong> <span id="editDetailItemName"></span></p>
+                <p><strong>Category:</strong> <span id="editDetailCategory"></span></p>
+                <p><strong>Variation:</strong> <span id="editDetailVariation"></span></p>
+
+                <label class="modal-label" for="edit_stocked_quantity">Stocked Quantity:</label>
+                <input class="modal-input" type="number" id="edit_stocked_quantity" name="stocked_quantity" required>
+
+                <label class="modal-label" for="edit_seller_id">Seller:</label>
+                <select class="modal-select" id="edit_seller_id" name="seller_id" required></select>
+
+                <label class="modal-label" for="edit_exact_price">Exact Price:</label>
+                <input class="modal-input" type="number" step="0.01" id="edit_exact_price" name="exact_price" required>
+
+                <label class="modal-label" for="edit_low_stock_threshold">Low Stock Threshold:</label>
+                <input class="modal-input" type="number" id="edit_low_stock_threshold" name="low_stock_threshold" required>
+                <button class="modal-button" type="submit">Submit</button>
             </form>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            loadInventory();
+            loadCategories();
+            loadVariations();
+            loadSellers();
+            loadItems();
+        });
+
+        function loadInventory() {
+            fetch('/get_inventory')
+                .then(response => response.json())
+                .then(data => {
+                    let table = '<table class="user-table"><thead><tr><th>Item Name</th><th>Category</th><th>Variation</th><th>Stocked Quantity</th><th>Seller</th><th>Exact Price</th><th>Low Stock Threshold</th><th>Added By</th><th>Role</th><th>Date Added</th><th>Time Added</th><th>Action</th></tr></thead><tbody>';
+
+                    data.forEach(item => {
+                        if (item.is_disabled !== 1) { // Check if the item is not disabled
+                            const role = item.added_by_role === 1 ? 'Admin' : 'User';
+                            table += `<tr>
+                                <td><a href="#" onclick="showItemDetails(${item.inventory_id})">${item.item_name}</a></td>
+                                <td>${item.category_name}</td>
+                                <td>${item.variation_name || 'No Variation'}</td>
+                                <td>${item.stocked_quantity}</td>
+                                <td>${item.seller_name}</td>
+                                <td>${item.exact_price}</td>
+                                <td>${item.low_stock_threshold}</td>
+                                <td>${item.added_by}</td>
+                                <td>${role}</td>
+                                <td>${item.date_added}</td>
+                                <td>${item.time_added}</td>
+                                <td>
+                                    <div class="action-container">
+                                        <span class="ellipsis-icon">⋮</span>
+                                        <div class="action-dropdown">
+                                            <div onclick="openEditItemModal(${item.inventory_id})">Edit Item</div>
+                                            <div onclick="disableItem(${item.inventory_id})">Disable Item</div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>`;
+                        }
+                    });
+                    table += '</tbody></table>';
+                    document.getElementById('inventoryTable').innerHTML = table;
+                });
+        }
+
+        function filterTable() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#inventoryTable tbody tr');
+            rows.forEach(row => {
+                const itemName = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                const category = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                const variation = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                const seller = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
+                const addedBy = row.querySelector('td:nth-child(8)').textContent.toLowerCase();
+                if (itemName.includes(query) || category.includes(query) || variation.includes(query) || seller.includes(query) || addedBy.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function disableItem(inventory_id) {
+            fetch('/disable_item', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ inventory_id: inventory_id })
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadInventory();
+                } else {
+                    alert('Failed to disable item: ' + data.message);
+                }
+            });
+        }
+
+        function loadItems() {
+            fetch('/get_items')
+                .then(response => response.json())
+                .then(data => {
+                    const uniqueItems = Array.from(new Set(data.map(item => item.item_name)))
+                        .map(item_name => {
+                            return data.find(item => item.item_name === item_name);
+                        });
+                    window.allItems = uniqueItems;
+                });
+        }
+
+        function filterItems() {
+            const query = document.getElementById('item_name').value.toLowerCase();
+            const dropdown = document.getElementById('itemDropdown');
+            dropdown.innerHTML = '';
+            if (query.length > 0) {
+                const filteredItems = window.allItems.filter(item => item.item_name.toLowerCase().includes(query));
+                if (filteredItems.length > 0) {
+                    dropdown.style.display = 'block';
+                    filteredItems.forEach(item => {
+                        const div = document.createElement('div');
+                        div.textContent = item.item_name;
+                        div.onclick = () => {
+                            document.getElementById('item_name').value = item.item_name;
+                            dropdown.style.display = 'none';
+                        };
+                        dropdown.appendChild(div);
+                    });
+                } else {
+                    dropdown.style.display = 'none';
+                }
+            } else {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        function openRegisterItemModal() {
+            document.getElementById('register-item-form').reset(); // Clear the form
+            loadCategories();
+            loadVariations();
+            loadSellers();
+            document.getElementById('registerItemModal').style.display = 'flex';
+        }
+
+        function closeRegisterItemModal() {
+            document.getElementById('registerItemModal').style.display = 'none';
+        }
+
+        function submitRegisterItem(event) {
+            event.preventDefault();
+            const formData = {
+                item_name: document.getElementById('item_name').value,
+                category_id: document.getElementById('category_id').value,
+                variation_id: document.getElementById('variation_id').value || null,
+                stocked_quantity: document.getElementById('stocked_quantity').value,
+                seller_id: document.getElementById('seller_id').value,
+                exact_price: document.getElementById('exact_price').value,
+                low_stock_threshold: document.getElementById('low_stock_threshold').value
+            };
+
+            fetch('/register_item', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadInventory();
+                    closeRegisterItemModal();
+                } else {
+                    alert('Failed to register item: ' + data.message);
+                }
+            });
+        }
+
+        function showItemDetails(inventory_id) {
+            fetch(`/get_item/${inventory_id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    const detailItemName = document.getElementById('detailItemName');
+                    const detailCategory = document.getElementById('detailCategory');
+                    const detailVariationDescription = document.getElementById('detailVariationDescription');
+                    const detailVariation = document.getElementById('detailVariation');
+                    const detailMinPrice = document.getElementById('detailMinPrice');
+                    const detailMaxPrice = document.getElementById('detailMaxPrice');
+                    const itemId = document.getElementById('item_id');
+
+                    if (detailItemName && detailCategory && detailVariationDescription && detailVariation && detailMinPrice && detailMaxPrice && itemId) {
+                        detailItemName.textContent = data.item_name;
+                        detailCategory.textContent = data.category_name;
+                        detailVariationDescription.textContent = data.variation_description;
+                        detailVariation.textContent = data.variation_name || 'No Variation';
+                        detailMinPrice.textContent = data.min_price;
+                        detailMaxPrice.textContent = data.max_price;
+                        itemId.value = inventory_id;  // Store the inventory_id in a hidden field
+
+                        document.getElementById('itemDetailsModal').style.display = 'flex';
+                    } else {
+                        console.error('One or more elements are missing in the DOM.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching item details:', error);
+                });
+        }
+
+        function openEditItemModal(inventory_id) {
+            fetch(`/get_item/${inventory_id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    const editDetailItemName = document.getElementById('editDetailItemName');
+                    const editDetailCategory = document.getElementById('editDetailCategory');
+                    const editDetailVariation = document.getElementById('editDetailVariation');
+                    const editStockedQuantity = document.getElementById('edit_stocked_quantity');
+                    const editSellerId = document.getElementById('edit_seller_id');
+                    const editExactPrice = document.getElementById('edit_exact_price');
+                    const editLowStockThreshold = document.getElementById('edit_low_stock_threshold');
+                    const editInventoryId = document.getElementById('edit_inventory_id');
+
+                    if (editDetailItemName && editDetailCategory && editDetailVariation && editStockedQuantity && editSellerId && editExactPrice && editLowStockThreshold && editInventoryId) {
+                        editDetailItemName.textContent = data.item_name;
+                        editDetailCategory.textContent = data.category_name;
+                        editDetailVariation.textContent = data.variation_name || 'No Variation';
+                        editStockedQuantity.value = data.stocked_quantity;
+                        editSellerId.value = data.seller_id;
+                        editExactPrice.value = data.exact_price;
+                        editLowStockThreshold.value = data.low_stock_threshold;
+                        editInventoryId.value = inventory_id;  // Store the inventory_id in a hidden field
+
+                        loadSellers(); // Reload sellers to update the dropdown
+                        document.getElementById('editItemModal').style.display = 'flex';
+                    } else {
+                        console.error('One or more elements are missing in the DOM.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching item details:', error);
+                });
+        }
+
+        function closeEditItemModal() {
+            document.getElementById('editItemModal').style.display = 'none';
+        }
+
+        function submitEditItem(event) {
+            event.preventDefault();
+            const formData = {
+                inventory_id: document.getElementById('edit_inventory_id').value,
+                stocked_quantity: document.getElementById('edit_stocked_quantity').value,
+                seller_id: document.getElementById('edit_seller_id').value,
+                exact_price: document.getElementById('edit_exact_price').value,
+                low_stock_threshold: document.getElementById('edit_low_stock_threshold').value
+            };
+
+            fetch('/edit_item', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadInventory();
+                    closeEditItemModal();
+                } else {
+                    alert('Failed to edit item: ' + data.message);
+                }
+            });
+        }
+
+        function closeItemDetailsModal() {
+            document.getElementById('itemDetailsModal').style.display = 'none';
+        }
+
+        function editVariationDescription() {
+            document.getElementById('editVariationDescriptionDiv').style.display = 'block';
+            document.getElementById('editVariationDescriptionTextarea').value = document.getElementById('detailVariationDescription').textContent;
+        }
+
+        function saveVariationDescription() {
+            const newVariationDescription = document.getElementById('editVariationDescriptionTextarea').value;
+            const itemId = document.getElementById('item_id').value;  // Get the stored item_id
+            fetch('/update_variation_description', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ item_id: itemId, variation_description: newVariationDescription })
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('detailVariationDescription').textContent = newVariationDescription;
+                    document.getElementById('editVariationDescriptionDiv').style.display = 'none';
+                } else {
+                    alert('Failed to update variation description: ' + data.message);
+                }
+            });
+        }
+
+        function loadCategories() {
+            fetch('/get_categories')
+                .then(response => response.json())
+                .then(data => {
+                    let select = document.getElementById('category_id');
+                    select.innerHTML = ''; // Clear existing options
+                    data.forEach(category => {
+                        let option = document.createElement('option');
+                        option.value = category.category_id;
+                        option.text = category.category_name;
+                        select.add(option);
+                    });
+                });
+        }
+
+        function loadVariations() {
+            fetch('/get_variations')
+                .then(response => response.json())
+                .then(data => {
+                    let select = document.getElementById('variation_id');
+                    select.innerHTML = '<option value="">No Variation</option>'; // Clear existing options and add default
+                    data.forEach(variation => {
+                        let option = document.createElement('option');
+                        option.value = variation.variation_id;
+                        option.text = variation.variation_name;
+                        select.add(option);
+                    });
+                });
+        }
+
+        function loadSellers() {
+            fetch('/get_sellers')
+                .then(response => response.json())
+                .then(data => {
+                    let select = document.getElementById('seller_id');
+                    select.innerHTML = ''; // Clear existing options
+                    data.forEach(seller => {
+                        let option = document.createElement('option');
+                        option.value = seller.seller_id;
+                        option.text = seller.seller_name;
+                        select.add(option);
+                    });
+
+                    // Also update the sellers in the edit modal
+                    let editSelect = document.getElementById('edit_seller_id');
+                    editSelect.innerHTML = ''; // Clear existing options
+                    data.forEach(seller => {
+                        let option = document.createElement('option');
+                        option.value = seller.seller_id;
+                        option.text = seller.seller_name;
+                        editSelect.add(option);
+                    });
+                });
+        }
+
+        function addNewCategory() {
+            const newCategory = document.getElementById('new_category').value.trim();
+            if (newCategory === '') {
+                alert('Please enter a category name.');
+                return;
+            }
+            fetch('/add_category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ category_name: newCategory })
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadCategories();
+                    document.getElementById('new_category').value = '';
+                } else {
+                    alert('Failed to add category: ' + data.message);
+                }
+            });
+        }
+
+        function addNewVariation() {
+            const newVariation = document.getElementById('new_variation').value.trim();
+            if (newVariation === '') {
+                alert('Please enter a variation name.');
+                return;
+            }
+            fetch('/add_variation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ variation_name: newVariation })
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadVariations();
+                    document.getElementById('new_variation').value = '';
+                } else {
+                    alert('Failed to add variation: ' + data.message);
+                }
+            });
+        }
+
+        function addNewSeller() {
+            const newSeller = document.getElementById('new_seller').value.trim();
+            if (newSeller === '') {
+                alert('Please enter a seller name.');
+                return;
+            }
+            fetch('/add_seller', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ seller_name: newSeller })
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadSellers();
+                    document.getElementById('new_seller').value = '';
+                } else {
+                    alert('Failed to add seller: ' + data.message);
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
-            const toggleSidebar = document.getElementById('toggleSidebar');
+            const sidebarTab = document.getElementById('sidebarTab');
             const mainContent = document.querySelector('.main-content');
 
-            toggleSidebar.addEventListener('click', function () {
+            sidebarTab.addEventListener('click', function () {
                 sidebar.classList.toggle('show');
                 mainContent.classList.toggle('shifted');
-                toggleSidebar.style.display = 'none';
+                sidebarTab.style.display = 'none';
             });
 
             document.addEventListener('click', function (event) {
-                if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
+                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
                     sidebar.classList.remove('show');
                     mainContent.classList.remove('shifted');
-                    toggleSidebar.style.display = 'block';
+                    sidebarTab.style.display = 'block';
                 }
             });
 
+            // Dropdown functionality
             const dropdowns = document.querySelectorAll('.dropdown');
             dropdowns.forEach(dropdown => {
-                const btn = dropdown.querySelector('a');
+                const btn = dropdown.querySelector('.ellipsis-btn');
                 const content = dropdown.querySelector('.dropdown-content');
 
                 btn.addEventListener('click', function (event) {
-                    event.preventDefault();
+                    event.stopPropagation();
                     content.classList.toggle('show');
                 });
 
@@ -308,120 +673,7 @@
                 });
             });
         });
-
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function toggleDropdown(itemId) {
-            const dropdown = document.getElementById(`dropdown-${itemId}`);
-            dropdown.classList.toggle('show');
-        }
-
-        function openStockItemModal(itemId, itemName, currentStock) {
-            document.getElementById('stock-item-name').textContent = itemName;
-            document.getElementById('stock-item-current').textContent = currentStock;
-            document.getElementById('stockItemForm').onsubmit = function(event) {
-                event.preventDefault();
-                addStock(itemId);
-            };
-            openModal('stockItemModal');
-        }
-
-        function addStock(itemId) {
-            const additionalStock = parseInt(document.getElementById('new_stock_quantity').value);
-
-            fetch('{{ url_for("add_stock") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    item_id: itemId,
-                    additional_stock: additionalStock
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    closeModal('stockItemModal');
-                    location.reload(); // Reload the page to update the stock display
-                } else {
-                    alert('Failed to add stock: ' + data.error);
-                }
-            });
-        }
-
-        function deactivateItem(itemId) {
-            if (confirm('Are you sure you want to deactivate this item?')) {
-                fetch('{{ url_for("deactivate_item") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ item_id: itemId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload(); // Reload the page to update the item display
-                    } else {
-                        alert('Failed to deactivate item: ' + data.error);
-                    }
-                });
-            }
-        }
-
-        function alertLowStock() {
-            document.querySelectorAll('.item').forEach(item => {
-                const stockedQuantity = parseInt(item.querySelector('.item-details p span').textContent);
-                const lowStockThreshold = parseInt(item.dataset.lowStockThreshold);
-
-                if (stockedQuantity <= lowStockThreshold) {
-                    item.classList.add('low-stock');
-                } else {
-                    item.classList.remove('low-stock');
-                }
-            });
-        }
-
-        document.getElementById('registerItemForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = {
-                name: document.getElementById('name').value,
-                category: document.getElementById('category').value,
-                variations: document.getElementById('variations').value,
-                stocked_quantity: document.getElementById('stocked_quantity').value,
-                seller: document.getElementById('seller').value,
-                price_min: document.getElementById('price_min').value,
-                price_max: document.getElementById('price_max').value,
-                low_stock_threshold: document.getElementById('low_stock_threshold').value,
-                unit: document.getElementById('unit').value
-            };
-
-            fetch('{{ url_for("submit_add_item") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = '{{ url_for("inventory") }}';
-                } else {
-                    alert('Failed to add item: ' + data.error);
-                }
-            });
-        });
-
-        // Call alertLowStock function when the page loads
-        document.addEventListener('DOMContentLoaded', alertLowStock);
     </script>
 </body>
 </html>
+
