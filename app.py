@@ -789,40 +789,194 @@ def submit_edit_patient():
         log_activity(f'{user_number} {current_time}: Failed to edit patient ID {patient_id} - {str(e)}')
         return jsonify(success=False, error=str(e))
 
-@app.route('/submit_medical_history', methods=['POST'])
-def submit_medical_history():
+@app.route('/save_medical_history', methods=['POST'])
+def save_medical_history():
+    data = request.get_json()
     try:
-        # Retrieve the patient ID and form data for the medical history
-        patient_id = request.form['patient_id']
-        medical_history = request.form.getlist('medical_history[]')
-        heart_disease_specify = request.form.get('heart_disease_specify')
-        blood_pressure = request.form.get('blood_pressure')
-        allergic_anesthetic_specify = request.form.get('allergic_anesthetic_specify')
-        extraction_date = request.form.get('extraction_date')
-        pregnant_specify = request.form.get('pregnant_specify')
-        hospitalization_specify = request.form.get('hospitalization_specify')
-        medicine_specify = request.form.get('medicine_specify')
-
-        # Save the medical history information to the database
         conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO medical_history (patient_id, medical_history, heart_disease_specify, blood_pressure, allergic_anesthetic_specify, extraction_date, pregnant_specify, hospitalization_specify, medicine_specify)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (patient_id, ','.join(medical_history), heart_disease_specify, blood_pressure, allergic_anesthetic_specify, extraction_date, pregnant_specify, hospitalization_specify, medicine_specify))
+        conn.execute('''
+            INSERT INTO medical_history (
+                patient_id, blood_type, blood_pressure, bleeding_time, in_good_health, use_tobacco,
+                use_alcohol_drugs, taking_medication, medication, allergies, allergies_details,
+                medical_condition, medical_condition_details, serious_illness, serious_illness_details,
+                for_woman_only, been_hospitalized, hospitalized_details, high_blood_pressure,
+                low_blood_pressure, epilepsy, aids, std, stomach_ulcer, fainting_seizure,
+                rapid_weight_loss, radiation_therapy, joint_replacement, heart_surgery,
+                heart_attack, thyroid_problem, heart_disease, heart_murmur, hepatitis_liver_disease,
+                rheumatic_fever, hay_fever_allergies, respiratory_problems, hepatitis_jaundice,
+                tuberculosis, swollen_ankles, kidney_disease, diabetes, chest_pain, stroke,
+                cancer_tumors, anemia, angina, asthma, emphysema, bleeding_problems, blood_diseases,
+                head_injury, arthritis_rheumatism, other_conditions
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(patient_id) DO UPDATE SET
+                blood_type=excluded.blood_type,
+                blood_pressure=excluded.blood_pressure,
+                bleeding_time=excluded.bleeding_time,
+                in_good_health=excluded.in_good_health,
+                use_tobacco=excluded.use_tobacco,
+                use_alcohol_drugs=excluded.use_alcohol_drugs,
+                taking_medication=excluded.taking_medication,
+                medication=excluded.medication,
+                allergies=excluded.allergies,
+                allergies_details=excluded.allergies_details,
+                medical_condition=excluded.medical_condition,
+                medical_condition_details=excluded.medical_condition_details,
+                serious_illness=excluded.serious_illness,
+                serious_illness_details=excluded.serious_illness_details,
+                for_woman_only=excluded.for_woman_only,
+                been_hospitalized=excluded.been_hospitalized,
+                hospitalized_details=excluded.hospitalized_details,
+                high_blood_pressure=excluded.high_blood_pressure,
+                low_blood_pressure=excluded.low_blood_pressure,
+                epilepsy=excluded.epilepsy,
+                aids=excluded.aids,
+                std=excluded.std,
+                stomach_ulcer=excluded.stomach_ulcer,
+                fainting_seizure=excluded.fainting_seizure,
+                rapid_weight_loss=excluded.rapid_weight_loss,
+                radiation_therapy=excluded.radiation_therapy,
+                joint_replacement=excluded.joint_replacement,
+                heart_surgery=excluded.heart_surgery,
+                heart_attack=excluded.heart_attack,
+                thyroid_problem=excluded.thyroid_problem,
+                heart_disease=excluded.heart_disease,
+                heart_murmur=excluded.heart_murmur,
+                hepatitis_liver_disease=excluded.hepatitis_liver_disease,
+                rheumatic_fever=excluded.rheumatic_fever,
+                hay_fever_allergies=excluded.hay_fever_allergies,
+                respiratory_problems=excluded.respiratory_problems,
+                hepatitis_jaundice=excluded.hepatitis_jaundice,
+                tuberculosis=excluded.tuberculosis,
+                swollen_ankles=excluded.swollen_ankles,
+                kidney_disease=excluded.kidney_disease,
+                diabetes=excluded.diabetes,
+                chest_pain=excluded.chest_pain,
+                stroke=excluded.stroke,
+                cancer_tumors=excluded.cancer_tumors,
+                anemia=excluded.anemia,
+                angina=excluded.angina,
+                asthma=excluded.asthma,
+                emphysema=excluded.emphysema,
+                bleeding_problems=excluded.bleeding_problems,
+                blood_diseases=excluded.blood_diseases,
+                head_injury=excluded.head_injury,
+                arthritis_rheumatism=excluded.arthritis_rheumatism,
+                other_conditions=excluded.other_conditions
+        ''', (
+            data.get('patient_id'),
+            data.get('blood_type'),
+            data.get('blood_pressure'),
+            data.get('bleeding_time'),
+            data.get('in_good_health', False),
+            data.get('use_tobacco', False),
+            data.get('use_alcohol_drugs', False),
+            data.get('taking_medication', False),
+            data.get('medication'),
+            data.get('allergies', False),
+            data.get('allergies_details'),
+            data.get('medical_condition', False),
+            data.get('medical_condition_details'),
+            data.get('serious_illness', False),
+            data.get('serious_illness_details'),
+            data.get('for_woman_only'),
+            data.get('been_hospitalized', False),
+            data.get('hospitalized_details'),
+            data.get('high_blood_pressure', False),
+            data.get('low_blood_pressure', False),
+            data.get('epilepsy', False),
+            data.get('aids', False),
+            data.get('std', False),
+            data.get('stomach_ulcer', False),
+            data.get('fainting_seizure', False),
+            data.get('rapid_weight_loss', False),
+            data.get('radiation_therapy', False),
+            data.get('joint_replacement', False),
+            data.get('heart_surgery', False),
+            data.get('heart_attack', False),
+            data.get('thyroid_problem', False),
+            data.get('heart_disease', False),
+            data.get('heart_murmur', False),
+            data.get('hepatitis_liver_disease', False),
+            data.get('rheumatic_fever', False),
+            data.get('hay_fever_allergies', False),
+            data.get('respiratory_problems', False),
+            data.get('hepatitis_jaundice', False),
+            data.get('tuberculosis', False),
+            data.get('swollen_ankles', False),
+            data.get('kidney_disease', False),
+            data.get('diabetes', False),
+            data.get('chest_pain', False),
+            data.get('stroke', False),
+            data.get('cancer_tumors', False),
+            data.get('anemia', False),
+            data.get('angina', False),
+            data.get('asthma', False),
+            data.get('emphysema', False),
+            data.get('bleeding_problems', False),
+            data.get('blood_diseases', False),
+            data.get('head_injury', False),
+            data.get('arthritis_rheumatism', False),
+            data.get('other_conditions')
+        ))
         conn.commit()
         conn.close()
 
+        # Log the activity
         user_number = session.get('user_number')
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_activity(f'{user_number} {current_time}: Submitted medical history for patient ID {patient_id}')
-        # Redirect back to the patients page
-        return redirect(url_for('patients'))
+        log_activity(f'{user_number} {current_time}: Saved medical history for patient ID {data.get("patient_id")}')
+
+        return jsonify(success=True)
     except Exception as e:
+        return jsonify(success=False, error=str(e))
+
+@app.route('/save_diagnosis', methods=['POST'])
+def save_diagnosis():
+    data = request.get_json()
+    patient_id = data.get('patient_id')
+    periodontal_screening = ' '.join([key for key, value in data.items() if key in ['G', 'EP', 'MP', 'AP'] and value == 'on'])
+    occlusion_class = data.get('occlusion_class')
+    appliances = ' '.join([key for key, value in data.items() if key in ['O', 'S', 'OT'] and value == 'on'])
+    tmd = ' '.join([key for key, value in data.items() if key in ['C', 'CL', 'T', 'MS'] and value == 'on'])
+    xray_taken = ' '.join([key for key, value in data.items() if key in ['P', 'C', 'PT', 'O'] and value == 'on'])
+    xray_periapical_tth_no = data.get('xray_periapical_tth_no')
+    xray_occlusal = data.get('xray_occlusal')
+    xray_others = data.get('xray_others')
+
+    try:
+        conn = get_db_connection()
+        conn.execute('''
+            INSERT INTO intraoral_exams (
+                patient_id, periodontal_screening, occlusion_class, appliances, tmd, xray_taken,
+                xray_periapical_tth_no, xray_occlusal, xray_others, exam_date
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, DATE('now'))
+            ON CONFLICT(patient_id) DO UPDATE SET
+                periodontal_screening=excluded.periodontal_screening,
+                occlusion_class=excluded.occlusion_class,
+                appliances=excluded.appliances,
+                tmd=excluded.tmd,
+                xray_taken=excluded.xray_taken,
+                xray_periapical_tth_no=excluded.xray_periapical_tth_no,
+                xray_occlusal=excluded.xray_occlusal,
+                xray_others=excluded.xray_others,
+                exam_date=DATE('now')
+        ''', (
+            patient_id, periodontal_screening, occlusion_class, appliances, tmd, xray_taken,
+            xray_periapical_tth_no, xray_occlusal, xray_others
+        ))
+        conn.commit()
+        conn.close()
+
+        # Log the activity
         user_number = session.get('user_number')
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_activity(f'{user_number} {current_time}: Failed to submit medical history for patient ID {patient_id} - {str(e)}')
-        return jsonify({'success': False, 'error': str(e)})
+        log_activity(f'{user_number} {current_time}: Saved diagnosis for patient ID {patient_id}')
+
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
+
+
 
 @app.route('/update_patient', methods=['POST'])
 def update_patient():

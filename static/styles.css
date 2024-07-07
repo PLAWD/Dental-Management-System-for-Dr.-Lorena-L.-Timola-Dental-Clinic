@@ -1677,6 +1677,19 @@ form button {
     cursor: pointer;
 }
 
+.consent-button {
+    background-color: #593C3C;
+    color: #D0C8BB;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.consent-button:hover {
+    background-color: #402828;
+}
+
 form button:hover {
     background-color: #D0C8BB;
 }
@@ -1796,15 +1809,15 @@ form button:hover {
 
 .submit-group button {
     padding: 10px 20px;
-    background-color: #8B4513;
-    color: #fff;
+    background-color: #593C3C;
+    color: #D0C8BB;
     border: none;
     border-radius: 5px;
     cursor: pointer;
 }
 
 .submit-group button:hover {
-    background-color: #D2691E;
+    background-color: #402828;
 }
 
 /* Modal styles */
