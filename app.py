@@ -1501,27 +1501,38 @@ def user_log():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+
 @app.route('/help')
 def help():
     user_number = session.get('user_number')
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_activity(f'{user_number} {current_time}: Accessed help page')
-    return render_template('help.html')
 
+    conn = get_db_connection()
+    faqs = conn.execute('SELECT * FROM faqs').fetchall()
+    conn.close()
 
-@app.route('/add_faq', methods=['GET', 'POST'])
-@role_required([1])  # Ensure only admins can access this route
+    return render_template('help.html', faqs=faqs)
+
+@app.route('/add_faq', methods=['POST'])
 def add_faq():
-    if request.method == 'POST':
-        question = request.form.get('question')
-        answer = request.form.get('answer')
+    data = request.get_json()
+    question = data.get('newQuestion')
+    answer = data.get('newAnswer')
 
-        # Add logic to save the question and answer to the database
+    if not question or not answer:
+        return jsonify(success=False, error="Both question and answer are required.")
 
-        flash('FAQ added successfully!', 'success')
-        return redirect(url_for('help'))
+    conn = get_db_connection()
+    conn.execute('INSERT INTO faqs (question, answer) VALUES (?, ?)', (question, answer))
+    conn.commit()
+    conn.close()
 
-    return render_template('add_faq.html')
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Added FAQ with question: {question}')
+
+    return jsonify(success=True)
 
 @app.route('/about')
 def about():

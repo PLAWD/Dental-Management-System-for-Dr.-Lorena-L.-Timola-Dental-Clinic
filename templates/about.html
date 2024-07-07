@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,8 +13,6 @@
             color: #5b2c1e;
             margin: 0;
             padding: 0;
-
-
         }
 
         .header {
@@ -71,15 +70,134 @@
             border: 2px solid #5b2c1e;
             border-radius: 10px;
             cursor: pointer;
-
         }
 
+        .sidebar-tab {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #593C3C;
+            color: #D0C8BB;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .content-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .content-container.shifted {
+            margin-left: 250px;
+        }
+
+        .add-faq-button {
+            display: none;
+            /* Initially hidden */
+            margin: 20px 0;
+            padding: 10px 15px;
+            background-color: #593C3C;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Black w/ opacity */
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: -250px;
+            top: 0;
+            width: 250px;
+            height: 100%;
+            background-color: #593C3C;
+            overflow-x: hidden;
+            transition: left 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar.show {
+            left: 0;
+        }
+
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            padding: 15px;
+            text-align: center;
+        }
+
+        .sidebar ul li a {
+            color: #D0C8BB;
+            text-decoration: none;
+            display: block;
+        }
+
+        .sidebar ul li a:hover {
+            background-color: #3e2723;
+        }
+
+        .sidebar .dropdown-content {
+            display: none;
+            background-color: #593C3C;
+        }
+
+        .sidebar .dropdown:hover .dropdown-content {
+            display: block;
+        }
     </style>
     <script>
         function showAnswer(question, answer) {
             document.getElementById('question').value = question;
             document.getElementById('answer').value = answer;
         }
+
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
             const toggleSidebar = document.getElementById('toggleSidebar');
@@ -98,14 +216,78 @@
                     toggleSidebar.style.display = 'block';
                 }
             });
+
+            let currentImage = 1;
+
+            function changeImage() {
+                currentImage = (currentImage % 5) + 1; // Cycle through images 1 to 6
+                document.getElementById('mapImage').src = `/static/images/image${currentImage}.png`;
+            }
+
+            // Show add FAQ button for admins
+            {% if session['role_id'] == 1 %}
+            document.querySelector('.add-faq-button').style.display = 'block';
+            {% endif %}
+
+            // Get the modal
+            var modal = document.getElementById("addFaqModal");
+
+            // Get the button that opens the modal
+            var btn = document.getElementById("addFaqBtn");
+
+            // Get the <span> element that closes the modal
+            var span = document.getElementsByClassName("close")[0];
+
+            // When the user clicks the button, open the modal
+            btn.onclick = function () {
+                modal.style.display = "block";
+            }
+
+            // When the user clicks on <span> (x), close the modal
+            span.onclick = function () {
+                modal.style.display = "none";
+            }
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+
+            // Handle form submission
+            const form = document.getElementById('addFaqForm');
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const formData = new FormData(form);
+                const data = {};
+                formData.forEach((value, key) => {
+                    data[key] = value;
+                });
+
+                fetch('/add_faq', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            modal.style.display = 'none';
+                            alert('FAQ added successfully');
+                            // Optionally, you can reload the page to show the new FAQ
+                            window.location.reload();
+                        } else {
+                            alert('Failed to add FAQ');
+                        }
+                    });
+            });
         });
-        let currentImage = 1;
-        function changeImage() {
-            currentImage = (currentImage % 5) + 1; // Cycle through images 1 to 6
-            document.getElementById('mapImage').src = `/static/images/image${currentImage}.png`;
-        }
     </script>
 </head>
+
 <body>
     <div class="sidebar-tab" id="toggleSidebar">☰</div>
     <div id="sidebar" class="sidebar">
@@ -113,7 +295,7 @@
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
             <li><a href="{{ url_for('profile') }}">Profile</a></li>
             <li><a href="{{ url_for('users') }}">Users</a></li>
-            <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
+            <li><a href="{{ url_for('treatments') }}">Treatments</a></li>
             <li class="dropdown">
                 <a href="#">Records</a>
                 <div class="dropdown-content">
@@ -143,34 +325,18 @@
     </div>
     <div class="content">
         <div class="text-content">
-<p> In an era marked by rapid digital advancements, the healthcare sector continually seeks innovative solutions to address long-standing challenges. Dental care, a critical component of this sector, benefits significantly from these innovations. Dr. Lorena T. Beltran, a leader in orthodontics and cosmetic dentistry, has not only demonstrated unwavering commitment throughout her professional journey but has also faced and overcome numerous challenges with resilience and dedication.</p>
-<p> Dr. Lorena T. Beltran embarked on her entrepreneurial journey in 2005, establishing her dental clinic with a vision of excellence in dental services. Specializing in orthodontics and cosmetic dentistry, Dr. Beltran's clinic has been a beacon of high standards and patient-centered care. Even during the global pandemic, Dr. Beltran's decision to personally manage the clinic underscored her deep commitment to patient welfare and quality care.</p>
-<p> Originally situated at Gate 2, Cainta, the clinic faced significant challenges, particularly due to flooding. This prompted a strategic relocation to Brookside Hills Gate 1. Dr. Beltran's proactive approach involved thorough risk assessments to identify potential hazards and vulnerabilities. She implemented preventive measures, such as elevating critical patient documents to safeguard them from flooding, showcasing her dedication to maintaining the integrity and safety of patient records.</p>
-<p> The clinic’s patient onboarding process is meticulously designed to ensure a smooth and comprehensive patient experience. It begins with a telephonic scheduling system that regulates patient flow. Upon arrival, patients complete a preliminary assessment using a detailed questionnaire, crafted with evidence-based practices to capture essential health indicators. Dr. Beltran then reviews each patient’s medical history through a checklist-based method, ensuring no detail is overlooked. Treatment plans are tailored to each patient, utilizing advanced equipment and techniques to ensure precision and comfort.</p>
-<p> Despite the high standards of care, Dr. Beltran's practice faces challenges related to manual record-keeping. The loss of records due to flooding and reliance on paper-based systems highlight the need for a digital transformation. The introduction of a Computer-Based Information System (CBIS) is proposed to enhance data management, ensure rapid data retrieval, and improve overall efficiency. A CBIS will streamline operations, bolster data security, provide real-time insights, and enhance resilience against physical disasters, ultimately safeguarding critical patient data.</p>
-<p> Dr. Lorena T. Beltran’s Dental Clinic is dedicated to setting new benchmarks in dental care by embracing digital solutions that enhance patient experience and operational efficiency. The proposed shift to a digital platform aims to ensure ease of access for staff, improve patient experiences, and protect invaluable patient records from potential adversities. </p>
-<p> With a steadfast commitment to excellence and patient care, Dr. Lorena T. Beltran's Dental Clinic continues to evolve, leveraging modern technology to overcome challenges and set new standards in the dental healthcare sector. Through the implementation of a Computer-Based Information System, the clinic aims to enhance its operational standards, ensuring a future-ready approach to dental healthcare management. </p>
-            </div>
+            <p>In an era marked by rapid digital advancements, the healthcare sector continually seeks innovative solutions to address long-standing challenges. Dental care, a critical component of this sector, benefits significantly from these innovations. Dr. Lorena T. Beltran, a leader in orthodontics and cosmetic dentistry, has not only demonstrated unwavering commitment throughout her professional journey but has also faced and overcome numerous challenges with resilience and dedication.</p>
+            <p>Dr. Lorena T. Beltran embarked on her entrepreneurial journey in 2005, establishing her dental clinic with a vision of excellence in dental services. Specializing in orthodontics and cosmetic dentistry, Dr. Beltran's clinic has been a beacon of high standards and patient-centered care. Even during the global pandemic, Dr. Beltran's decision to personally manage the clinic underscored her deep commitment to patient welfare and quality care.</p>
+            <p>Originally situated at Gate 2, Cainta, the clinic faced significant challenges, particularly due to flooding. This prompted a strategic relocation to Brookside Hills Gate 1. Dr. Beltran's proactive approach involved thorough risk assessments to identify potential hazards and vulnerabilities. She implemented preventive measures, such as elevating critical patient documents to safeguard them from flooding, showcasing her dedication to maintaining the integrity and safety of patient records.</p>
+            <p>The clinic’s patient onboarding process is meticulously designed to ensure a smooth and comprehensive patient experience. It begins with a telephonic scheduling system that regulates patient flow. Upon arrival, patients complete a preliminary assessment using a detailed questionnaire, crafted with evidence-based practices to capture essential health indicators. Dr. Beltran then reviews each patient’s medical history through a checklist-based method, ensuring no detail is overlooked. Treatment plans are tailored to each patient, utilizing advanced equipment and techniques to ensure precision and comfort.</p>
+            <p>Despite the high standards of care, Dr. Beltran's practice faces challenges related to manual record-keeping. The loss of records due to flooding and reliance on paper-based systems highlight the need for a digital transformation. The introduction of a Computer-Based Information System (CBIS) is proposed to enhance data management, ensure rapid data retrieval, and improve overall efficiency. A CBIS will streamline operations, bolster data security, provide real-time insights, and enhance resilience against physical disasters, ultimately safeguarding critical patient data.</p>
+            <p>Dr. Lorena T. Beltran’s Dental Clinic is dedicated to setting new benchmarks in dental care by embracing digital solutions that enhance patient experience and operational efficiency. The proposed shift to a digital platform aims to ensure ease of access for staff, improve patient experiences, and protect invaluable patient records from potential adversities.</p>
+            <p>With a steadfast commitment to excellence and patient care, Dr. Lorena T. Beltran's Dental Clinic continues to evolve, leveraging modern technology to overcome challenges and set new standards in the dental healthcare sector. Through the implementation of a Computer-Based Information System, the clinic aims to enhance its operational standards, ensuring a future-ready approach to dental healthcare management.</p>
+        </div>
         <div class="map-container">
             <img id="mapImage" src="/static/images/image2.png" alt="Map to Dr. Lorena T. Beltran's Dental Clinic" onclick="changeImage()">
         </div>
     </div>
 </body>
+
 </html>
-<!-- 
-
-<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa.</p>
-
-            <p>Vestibulum lacinia arcu eget nulla. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur sodales ligula in libero. Sed dignissim lacinia nunc. Curabitur tortor. Pellentesque nibh. Aenean quam. In scelerisque sem at dolor. Maecenas mattis.</p>
-
-            <p>Sed convallis tristique sem. Proin ut ligula vel nunc egestas porttitor. Morbi lectus risus, iaculis vel, suscipit quis, luctus non, massa. Fusce ac turpis quis ligula lacinia aliquet. Mauris ipsum. Nulla metus metus, ullamcorper vel, tincidunt sed, euismod in, nibh. Quisque volutpat condimentum velit.</p>
-
-            <p>Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nam nec ante. Sed lacinia, urna non tincidunt mattis, tortor neque adipiscing diam, a cursus ipsum ante quis turpis. Nulla facilisi. Ut fringilla. Suspendisse potenti. Nunc feugiat mi a tellus consequat imperdiet.</p>
-
-            <p>Vestibulum sapien. Proin quam. Etiam ultrices. Suspendisse in justo eu magna luctus suscipit. Sed lectus. Integer euismod lacus luctus magna. Quisque cursus, metus vitae pharetra auctor, sem massa mattis sem, at interdum magna augue eget diam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae.</p>
-
-            <p>Morbi lacinia molestie dui. Praesent blandit dolor. Sed non quam. In vel mi sit amet augue congue elementum. Morbi in ipsum sit amet pede facilisis laoreet. Donec lacus nunc, viverra nec, blandit vel, egestas et, augue. Vestibulum tincidunt malesuada tellus. Ut ultrices ultrices enim. Curabitur sit amet mauris.</p>
-
-            <p>Morbi in dui quis est pulvinar ullamcorper. Nulla facilisi. Integer lacinia sollicitudin massa. Cras metus. Sed aliquet risus a tortor. Integer id quam. Morbi mi. Quisque nisl felis, venenatis tristique, dignissim in, ultrices sit amet, augue. Proin sodales libero eget ante.</p>
-            
--->

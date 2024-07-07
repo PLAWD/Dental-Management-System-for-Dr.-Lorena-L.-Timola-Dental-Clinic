@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,9 +15,11 @@
             height: 100vh;
             transition: margin-left 0.3s ease;
         }
+
         .content-container.shifted {
             margin-left: 250px;
         }
+
         .faq-container {
             width: 70%;
             padding: 20px;
@@ -24,16 +27,21 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
+
         .faq-container h1 {
             text-align: center;
             color: #8b4513;
         }
+
         .faq-container label {
             display: block;
             margin: 20px 0 5px;
             font-weight: bold;
         }
-        .faq-container input, .faq-container textarea {
+
+        .faq-container input,
+        .faq-container textarea,
+        .faq-container select {
             width: calc(100% - 20px);
             padding: 10px;
             margin-bottom: 20px;
@@ -41,40 +49,17 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
-        .faq-container input:hover, .custom-dropdown:hover .custom-dropdown-content {
+
+        .faq-container input:hover,
+        .faq-container textarea:hover,
+        .faq-container select:hover {
             cursor: pointer;
             background-color: #f0e6d2;
         }
-        .custom-dropdown {
-            position: relative;
-        }
-        .custom-dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #f9f9f9;
-            width: calc(100% - 20px);
-            max-height: 180px;
-            overflow-y: auto;
-            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-            z-index: 1;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
-        }
-        .custom-dropdown-content a {
-            color: black;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            text-align: left; /* Align text to the left */
-        }
-        .custom-dropdown:hover .custom-dropdown-content {
-            display: block;
-        }
-        .custom-dropdown-content a:hover {
-            background-color: white;
-        }
+
         .add-faq-button {
-            display: none; /* Initially hidden */
+            display: none;
+            /* Initially hidden */
             margin: 20px 0;
             padding: 10px 15px;
             background-color: #593C3C;
@@ -83,12 +68,50 @@
             border-radius: 4px;
             cursor: pointer;
         }
+
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Black w/ opacity */
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
     <script>
-        function showAnswer(question, answer) {
-            document.getElementById('question').value = question;
+        function showAnswer(answer) {
             document.getElementById('answer').value = answer;
         }
+
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
             const toggleSidebar = document.getElementById('toggleSidebar');
@@ -112,9 +135,66 @@
             {% if session['role_id'] == 1 %}
             document.querySelector('.add-faq-button').style.display = 'block';
             {% endif %}
+
+            // Get the modal
+            var modal = document.getElementById("addFaqModal");
+
+            // Get the button that opens the modal
+            var btn = document.getElementById("addFaqBtn");
+
+            // Get the <span> element that closes the modal
+            var span = document.getElementsByClassName("close")[0];
+
+            // When the user clicks the button, open the modal
+            btn.onclick = function () {
+                modal.style.display = "block";
+            }
+
+            // When the user clicks on <span> (x), close the modal
+            span.onclick = function () {
+                modal.style.display = "none";
+            }
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+
+            // Handle form submission
+            const form = document.getElementById('addFaqForm');
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const formData = new FormData(form);
+                const data = {};
+                formData.forEach((value, key) => {
+                    data[key] = value;
+                });
+
+                fetch('/add_faq', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            modal.style.display = 'none';
+                            alert('FAQ added successfully');
+                            // Optionally, you can reload the page to show the new FAQ
+                            window.location.reload();
+                        } else {
+                            alert('Failed to add FAQ');
+                        }
+                    });
+            });
         });
     </script>
 </head>
+
 <body>
     <div class="sidebar-tab" id="toggleSidebar">☰</div>
     <div id="sidebar" class="sidebar">
@@ -150,30 +230,34 @@
         <div class="faq-container">
             <h1>Having any problems?</h1>
             <label for="question">Questions:</label>
-            <div class="custom-dropdown">
-                <input type="text" id="question" readonly placeholder="Select a question">
-                <div class="custom-dropdown-content">
-                    <a href="#" onclick="showAnswer('Who is Dr. Lorena L. Timola?', 'Dr. Lorena L. Timola is a highly experienced dental practitioner dedicated to providing quality dental care. She specializes in various dental treatments and ensures that her patients receive the best possible care.')">Who is Dr. Lorena L. Timola?</a>
-                    <a href="#" onclick="showAnswer('Where is Dr. Lorena’s clinic located?', 'Dr. Lorena\'s clinic is located at [Clinic Address]. You can visit our contact page for more details and directions.')">Where is Dr. Lorena’s clinic located?</a>
-                    <a href="#" onclick="showAnswer('What are the clinic’s operating hours?', 'The clinic operates from Monday to Saturday, 9:00 AM to 6:00 PM. We are closed on Sundays and public holidays.')">What are the clinic’s operating hours?</a>
-                    <a href="#" onclick="showAnswer('How can I make an appointment with Dr. Lorena?', 'You can make an appointment by calling our clinic at [Clinic Phone Number] or by using our online appointment scheduling system available on our website.')">How can I make an appointment with Dr. Lorena?</a>
-                    <a href="#" onclick="showAnswer('How do I log in to the system?', 'You can log in to the system using your registered email or username and password. If you do not have an account, please contact the clinic administrator for assistance.')">How do I log in to the system?</a>
-                    <a href="#" onclick="showAnswer('I forgot my password. How can I reset it?', 'If you forgot your password, you can reset it by clicking the \'Forgot Password\' link on the login page. Enter your registered email address, and an OTP will be sent to you for verification. Follow the instructions to reset your password.')">I forgot my password. How can I reset it?</a>
-                    <a href="#" onclick="showAnswer('How do I register for a new account?', 'To register for a new account, click the \'Register\' button on the login page and fill in the required information. Your account will be created, and a temporary password will be sent to your registered email.')">How do I register for a new account?</a>
-                    <a href="#" onclick="showAnswer('How can I add a new patient to the system?', 'To add a new patient, log in to the system, go to the \'Patients\' section, and click on \'Add Patient.\' Fill in the required patient information and click \'Submit.\'')">How can I add a new patient to the system?</a>
-                    <a href="#" onclick="showAnswer('How can I view a patient’s records?', 'To view a patient’s records, go to the \'Patient Records\' section, search for the patient by name or ID, and click on their profile. You will be able to see their detailed records, including past appointments and treatments.')">How can I view a patient’s records?</a>
-                    <a href="#" onclick="showAnswer('How do I schedule a new appointment?', 'To schedule a new appointment, go to the \'Appointments\' section, click on \'Create Appointment,\' and fill in the required details such as patient name, date, time, and type of appointment. Click \'Submit\' to save the appointment.')">How do I schedule a new appointment?</a>
-                    <a href="#" onclick="showAnswer('How can I view upcoming appointments?', 'You can view upcoming appointments on the \'Dashboard\' or in the \'Appointments\' section. The calendar view provides a quick overview of all scheduled appointments.')">How can I view upcoming appointments?</a>
-                    <a href="#" onclick="showAnswer('What should I do if I encounter a technical issue?', 'If you encounter any technical issues, please contact our support team at [Support Email] or call [Support Phone Number]. We are here to assist you with any problems you may face.')">What should I do if I encounter a technical issue?</a>
-                    <a href="#" onclick="showAnswer('How do I update my profile information?', 'To update your profile information, log in to the system, go to the \'Profile\' section, and make the necessary changes. Click \'Save\' to update your information.')">How do I update my profile information?</a>
-                </div>
-            </div>
+            <select id="question" onchange="showAnswer(this.options[this.selectedIndex].getAttribute('data-answer'))">
+                <option value="">Select a question</option>
+                {% for faq in faqs %}
+                <option value="{{ faq.question }}" data-answer="{{ faq.answer }}">{{ faq.question }}</option>
+                {% endfor %}
+            </select>
             <label for="answer">Answer:</label>
             <textarea id="answer" rows="6" readonly></textarea>
 
             <!-- Button to add new FAQ, visible only to admins -->
-            <button class="add-faq-button" onclick="location.href='{{ url_for('add_faq') }}'">Add FAQ</button>
+            <button class="add-faq-button" id="addFaqBtn">Add FAQ</button>
+        </div>
+    </div>
+
+    <!-- The Modal -->
+    <div id="addFaqModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add FAQ</h2>
+            <form id="addFaqForm">
+                <label for="newQuestion">Question:</label>
+                <input type="text" id="newQuestion" name="newQuestion" required>
+                <label for="newAnswer">Answer:</label>
+                <textarea id="newAnswer" name="newAnswer" rows="6" required></textarea>
+                <button type="submit">Submit</button>
+            </form>
         </div>
     </div>
 </body>
+
 </html>
