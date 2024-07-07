@@ -879,6 +879,7 @@ def treatments():
     log_activity(f'{user_number} {current_time}: Accessed treatments page')
     return render_template('treatments.html', patients=patients)
 
+
 @app.route('/intraoral_exams/<int:patient_id>')
 def intraoral_exams(patient_id):
     conn = get_db_connection()
@@ -887,11 +888,17 @@ def intraoral_exams(patient_id):
         flash('Patient not found!')
         return redirect(url_for('patients'))
 
+    # Calculate age
+    birth_date = datetime.strptime(patient['dob'], '%Y-%m-%d')
+    today = datetime.today()
+    age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+
+    patient = dict(patient)
+    patient['age'] = age
+
     intraoral_exams = conn.execute('SELECT * FROM intraoral_exams WHERE patient_id = ?', (patient_id,)).fetchall()
     conn.close()
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_activity(f'{user_number} {current_time}: Viewed intraoral exams for patient ID {patient_id}')
+    log_activity(f'Viewed intraoral exams for patient ID {patient_id}')
     return render_template('intraoral_exam.html', patient=patient, intraoral_exams=intraoral_exams)
 
 @app.route('/logout')
@@ -907,14 +914,11 @@ def logout():
 def inventory():
     conn = get_db_connection()
     inventory_items = conn.execute('''
-        SELECT item_id, name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold
+        SELECT item_id, name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, unit
         FROM inventory
         WHERE is_disabled = 0
     ''').fetchall()
     conn.close()
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_activity(f'{user_number} {current_time}: Accessed inventory page')
     return render_template('inventory.html', inventory_items=inventory_items)
 
 @app.route('/submit_add_item', methods=['POST'])
@@ -928,22 +932,24 @@ def submit_add_item():
     price_min = data['price_min']
     price_max = data['price_max']
     low_stock_threshold = data['low_stock_threshold']
-
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    unit = data['unit']
 
     try:
         conn = get_db_connection()
         conn.execute('''
-            INSERT INTO inventory (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold))
+            INSERT INTO inventory (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, unit)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, unit))
         conn.commit()
         conn.close()
+
+        # Log the activity
+        user_number = session.get('user_number')
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_activity(f'{user_number} {current_time}: Added new item to inventory: {name}')
+
         return jsonify(success=True)
     except Exception as e:
-        log_activity(f'{user_number} {current_time}: Failed to add new item to inventory: {name} - {str(e)}')
         return jsonify(success=False, error=str(e))
 
 @app.route('/add_stock', methods=['POST'])
@@ -1031,9 +1037,6 @@ def view_item(item_id):
 @role_required([1])  # Assuming only admin can edit
 def edit_inventory(item_id):
     conn = get_db_connection()
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
     if request.method == 'POST':
         name = request.form['name']
         category = request.form['category']
@@ -1043,15 +1046,21 @@ def edit_inventory(item_id):
         price_min = request.form['price_min']
         price_max = request.form['price_max']
         low_stock_threshold = request.form['low_stock_threshold']
+        unit = request.form['unit']
 
         conn.execute('''
             UPDATE inventory
-            SET name = ?, category = ?, variations = ?, stocked_quantity = ?, seller = ?, price_min = ?, price_max = ?, low_stock_threshold = ?
+            SET name = ?, category = ?, variations = ?, stocked_quantity = ?, seller = ?, price_min = ?, price_max = ?, low_stock_threshold = ?, unit = ?
             WHERE item_id = ?
-        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, item_id))
+        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, unit, item_id))
         conn.commit()
         conn.close()
+
+        # Log the activity
+        user_number = session.get('user_number')
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_activity(f'{user_number} {current_time}: Edited item with ID {item_id}')
+
         return redirect(url_for('inventory'))
 
     item = conn.execute('SELECT * FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
@@ -1840,6 +1849,90 @@ def generate_billing(patient_id):
     log_activity(f'{user_number} {current_time}: Generated billing for patient ID {patient_id} with total cost {total_cost}.')
 
     return render_template('billing.html', diagnoses=diagnoses, billing=billing, patient=patient)
+
+@app.route('/generate_consent_form/<int:patient_id>')
+@role_required([1, 2])  # Both admin and user can access
+def generate_consent_form(patient_id):
+    conn = get_db_connection()
+    patient = conn.execute('SELECT first_name, middle_name, last_name FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
+    conn.close()
+
+    if not patient:
+        return 'Patient not found', 404
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    p.setFont("Helvetica", 12)
+    p.drawCentredString(width / 2, height - 50, "Dra. Lorena Timola – Beltran Dental Clinic")
+    p.drawCentredString(width / 2, height - 70, "COSMETIC DENTISTRY/ORTHODONTIC")
+    p.drawCentredString(width / 2, height - 90, "2561 Brookside Drive Ortigas Ave. Extn. Brookside Hills Subd. Cainta, Rizal")
+    p.drawCentredString(width / 2, height - 110, "Tel no: 941-3833 Cell no.: 0917-732-4523")
+
+    p.drawString(30, height - 150, "___________________________________________________________________________________")
+
+    p.setFont("Helvetica-Bold", 16)  # Set the font to bold and size to 16
+    p.drawCentredString(width / 2, height - 190, "CONSENT FORM")
+
+    p.setFont("Helvetica", 12)
+    p.drawString(30, height - 260, f"Date: {datetime.now().strftime('%Y-%m-%d')}")
+
+    patient_name = f"{patient['last_name']}, {patient['first_name']} {patient['middle_name']}"
+    p.drawString(30, height - 370, f"I {patient_name}, hereby consent to the")
+    p.drawString(30, height - 390, "performance upon myself of the recommended operations and/or treatments that may")
+    p.drawString(30, height - 410, "be considered necessary to restore my oral and dental health. This consent is given")
+    p.drawString(30, height - 430, "freely and voluntarily and whatever the result of any intervention or treatment may be, I")
+    p.drawString(30, height - 450, "responsibility, be it known, further, that I am willing to pay for all services rendered to")
+    p.drawString(30, height - 470, "me/or my family.")
+
+    p.drawString(30, height - 530, "_______________________________________________")
+    p.drawString(30, height - 550, "Signature of Patient and/or person responsible for the payment")
+
+    p.showPage()
+    p.save()
+
+    buffer.seek(0)
+    return send_file(buffer, as_attachment=True, download_name='Consent_Form.pdf', mimetype='application/pdf')
+
+# Boo's Commit
+@app.route('/conditions', methods=['POST'])
+def add_condition():
+    data = request.json
+    required_fields = ['tooth_number', 'condition_code', 'patient_id']
+    if not all(field in data for field in required_fields):
+        return jsonify({'error': 'Missing fields'}), 400
+
+    with sqlite3.connect('instance/DMSDB.db') as conn:
+        cur = conn.cursor()
+        cur.execute("INSERT INTO conditions (tooth_number, condition_code, patient_id) VALUES (?, ?, ?)",
+                    (data['tooth_number'], data['condition_code'], data['patient_id']))
+        conn.commit()
+
+    # Log the activity
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Added condition for patient ID {data["patient_id"]}, tooth number {data["tooth_number"]}, condition code {data["condition_code"]}')
+
+    return jsonify({'success': True}), 201
+
+
+@app.route('/conditions/<int:condition_id>', methods=['DELETE'])
+def delete_condition(condition_id):
+    with sqlite3.connect('database.db') as conn:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM conditions WHERE condition_id=?", (condition_id,))
+        conn.commit()
+
+    # Log the activity
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Deleted condition with ID {condition_id}')
+
+    return jsonify({'success': True}), 200
+
+# Boo's Commit
+
 
 if __name__ == '__main__':
    app.run(debug=True)

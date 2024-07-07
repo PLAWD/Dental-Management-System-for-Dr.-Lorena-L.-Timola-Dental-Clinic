@@ -240,6 +240,13 @@
                     <label for="low_stock_threshold">Low Stock Threshold:</label>
                     <input type="number" id="low_stock_threshold" name="low_stock_threshold" required>
                 </div>
+                <div class="form-group">
+                    <label for="unit">Unit:</label>
+                    <select id="unit" name="unit" required>
+                        <option value="Pcs">Pcs</option>
+                        <option value="Undetermined">Undetermined</option>
+                    </select>
+                </div>
                 <div class="submit-group">
                     <button type="submit">Submit</button>
                 </div>
@@ -392,7 +399,8 @@
                 seller: document.getElementById('seller').value,
                 price_min: document.getElementById('price_min').value,
                 price_max: document.getElementById('price_max').value,
-                low_stock_threshold: document.getElementById('low_stock_threshold').value
+                low_stock_threshold: document.getElementById('low_stock_threshold').value,
+                unit: document.getElementById('unit').value
             };
 
             fetch('{{ url_for("submit_add_item") }}', {
