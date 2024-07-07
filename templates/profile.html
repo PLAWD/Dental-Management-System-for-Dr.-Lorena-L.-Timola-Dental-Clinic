@@ -32,17 +32,7 @@
             font-size: 1.2em;
             margin: 5px 0;
         }
-        .sidebar-tab {
-            position: fixed;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: #3a3f51;
-            color: #fff;
-            padding: 10px 15px;
-            cursor: pointer;
-            z-index: 1001;
-        }
+
         .btn {
             background-color: #5b2c1e;
             color: #fff;
@@ -92,6 +82,12 @@
             font-size: 1.2em;
             margin: 20px 0;
         }
+        .content-container {
+            transition: margin-left 0.3s ease;
+        }
+        .content-container.shifted {
+            margin-left: 250px;
+        }
     </style>
 </head>
 <body>
@@ -120,16 +116,18 @@
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
         </ul>
     </div>
-    <div class="profile-container">
-        <div class="profile-details">
-            <h1>{{ user['first_name'] }} {{ user['last_name'] }}</h1>
-            <p>User Number: {{ user['user_number'] }}</p>
-            <p>Username: {{ user['username'] }}</p>
-            <p>Email: {{ user['email'] }}</p>
-            <p>Role: {{ user['role_name'] }}</p>
-            <p>Status: {{ user['userStatus'] }}</p>
-            <button class="btn" onclick="document.getElementById('changeEmailModal').style.display='block'">Change Email</button>
-            <button class="btn" onclick="document.getElementById('changePasswordModal').style.display='block'">Change Password</button>
+    <div class="content-container">
+        <div class="profile-container">
+            <div class="profile-details">
+                <h1>{{ user['first_name'] }} {{ user['last_name'] }}</h1>
+                <p>User Number: {{ user['user_number'] }}</p>
+                <p>Username: {{ user['username'] }}</p>
+                <p>Email: {{ user['email'] }}</p>
+                <p>Role: {{ user['role_name'] }}</p>
+                <p>Status: {{ user['userStatus'] }}</p>
+                <button class="btn" onclick="document.getElementById('changeEmailModal').style.display='block'">Change Email</button>
+                <button class="btn" onclick="document.getElementById('changePasswordModal').style.display='block'">Change Password</button>
+            </div>
         </div>
     </div>
 
@@ -207,128 +205,128 @@
         </div>
     </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const sidebar = document.getElementById('sidebar');
-        const toggleSidebar = document.getElementById('toggleSidebar');
-        const contentContainer = document.querySelector('.content-container');
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const toggleSidebar = document.getElementById('toggleSidebar');
+            const contentContainer = document.querySelector('.content-container');
 
-        toggleSidebar.addEventListener('click', function () {
-            sidebar.classList.toggle('show');
-            contentContainer.classList.toggle('shifted');
-            toggleSidebar.style.display = 'none';
-        });
+            toggleSidebar.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                contentContainer.classList.toggle('shifted');
+                toggleSidebar.style.display = 'none';
+            });
 
-        document.addEventListener('click', function (event) {
-            if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
-                sidebar.classList.remove('show');
-                contentContainer.classList.remove('shifted');
-                toggleSidebar.style.display = 'block';
-            }
-        });
-
-        document.getElementById('sendOtpForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            fetch('{{ url_for("resend_otp_profile") }}', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('OTP sent to your email.');
-                    document.getElementById('changeEmailModal').style.display = 'none';
-                    document.getElementById('verifyOtpModal').style.display = 'block';
-                } else {
-                    alert(data.message);
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    contentContainer.classList.remove('shifted');
+                    toggleSidebar.style.display = 'block';
                 }
             });
-        });
 
-        document.getElementById('verifyOtpForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            fetch('{{ url_for("verify_otp_profile") }}', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.next_step === 'new_email') {
-                    alert('OTP verified. You can now enter your new email.');
-                    document.getElementById('verifyOtpModal').style.display = 'none';
-                    document.getElementById('newEmailModal').style.display = 'block';
-                } else if (data.success && data.next_step === 'verify_new_email') {
-                    alert('OTP verified. Please check your new email for another OTP.');
-                    document.getElementById('verifyOtpModal').style.display = 'none';
-                    document.getElementById('verifyNewEmailOtpModal').style.display = 'block';
-                } else {
-                    alert(data.message);
-                }
-            });
-        });
-
-        document.getElementById('sendNewEmailOtpForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            fetch('{{ url_for("send_new_email_otp_profile") }}', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('OTP sent to your new email.');
-                    document.getElementById('newEmailModal').style.display = 'none';
-                    document.getElementById('verifyNewEmailOtpModal').style.display = 'block';
-                } else {
-                    alert(data.message);
-                }
-            });
-        });
-
-        document.getElementById('verifyNewEmailOtpForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            fetch('{{ url_for("verify_new_email_otp_profile") }}', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Your email has been changed successfully.');
-                    document.getElementById('verifyNewEmailOtpModal').style.display = 'none';
-                    location.reload();
-                } else {
-                    alert(data.message);
-                }
-            });
-        });
-
-        document.getElementById('changePasswordForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            fetch('{{ url_for("change_password") }}', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    document.getElementById('changePasswordModal').style.display = 'none';
-                } else {
-                    if (data.message === 'Current password is incorrect') {
-                        document.getElementById('incorrectPasswordModal').style.display = 'block';
+            document.getElementById('sendOtpForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+                const formData = new FormData(this);
+                fetch('{{ url_for("resend_otp_profile") }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('OTP sent to your email.');
+                        document.getElementById('changeEmailModal').style.display = 'none';
+                        document.getElementById('verifyOtpModal').style.display = 'block';
                     } else {
                         alert(data.message);
                     }
-                }
+                });
+            });
+
+            document.getElementById('verifyOtpForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+                const formData = new FormData(this);
+                fetch('{{ url_for("verify_otp_profile") }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.next_step === 'new_email') {
+                        alert('OTP verified. You can now enter your new email.');
+                        document.getElementById('verifyOtpModal').style.display = 'none';
+                        document.getElementById('newEmailModal').style.display = 'block';
+                    } else if (data.success && data.next_step === 'verify_new_email') {
+                        alert('OTP verified. Please check your new email for another OTP.');
+                        document.getElementById('verifyOtpModal').style.display = 'none';
+                        document.getElementById('verifyNewEmailOtpModal').style.display = 'block';
+                    } else {
+                        alert(data.message);
+                    }
+                });
+            });
+
+            document.getElementById('sendNewEmailOtpForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+                const formData = new FormData(this);
+                fetch('{{ url_for("send_new_email_otp_profile") }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('OTP sent to your new email.');
+                        document.getElementById('newEmailModal').style.display = 'none';
+                        document.getElementById('verifyNewEmailOtpModal').style.display = 'block';
+                    } else {
+                        alert(data.message);
+                    }
+                });
+            });
+
+            document.getElementById('verifyNewEmailOtpForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+                const formData = new FormData(this);
+                fetch('{{ url_for("verify_new_email_otp_profile") }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Your email has been changed successfully.');
+                        document.getElementById('verifyNewEmailOtpModal').style.display = 'none';
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                });
+            });
+
+            document.getElementById('changePasswordForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+                const formData = new FormData(this);
+                fetch('{{ url_for("change_password") }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        document.getElementById('changePasswordModal').style.display = 'none';
+                    } else {
+                        if (data.message === 'Current password is incorrect') {
+                            document.getElementById('incorrectPasswordModal').style.display = 'block';
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                });
             });
         });
-    });
-</script>
+    </script>
 </body>
 </html>

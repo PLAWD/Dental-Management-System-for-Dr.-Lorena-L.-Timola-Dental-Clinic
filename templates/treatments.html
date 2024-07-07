@@ -5,6 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Treatments</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5ede3;
+            color: #5b2c1e;
+        }
+        .main-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+        }
+        .treatments-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 800px;
+            text-align: center; /* Center the text */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .treatments-header {
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center the content */
+        }
+        .form-group label {
+            margin-bottom: 5px;
+        }
+        .form-group select {
+            width: 50%; /* Reduce the width to better center align */
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            display: block;
+            width: 50%; /* Reduce the width to better center align */
+            padding: 10px;
+            background-color: #5b2c1e;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px; /* Add margin to create space above the button */
+        }
+        button:hover {
+            background-color: #3a1e12;
+        }
+    </style>
 </head>
 <body class="treatments-page">
     <div class="sidebar-tab" id="sidebarTab">☰</div>
@@ -32,11 +97,6 @@
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
         </ul>
     </div>
-    <header>
-        <div class="header-left">
-            <h2>Treatments</h2>
-        </div>
-    </header>
     <div class="main-content">
         <div class="treatments-container">
             <h2 class="treatments-header">Select Patient for Treatment</h2>

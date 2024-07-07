@@ -6,6 +6,12 @@ body {
     box-sizing: border-box;
 }
 
+
+.fc-right .fc-prev-button, .fc-right .fc-next-button{
+    background-color: #784d3c;
+    background-image: none;
+}
+
 /* Styles for login and related pages */
 .center-content {
     display: flex;
@@ -31,7 +37,7 @@ form {
 
 h2 {
     margin-bottom: 10px;
-    color: #f44336;
+    color: #593C3C
 }
 
 label {
@@ -59,7 +65,7 @@ button:hover {
 }
 
 a {
-    color: #000;
+    color: #cbc7c2;
     text-align: right;
     margin-bottom: 10px;
 }
@@ -297,7 +303,7 @@ header h1 {
 
 .pagination .page-numbers a {
     text-decoration: none;
-    color: #00b4d8;
+    color: #D0C8BB;
     padding: 5px 10px;
     border-radius: 5px;
     border: 1px solid #00b4d8;
@@ -340,7 +346,7 @@ body.register-user {
 }
 
 .register-user-title {
-    color: #f44336;
+    color: #593C3C;
     text-align: center;
     margin-bottom: 20px;
 }
@@ -637,10 +643,10 @@ header h1 {
 
 .pagination .page-numbers a {
     text-decoration: none;
-    color: #00b4d8;
+    color: #D0C8BB
     padding: 5px 10px;
     border-radius: 5px;
-    border: 1px solid #00b4d8;
+    border: 1px solid #402828;
 }
 
 .pagination .page-numbers a.active {
@@ -1077,7 +1083,7 @@ header h1 {
         }
 
         .status-badge {
-            background-color: #32CD32;
+            background-color: #778877;
             color: white;
             padding: 5px 10px;
             border-radius: 5px;
@@ -1483,7 +1489,7 @@ header h1 {
 
 .users-page .add-user-btn {
     padding: 10px 20px;
-    background-color: #8B4513;
+    background-color: #593C3C;
     color: #fff;
     border: none;
     border-radius: 5px;
@@ -1512,8 +1518,8 @@ header h1 {
 }
 
 .users-page .user-table th {
-    background-color: #00BFFF;
-    color: #fff;
+    background-color: #593C3C;
+    color: #f5ede3;
 }
 
 .users-page .user-table td {
@@ -1521,27 +1527,27 @@ header h1 {
 }
 
 .users-page .status-active {
-    color: green;
+    color: #4E6A57;
 }
 
 .users-page .status-inactive {
-    color: red;
+    color: #ba3f37;
 }
 
 .users-page .status-suspended {
-    color: orange;
+    color: #e1a95f;
 }
 
 .users-page .status-banned {
-    color: darkred;
+    color: #705364;
 }
 
-.users-page .status-password-reset-required {
-    color: darkorange;
+.users-page .status-password-reset {
+    color: #bb532e;
 }
 
 .users-page .status-locked {
-    color: blue;
+    color: #215072;
 }
 
 .users-page .dropdown {
@@ -1659,12 +1665,12 @@ header h1 {
 .register-user-title, form label, form input, form select, form button {
     display: block;
     margin: 10px 0;
-    width: 100%;
+    width: 95%;
 }
 
 form button {
-    background-color: #8B4513;
-    color: #fff;
+    background-color: #D0C8BB;
+    color: #593C3C;
     border: none;
     border-radius: 5px;
     padding: 10px;
@@ -1672,7 +1678,7 @@ form button {
 }
 
 form button:hover {
-    background-color: #D2691E;
+    background-color: #D0C8BB;
 }
 
 /* Patients page specific styles */
@@ -1868,73 +1874,7 @@ Specific styles for login page
 ==============================================================================================================================================================================================================================
 ==============================================================================================================================================================================================================================*/
 
-.login-page {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #e0e0e0;
-}
 
-.login-container {
-    background-color: #784D3C;
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 400px; /* Fixed width */
-    margin: 0 auto;
-}
-
-.login-container h2 {
-    margin-bottom: 20px;
-    color: #D0C8BB;
-    text-align: left;
-}
-
-.login-container label {
-    display: block;
-    margin-bottom: 8px;
-    color: #D0C8BB;
-}
-
-.login-container input[type="text"],
-.login-container input[type="password"] {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 20px;
-    border: none;
-    border-radius: 5px;
-    background-color: #D0C8BB;
-}
-
-.login-container button {
-    width: 30%;
-    padding: 10px;
-    background-color: #E0D8CB;
-    border: none;
-    border-radius: 5px;
-    color: #784D3C;
-    font-size: 16px;
-    cursor: pointer;
-
-}
-
-.login-container button:hover {
-    background-color: #B9B09E;
-}
-
-.login-container .forgot-password {
-    display: block;
-    margin-top: 10px;
-    text-align: center;
-    color: #fff;
-    text-decoration: none;
-}
-
-.login-container .forgot-password:hover {
-    text-decoration: underline;
-    color: #B9B09E
-}
 
 /*=============================================================================================================================================================================================================================
 ==============================================================================================================================================================================================================================
@@ -1942,7 +1882,15 @@ Specific styles for forgot password page
 ==============================================================================================================================================================================================================================
 ==============================================================================================================================================================================================================================*/
 
-
+/* Actually a General Style */
+.center-content {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	background-color: #fffaf0;
+}
+/* Actually a General Style */
 
 /*=============================================================================================================================================================================================================================
 ==============================================================================================================================================================================================================================
@@ -1950,14 +1898,16 @@ Specific styles for enter otp page
 ==============================================================================================================================================================================================================================
 ==============================================================================================================================================================================================================================*/
 
-/* Specific styles for Verify OTP page */
+/* Actually a General Style */
 .center-content {
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	height: 100vh;
-	background-color: #f5f5f5;
+	background-color: #fffaf0;
 }
+/* Actually a General Style */
+
 
 .otp-container {
 	background-color: #784D3C;
@@ -2255,8 +2205,8 @@ Specific styles for sidebar
 
 .sidebar {
     width: 250px;
-    background-color: #3a3f51;
-    color: #fff;
+    background-color: #593C3C;
+    color: #D0C8BB;
     overflow-y: scroll;
     padding: 15px;
     position: fixed;
@@ -2276,8 +2226,8 @@ Specific styles for sidebar
     left: 0;
     top: 50%;
     transform: translateY(-50%);
-    background-color: #3a3f51;
-    color: #fff;
+    background-color: #593C3C;
+    color: #D0C8BB;
     padding: 10px 15px;
     cursor: pointer;
     z-index: 1001;
@@ -2370,8 +2320,8 @@ Specific styles for user
 /* CSS for Users Page */
 .users-page {
     font-family: 'Arial', sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
+    background-color: #fffaf0;
+    color: #fffaf0;
 }
 
 .header {
@@ -2399,8 +2349,8 @@ Specific styles for user
 }
 
 .add-user-btn {
-    background-color: #8B4513;
-    color: #fff;
+    background-color: #593C3C;
+    color: #D0C8BB;
     border: none;
     padding: 10px 20px;
     cursor: pointer;
@@ -2465,8 +2415,8 @@ Specific styles for user
 }
 
 .user-table th {
-    background-color: #00BFFF;
-    color: #fff;
+    background-color: #593C3C;
+    color: #D0C8BB;
 }
 
 .user-table td {
@@ -2492,7 +2442,7 @@ Specific styles for user
 }
 
 .user-info .name {
-    color: #1e90ff;
+    color: #593C3C;
     text-decoration: none;
 }
 
@@ -2671,11 +2621,13 @@ Specific styles for reports
 .reports-container {
     max-width: 800px;
     margin: 0 auto;
+    background-color: #593C3C;
 }
 
 .reports-header {
     text-align: center;
     margin-bottom: 20px;
+    color: #D0C8BB;
 }
 
 .report-options,
@@ -2687,11 +2639,13 @@ Specific styles for reports
 .report-options label,
 .date-range label {
     margin-right: 10px;
+    color: #D0C8BB;
 }
 
 .report-options select,
 .date-range input {
     margin-right: 20px;
+    color: #D0C8BB;
 }
 
 button {
@@ -2717,7 +2671,7 @@ Specific styles for payments
     max-width: 600px;
     margin: 0 auto;
     padding: 20px;
-    background-color: #f9f9f9;
+    background-color: #593C3C;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
@@ -2725,6 +2679,7 @@ Specific styles for payments
 .payments-header {
     text-align: center;
     margin-bottom: 20px;
+    color: #D0C8BB;
 }
 
 .form-group {
@@ -2734,6 +2689,7 @@ Specific styles for payments
 .form-group label {
     display: block;
     margin-bottom: 5px;
+    color: #D0C8BB;
 }
 
 .form-group select,
@@ -2801,6 +2757,7 @@ body.treatments-page .form-group {
 body.treatments-page label {
     display: block;
     margin-bottom: 5px;
+    color: #593C3C;
 }
 
 body.treatments-page select {
@@ -2811,14 +2768,15 @@ body.treatments-page select {
 
 body.treatments-page button {
     padding: 10px 20px;
-    background-color: #007bff;
+    background-color: #593C3C;
     color: #fff;
     border: none;
     cursor: pointer;
+    width: 100%;
 }
 
 body.treatments-page button:hover {
-    background-color: #0056b3;
+    background-color: #402828;
 }
 
 /*=============================================================================================================================================================================================================================
@@ -2843,6 +2801,7 @@ Specific styles for treatments
 
 .form-group {
     margin-bottom: 15px;
+    color: #593C3C;
 }
 
 .form-group label {
@@ -2861,8 +2820,8 @@ Specific styles for treatments
 
 button {
     padding: 10px 20px;
-    background-color: #007bff;
-    color: #fff;
+    background-color: #D0C8BB;
+    color: #593C3C;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -2871,7 +2830,7 @@ button {
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #B9B09E;
 }
 
 #confirmation {
@@ -2903,7 +2862,7 @@ Specific styles for intraoral exam
 
 .intraoral-page .tab {
     padding: 10px 20px;
-    background-color: #8B4513;
+    background-color: #593C3C;
     color: #fff;
     border: none;
     border-radius: 5px;
@@ -2911,7 +2870,7 @@ Specific styles for intraoral exam
 }
 
 .intraoral-page .tab.active {
-    background-color: #D2691E;
+    background-color: #8C6B6B;
 }
 
 .intraoral-page .tab-content {

@@ -128,15 +128,6 @@
             <div class="filter-container">
                 <div class="controls">
                     <button class="add-user-btn" onclick="openModal('addPatientModal')">Add Patient</button>
-                    <select id="filterPatients" onchange="filterPatients()">
-                        <option value="">Filter Patients</option>
-                        <!-- Add options for filtering patients -->
-                    </select>
-                    <select id="sortPatients" onchange="sortPatients()">
-                        <option value="">Sort Patients By</option>
-                        <option value="name">Name</option>
-                        <option value="date">Date</option>
-                    </select>
                 </div>
                 <div class="search-form">
                     <input type="text" id="searchInput" onkeyup="searchPatients()" placeholder="Search patients...">
@@ -473,13 +464,43 @@
         }
 
         function filterPatients() {
-            const filterValue = document.getElementById('filterPatients').value;
-            // Implement the filter logic here
+            const sexFilter = document.getElementById('filterPatientsSex').value;
+            const rows = document.querySelectorAll('.user-table tbody tr');
+
+            rows.forEach(row => {
+                const sex = row.querySelector('.user-info .sex').textContent.trim();
+                if (sexFilter === "" || sex === sexFilter) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
         }
 
         function sortPatients() {
             const sortValue = document.getElementById('sortPatients').value;
-            // Implement the sort logic here
+            const rows = Array.from(document.querySelectorAll('.user-table tbody tr'));
+
+            rows.sort((a, b) => {
+                let aValue, bValue;
+                switch (sortValue) {
+                    case 'name':
+                        aValue = a.querySelector('.name').textContent.toLowerCase();
+                        bValue = b.querySelector('.name').textContent.toLowerCase();
+                        return aValue.localeCompare(bValue);
+                    case 'date_created':
+                        aValue = new Date(a.querySelector('.date-created').textContent);
+                        bValue = new Date(b.querySelector('.date-created').textContent);
+                        return aValue - bValue;
+                    case 'latest_appointment':
+                        aValue = new Date(a.querySelector('.latest-appointment').textContent);
+                        bValue = new Date(b.querySelector('.latest-appointment').textContent);
+                        return bValue - aValue;
+                }
+            });
+
+            const tbody = document.querySelector('.user-table tbody');
+            rows.forEach(row => tbody.appendChild(row));
         }
 
         function searchPatients() {

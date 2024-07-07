@@ -5,7 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify OTP</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<style>
+    .otp-container {
+	background-color: #784D3C;
+	padding: 40px;
+	border: 1px solid #ddd;
+	border-radius: 10px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	text-align: center;
+	max-width: 400px;
+	width: 100%;
+}
 
+.verify-title {
+	font-size: 24px;
+	margin-bottom: 20px;
+	color: #D0C8BB;
+}
+
+.l-otp {
+	display: block;
+	font-size: 18px;
+	margin-bottom: 10px;
+	color: #D0C8BB;
+}
+
+.otp-input {
+	width: 95%;
+	padding: 10px;
+	font-size: 16px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	margin-bottom: 20px;
+}
+
+.verify-otp-button-container {
+    display: flex;
+    justify-content: center; /* Centers the button horizontally */
+}
+
+.verify-otp-button {
+    width: 100%;
+    max-width: 100px; /* Optional: Set a max-width to prevent the button from being too wide */
+    padding: 10px;
+    font-size: 16px;
+    background-color: #E0D8CB;
+    color: #784d3c;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: block; /* Ensure the button is treated as a block element */
+    margin: 0 auto; /* Center the button within its parent container */
+}
+
+.verify-otp-button:hover {
+	background-color: #B9B09E;
+}
+
+.forgor-a {
+	color: #D0C8BB;
+	text-decoration: none;
+}
+
+.forgor-a:hover {
+	text-decoration: underline;
+}
+
+#countdown {
+	margin-top: 10px;
+	color: #888;
+}
+</style>
 </head>
 <body>
     <div class="center-content">
@@ -14,7 +84,9 @@
             <form action="{{ url_for('verify_otp') }}" method="post">
                 <label for="otp" class="l-otp">OTP:</label>
                 <input type="text" id="otp" name="otp" class="otp-input" required>
+                <div class="verify-otp-button-container">
                 <button type="submit" class="verify-otp-button">Verify</button>
+                </div>
             </form>
             <p><a href="#" id="resend-otp-btn" class="forgor-a" onclick="resendOtp()">Resend OTP</a></p>
             <p><span id="countdown"></span></p>

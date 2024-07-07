@@ -39,13 +39,16 @@
             border-radius: 10px;
         }
         .modal button {
-            background-color: #5d74e2;
+            background-color: #593C3C;
             border: none;
             color: white;
             padding: 10px;
             border-radius: 5px;
             cursor: pointer;
         }
+        .total-users-count {
+            color: #593C3C;
+           }
     </style>
 </head>
 <body class="users-page">
@@ -61,7 +64,7 @@
                 <div class="dropdown-content">
                     <a href="{{ url_for('patients') }}">Patient Records</a>
                     <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                    <a href="#">Treatment Records</a>
+                    <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
                 </div>
             </li>
             <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
@@ -76,7 +79,7 @@
     </div>
     <header>
         <div class="header-left">
-            <h1>Total Users: {{ total_users }}</h1>
+            <h1 class="total-users-count">Total Users: {{ total_users }}</h1>
         </div>
     </header>
     <div class="main-content">

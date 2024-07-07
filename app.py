@@ -1409,6 +1409,21 @@ def help():
     log_activity(f'{user_number} {current_time}: Accessed help page')
     return render_template('help.html')
 
+
+@app.route('/add_faq', methods=['GET', 'POST'])
+@role_required([1])  # Ensure only admins can access this route
+def add_faq():
+    if request.method == 'POST':
+        question = request.form.get('question')
+        answer = request.form.get('answer')
+
+        # Add logic to save the question and answer to the database
+
+        flash('FAQ added successfully!', 'success')
+        return redirect(url_for('help'))
+
+    return render_template('add_faq.html')
+
 @app.route('/about')
 def about():
     user_number = session.get('user_number')
