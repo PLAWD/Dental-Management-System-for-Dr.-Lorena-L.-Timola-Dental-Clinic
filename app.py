@@ -1391,6 +1391,7 @@ def payments():
     return render_template('payments.html', patients=patients)
 
 @app.route('/process_payment', methods=['POST'])
+@role_required([1, 2])  # Both admin and user can access
 def process_payment():
     data = request.json
     patient_id = data['patient']
@@ -1406,20 +1407,20 @@ def process_payment():
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     if not user_id:
-        return 'User not logged in', 401
+        return jsonify(success=False, error='User not logged in'), 401
 
     conn = get_db_connection()
     user = conn.execute('SELECT first_name, last_name FROM users WHERE user_id = ?', (user_id,)).fetchone()
     if not user:
         conn.close()
-        return 'Invalid user ID', 400
+        return jsonify(success=False, error='Invalid user ID'), 400
     user_name = f"{user['first_name']} {user['last_name']}"
 
     patient = conn.execute('SELECT email, last_name, first_name, middle_name FROM patients WHERE patient_id = ?',
                            (patient_id,)).fetchone()
     if not patient:
         conn.close()
-        return 'Invalid patient ID', 400
+        return jsonify(success=False, error='Invalid patient ID'), 400
     patient_full_name = f"{patient['last_name']} {patient['first_name']} {patient['middle_name']}"
 
     payment_date = datetime.now().strftime('%Y-%m-%d')
@@ -1434,7 +1435,7 @@ def process_payment():
     conn.commit()
 
     # Log the activity
-    log_activity(f'{user_number} {current_time}: Processed payment for patient {patient_full_name} ({patient_id}), amount: {amount}, payment method: {payment_method}')
+    log_activity(f'{user_number} {current_time}: Processed payment for patient ID {patient_id} with amount {amount}.')
 
     # Generate the PDF receipt
     buffer = BytesIO()
@@ -1987,11 +1988,23 @@ def generate_billing(patient_id):
 
     # Fetch diagnosis details for the patient
     diagnoses = conn.execute('''
-        SELECT * FROM diagnosis WHERE patient_id = ?
+        SELECT ie.tooth_number, ie.periodontal_screening AS condition, t.treatment, t.cost, t.date_of_diagnosis
+        FROM intraoral_exams ie
+        JOIN treatments t ON ie.exam_id = t.exam_id
+        WHERE ie.patient_id = ?
     ''', (patient_id,)).fetchall()
 
-    # Calculate total cost
-    total_cost = sum(d['cost'] for d in diagnoses)
+    # Fetch items used for each diagnosis
+    items_used = conn.execute('''
+        SELECT i.item_name, i.unit, iu.quantity, di.tooth_number, di.date_of_diagnosis
+        FROM items_used iu
+        JOIN inventory i ON iu.item_id = i.item_id
+        JOIN intraoral_exams di ON iu.diagnosis_id = di.exam_id
+        WHERE di.patient_id = ?
+    ''', (patient_id,)).fetchall()
+
+    # Calculate total cost including items used
+    total_cost = sum(d['cost'] for d in diagnoses) + sum(i['quantity'] * i['cost'] for i in items_used)
 
     # Insert billing record
     conn.execute('''
@@ -2017,7 +2030,8 @@ def generate_billing(patient_id):
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_activity(f'{user_number} {current_time}: Generated billing for patient ID {patient_id} with total cost {total_cost}.')
 
-    return render_template('billing.html', diagnoses=diagnoses, billing=billing, patient=patient)
+    return render_template('billing.html', diagnoses=diagnoses, items_used=items_used, billing=billing, patient=patient)
+
 
 @app.route('/generate_consent_form/<int:patient_id>')
 @role_required([1, 2])  # Both admin and user can access

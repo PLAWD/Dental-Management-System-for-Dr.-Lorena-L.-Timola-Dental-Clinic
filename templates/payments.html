@@ -47,7 +47,7 @@
         </header>
         <div class="payments-container">
             <h2 class="payments-header">Process Payment</h2>
-            <form id="paymentForm" method="POST">
+            <form id="paymentForm" method="POST" action="{{ url_for('process_payment') }}">
                 <div class="form-group">
                     <label for="patient">Select Patient:</label>
                     <select id="patient" name="patient">
@@ -66,22 +66,15 @@
                 </div>
                 <div id="cashPayment" class="payment-details">
                     <label for="amount">Amount:</label>
-                    <input type="text" id="amount" name="amount">
+                    <input type="text" id="amount" name="amount" value="{{ request.args.get('total_cost', '') }}" readonly>
                     <label for="referenceNumberCash">Reference Number:</label>
                     <input type="text" id="referenceNumberCash" name="reference_number_cash">
                 </div>
                 <div id="ewalletPayment" class="payment-details" style="display:none;">
                     <p>Scan the QR code to pay:</p>
-                    <img src="static/images/gkas.png" alt="QR Code">
+                    <img src="{{ url_for('static', filename='images/gkas.png') }}" alt="QR Code">
                     <label for="referenceNumber">Reference Number:</label>
                     <input type="text" id="referenceNumber" name="reference_number">
-                </div>
-                <div class="form-group">
-                    <label for="services">Services:</label>
-                    <div id="services">
-                        <!-- Services will be dynamically added here -->
-                    </div>
-                    <button type="button" onclick="addService()">+ Add Service</button>
                 </div>
                 <div class="form-group">
                     <label for="payment_type">Payment Type:</label>
@@ -110,27 +103,6 @@
                 document.getElementById('ewalletPayment').style.display = 'block';
             }
         }
-
-        function addService() {
-            const servicesContainer = document.getElementById('services');
-            const serviceDiv = document.createElement('div');
-            serviceDiv.classList.add('service-entry');
-            serviceDiv.innerHTML = `
-                <input type="text" name="service_name" placeholder="Service Name">
-                <input type="text" name="service_amount" placeholder="Amount">
-                <button type="button" onclick="removeService(this)">- Remove</button>
-            `;
-            servicesContainer.appendChild(serviceDiv);
-        }
-
-        function removeService(button) {
-            button.parentElement.remove();
-        }
-
-        document.getElementById('paymentForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            document.getElementById('confirmation').style.display = 'block';
-        });
 
         function confirmPayment() {
             const form = document.getElementById('paymentForm');

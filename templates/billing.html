@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Billing</title>
+    <title>Payments</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='payments.css') }}">
 </head>
 <body>
-    <div class="sidebar-tab" id="sidebarTab">☰</div>
+    <div class="sidebar-tab" id="toggleSidebar">☰</div>
     <div id="sidebar" class="sidebar">
         <ul>
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
@@ -19,86 +20,151 @@
                 <div class="dropdown-content">
                     <a href="{{ url_for('patients') }}">Patient Records</a>
                     <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                    <a href="#">Treatment Records</a>
+                    <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
                 </div>
             </li>
             <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
             <li><a href="{{ url_for('payments') }}">Payments</a></li>
-            <br><br><br><br><br><br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
             <li><a href="{{ url_for('help') }}">Help</a></li>
             <li><a href="{{ url_for('about') }}">About</a></li>
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
         </ul>
     </div>
     <div class="main-content">
-        <div class="container">
-            <h1>Billing for {{ billing['date_of_billing'] }}</h1>
-            <h2>Patient: {{ patient['first_name'] }} {{ patient['last_name'] }}</h2>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tooth Number</th>
-                        <th>Condition</th>
-                        <th>Treatment</th>
-                        <th>Cost</th>
-                        <th>Date of Diagnosis</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for diagnosis in diagnoses %}
-                    <tr>
-                        <td>{{ diagnosis['tooth_number'] }}</td>
-                        <td>{{ diagnosis['condition'] }}</td>
-                        <td>{{ diagnosis['treatment'] }}</td>
-                        <td>₱{{ diagnosis['cost'] }}</td>
-                        <td>{{ diagnosis['date_of_diagnosis'] }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <h3>Total Cost: ₱{{ billing['total_cost'] }}</h3>
-            
-            <button onclick="window.print()">Print Bill</button>
+        <header>
+            <div class="header-left">
+            </div>
+            <div class="header-center">
+            </div>
+        </header>
+        <div class="payments-container">
+            <h2 class="payments-header">Process Payment</h2>
+            <form id="paymentForm" method="POST">
+                <div class="form-group">
+                    <label for="patient">Select Patient:</label>
+                    <select id="patient" name="patient">
+                        {% for patient in patients %}
+                        <option value="{{ patient.patient_id }}">{{ patient.last_name }}, {{ patient.first_name }} {{ patient.middle_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="payment_method">Payment Method:</label>
+                    <select id="payment_method" name="payment_method" onchange="togglePaymentMethod(this.value)">
+                        <option value="Select">--- Select ---</option>
+                        <option value="Cash">Cash</option>
+                        <option value="E-wallet">E-wallet</option>
+                    </select>
+                </div>
+                <div id="cashPayment" class="payment-details">
+                    <label for="amount">Amount:</label>
+                    <input type="text" id="amount" name="amount" value="{{ request.args.get('total_cost', '') }}" readonly>
+                    <label for="referenceNumberCash">Reference Number:</label>
+                    <input type="text" id="referenceNumberCash" name="reference_number_cash">
+                </div>
+                <div id="ewalletPayment" class="payment-details" style="display:none;">
+                    <p>Scan the QR code to pay:</p>
+                    <img src="{{ url_for('static', filename='images/gkas.png') }}" alt="QR Code">
+                    <label for="referenceNumber">Reference Number:</label>
+                    <input type="text" id="referenceNumber" name="reference_number">
+                </div>
+                <div class="form-group">
+                    <label for="payment_type">Payment Type:</label>
+                    <select id="payment_type" name="payment_type">
+                        <option value="full">Full</option>
+                        <option value="partial">Partial</option>
+                    </select>
+                </div>
+                <button type="submit">Submit Payment</button>
+            </form>
+            <div id="confirmation" style="display:none;">
+                <p>Are you sure the details are correct?</p>
+                <button onclick="confirmPayment()">Yes</button>
+                <button onclick="cancelPayment()">No</button>
+            </div>
+            <div id="feedback" style="display:none;"></div>
         </div>
     </div>
-
     <script>
+        function togglePaymentMethod(method) {
+            if (method === 'Cash') {
+                document.getElementById('cashPayment').style.display = 'block';
+                document.getElementById('ewalletPayment').style.display = 'none';
+            } else {
+                document.getElementById('cashPayment').style.display = 'none';
+                document.getElementById('ewalletPayment').style.display = 'block';
+            }
+        }
+
+        function confirmPayment() {
+            const form = document.getElementById('paymentForm');
+            const formData = new FormData(form);
+            const services = [];
+            document.querySelectorAll('.service-entry').forEach(entry => {
+                const serviceName = entry.querySelector('input[name="service_name"]').value;
+                const serviceAmount = entry.querySelector('input[name="service_amount"]').value;
+                services.push({ name: serviceName, amount: serviceAmount });
+            });
+
+            const data = Object.fromEntries(formData);
+            data.services = services;
+
+            fetch('{{ url_for("process_payment") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const feedback = document.getElementById('feedback');
+                feedback.style.display = 'block';
+                if (data.success) {
+                    feedback.innerHTML = '<p>Payment processed successfully!</p>';
+                    form.reset();  // Reset the form on success
+                } else {
+                    feedback.innerHTML = `<p>Error: ${data.error}</p>`;
+                }
+                document.getElementById('confirmation').style.display = 'none';
+            })
+            .catch(error => {
+                const feedback = document.getElementById('feedback');
+                feedback.style.display = 'block';
+                feedback.innerHTML = `<p>Error: ${error.message}</p>`;
+                document.getElementById('confirmation').style.display = 'none';
+            });
+        }
+
+        function cancelPayment() {
+            document.getElementById('confirmation').style.display = 'none';
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
-            const sidebarTab = document.getElementById('sidebarTab');
+            const toggleSidebar = document.getElementById('toggleSidebar');
             const mainContent = document.querySelector('.main-content');
 
-            sidebarTab.addEventListener('click', function () {
+            toggleSidebar.addEventListener('click', function () {
                 sidebar.classList.toggle('show');
                 mainContent.classList.toggle('shifted');
-                sidebarTab.style.display = 'none';
+                toggleSidebar.style.display = 'none';
             });
 
             document.addEventListener('click', function (event) {
-                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                if (!sidebar.contains(event.target) && !toggleSidebar.contains(event.target)) {
                     sidebar.classList.remove('show');
                     mainContent.classList.remove('shifted');
-                    sidebarTab.style.display = 'block';
+                    toggleSidebar.style.display = 'block';
                 }
-            });
-
-            const dropdowns = document.querySelectorAll('.dropdown');
-            dropdowns.forEach(dropdown => {
-                const btn = dropdown.querySelector('a');
-                const content = dropdown.querySelector('.dropdown-content');
-
-                btn.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    content.classList.toggle('show');
-                });
-
-                document.addEventListener('click', function () {
-                    content.classList.remove('show');
-                });
             });
         });
     </script>
