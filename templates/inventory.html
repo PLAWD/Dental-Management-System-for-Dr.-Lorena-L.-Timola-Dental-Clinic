@@ -88,6 +88,10 @@
 <body>
     <div class="container">
         <button onclick="openRegisterItemModal()">Register Item</button>
+        
+        <!-- Add the search input here -->
+        <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search for items..">
+        
         <div id="inventoryTable"></div>
     </div>
 
@@ -153,7 +157,7 @@
         </div>
     </div>
 
-<!-- Edit Item Modal -->
+    <!-- Edit Item Modal -->
     <div id="editItemModal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeEditItemModal()">&times;</span>
@@ -179,7 +183,6 @@
             </form>
         </div>
     </div>
-
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -227,7 +230,30 @@
                 });
         }
 
+        function filterTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById('inventoryTable').getElementsByTagName('table')[0];
+            const tr = table.getElementsByTagName('tr');
 
+            for (let i = 1; i < tr.length; i++) {
+                const tds = tr[i].getElementsByTagName('td');
+                let isVisible = false;
+
+                for (let j = 0; j < tds.length - 1; j++) {
+                    const td = tds[j];
+                    if (td) {
+                        const textValue = td.textContent || td.innerText;
+                        if (textValue.toLowerCase().indexOf(filter) > -1) {
+                            isVisible = true;
+                            break;
+                        }
+                    }
+                }
+
+                tr[i].style.display = isVisible ? "" : "none";
+            }
+        }
 
         function disableItem(inventory_id) {
             fetch('/disable_item', {
