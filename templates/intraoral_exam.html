@@ -44,6 +44,7 @@
                 <button class="tab" onclick="openTab(event, 'medical-history')">Medical History</button>
                 <button class="tab" onclick="openTab(event, 'overview')">Overview</button>
                 <button class="tab" onclick="openTab(event, 'enter-diagnosis')">Enter Diagnosis</button>
+                <button class="tab" onclick="openTab(event, 'generate_billing')">Billings</button>
             </div>
 
             <div class="exam-form">
@@ -328,6 +329,22 @@
 </div>
 </div>
 </div>
+<!-- ////////////////////////////////// Billing ////////////////-->
+
+<div id="generate_billing" class="tab-content" style="display:none;">
+    <!-- Overview content -->
+    <div class="exam-details">
+        <h3>Patient Records</h3>
+        <form>
+            <div>
+                <p>{{ patient.first_name }} {{ patient.middle_name }} {{ patient.last_name }}
+                    <span class="status-badge {{ 'inactive' if not patient.is_active else '' }}">{{ 'Active' if patient.is_active else 'Inactive' }}</span>
+                </p>
+                <button type="button" onclick="redirectToBilling({{ patient.patient_id }})">Go to Billing</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- Success and Error Modals -->
 <div id="successModal" class="modal">
@@ -343,6 +360,7 @@
         <p id="errorMessage"></p>
     </div>
 </div>
+
 
 <!-- Modal for teeth conditions -->
 <div id="conditionModal" class="modal">
@@ -659,6 +677,9 @@ function toggleDatePicker(checkboxId, datePickerId) {
     datePicker.style.display = checkBox.checked ? 'block' : 'none';
 }
 
+    function redirectToBilling(patientId) {
+    window.location.href = `/generate_billing/${patientId}`;
+}
 </script>
     </div>
 </body>
