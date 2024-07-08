@@ -50,9 +50,11 @@
             border-radius: 10px;
             overflow: auto;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
         }
 
-        .modal button {
+        .modal button, .stock-button {
             background-color: #593C3C;
             border: none;
             color: white;
@@ -61,7 +63,7 @@
             cursor: pointer;
         }
 
-        .modal-button:hover {
+        .modal-button:hover, .stock-button:hover {
             background-color: darkgrey;
         }
 
@@ -100,6 +102,27 @@
             text-decoration: none;
             cursor: pointer;
         }
+
+        .button-container {
+            display: flex;
+            justify-content: flex-start; /* Aligns buttons to the left */
+            gap: 10px; /* Adds space between the buttons */
+            margin-top: 10px; /* Adjust as needed */
+        }
+
+        .stock-button {
+            width: 40px;
+            height: 40px;
+            background-color: #593C3C;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            font-size: 20px;
+            cursor: pointer;
+            text-align: center;
+            line-height: 40px; /* Centers text vertically */
+        }
+
     </style>
 </head>
 <body class="users-page">
@@ -246,12 +269,13 @@
             <p><strong>Category:</strong> <span id="stockItemCategory"></span></p>
             <p><strong>Variation:</strong> <span id="stockItemVariation"></span></p>
             <p><strong>Current Quantity:</strong> <span id="stockItemQuantity"></span></p>
-            <div>
-                <button onclick="updateStockQuantity('decrease')">-</button>
-                <button onclick="updateStockQuantity('increase')">+</button>
+            <div class="button-container">
+                <button class="stock-button" onclick="updateStockQuantity('decrease')">-</button>
+                <button class="stock-button" onclick="updateStockQuantity('increase')">+</button>
             </div>
         </div>
     </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
