@@ -217,6 +217,7 @@
             <h2 class="modal-title">Item Details</h2>
             <div>
                 <p><strong>Item Name:</strong> <span id="detailItemName"></span></p>
+                <p><strong>Total Item Inventory:</strong> <span id="detailTotalInventory"></span></p> <!-- New line -->
                 <p><strong>Item Category:</strong> <span id="detailCategory"></span></p>
                 <p><strong>Variation Description:</strong> <span id="detailVariationDescription"></span></p>
                 <p><strong>Item Variation:</strong> <span id="detailVariation"></span></p>
@@ -450,6 +451,7 @@
                     }
 
                     const detailItemName = document.getElementById('detailItemName');
+                    const detailTotalInventory = document.getElementById('detailTotalInventory'); // New line
                     const detailCategory = document.getElementById('detailCategory');
                     const detailVariationDescription = document.getElementById('detailVariationDescription');
                     const detailVariation = document.getElementById('detailVariation');
@@ -457,8 +459,9 @@
                     const detailMaxPrice = document.getElementById('detailMaxPrice');
                     const itemId = document.getElementById('item_id');
 
-                    if (detailItemName && detailCategory && detailVariationDescription && detailVariation && detailMinPrice && detailMaxPrice && itemId) {
+                    if (detailItemName && detailTotalInventory && detailCategory && detailVariationDescription && detailVariation && detailMinPrice && detailMaxPrice && itemId) {
                         detailItemName.textContent = data.item_name;
+                        detailTotalInventory.textContent = data.total_inventory; // New line
                         detailCategory.textContent = data.category_name;
                         detailVariationDescription.textContent = data.variation_description;
                         detailVariation.textContent = data.variation_name || 'No Variation';

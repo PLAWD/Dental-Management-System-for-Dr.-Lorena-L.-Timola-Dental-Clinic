@@ -1832,7 +1832,10 @@ def get_item(inventory_id):
     conn = get_db_connection()
     item = conn.execute('''
         SELECT it.item_name, c.category_name, it.variation_description, v.variation_name,
-               MIN(p.price) AS min_price, MAX(p.price) AS max_price
+               MIN(p.price) AS min_price, MAX(p.price) AS max_price,
+               (SELECT SUM(i2.stocked_quantity) FROM Inventory i2
+                JOIN Item it2 ON i2.item_id = it2.item_id
+                WHERE it2.item_name = it.item_name) AS total_inventory
         FROM Inventory i
         JOIN Item it ON i.item_id = it.item_id
         JOIN Category c ON it.category_id = c.category_id
