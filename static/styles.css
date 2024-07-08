@@ -122,9 +122,8 @@ header {
 }
 
 .search-form {
-    display: flex;
-    align-items: center;
-    padding: 10px;
+    flex: 1; /* Takes up remaining space */
+    margin-right: 20px; /* Adds space between form and button */
 }
 
 .search-form input[type="text"] {
