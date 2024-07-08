@@ -5,6 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Intraoral Examination</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .price-button {
+            position: relative;
+            padding: 10px 20px;
+            background-color: #8B4513;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .price-button:hover {
+            background-color: #D2691E;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body class="intraoral-page">
     <div class="sidebar-tab" id="sidebarTab">☰</div>
@@ -42,105 +117,107 @@
             <div class="tab-container">
                 <button class="tab active" onclick="openTab(event, 'consent-form')">Consent Form</button>
                 <button class="tab" onclick="openTab(event, 'medical-history')">Medical History</button>
-                <button class="tab" onclick="openTab(event, 'overview')">Overview</button>
+                <button class="tab" onclick="openTab(event, 'add-items')">Add Items</button>
                 <button class="tab" onclick="openTab(event, 'enter-diagnosis')">Enter Diagnosis</button>
+                <button class="tab" onclick="openTab(event, 'generate_billing')">Billings</button>
             </div>
 
             <div class="exam-form">
-                <div class="legend">
-                    <label><input type="checkbox" class="condition-checkbox" data-code="X"> Cleaning </label><br>
+                <div class="teeth-diagram">
+                    <div class="legend">
+                         <button class="price-button" onclick="openPriceModal()">Set Prices</button>
+                        <label><input type="checkbox" class="condition-checkbox" data-code="Cl"> Cleaning </label><br>
                     </div>
-                    <div class="teeth-diagram">
-                        <div class="teeth-section">
-                            <div class="teeth-header">Upper Temporary Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Upper temporary teeth row -->
-                                {% for number in [55, 54, 53, 52, 51, 61, 62, 63, 64, 65] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})">
-                                        <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
-                                    </div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
+                    <div class="teeth-section">
+                        <div class="teeth-header">Upper Temporary Teeth</div>
+                        <div class="teeth-row">
+                            <!-- Upper temporary teeth row -->
+                            {% for number in [55, 54, 53, 52, 51, 61, 62, 63, 64, 65] %}
+                            <div class="tooth-container">
+                                <div class="tooth-box" onclick="openModal(this, {{ number }})">
+                                    <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
                                 </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="teeth-section">
-                            <div class="teeth-header">Permanent Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Permanent teeth upper row -->
-                                {% for number in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})">
-                                        <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
-                                    </div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
+                                <div class="tooth">
+                                    <svg viewBox="0 0 100 100" class="interactive-circle">
+                                        <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                        <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                        <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                        <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                        <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                        <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                    </svg>
                                 </div>
-                                {% endfor %}
                             </div>
-                            <div class="teeth-row">
-                                <!-- Permanent teeth lower row -->
-                                {% for number in [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] %}
-                                <div class="tooth-container">
-                                     <div class="tooth-box" onclick="openModal(this, {{ number }})">
-                                        <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
-                                    </div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="teeth-section">
-                            <div class="teeth-header">Lower Temporary Teeth</div>
-                            <div class="teeth-row">
-                                <!-- Lower temporary teeth row -->
-                                {% for number in [85, 84, 83, 82, 81, 71, 72, 73, 74, 75] %}
-                                <div class="tooth-container">
-                                    <div class="tooth-box" onclick="openModal(this, {{ number }})">
-                                        <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
-                                    </div>
-                                    <div class="tooth">
-                                        <svg viewBox="0 0 100 100" class="interactive-circle">
-                                            <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
-                                            <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
-                                            <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
-                                            <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
-                                            <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
+                            {% endfor %}
                         </div>
                     </div>
+                    <div class="teeth-section">
+                        <div class="teeth-header">Permanent Teeth</div>
+                        <div class="teeth-row">
+                            <!-- Permanent teeth upper row -->
+                            {% for number in [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] %}
+                            <div class="tooth-container">
+                                <div class="tooth-box" onclick="openModal(this, {{ number }})">
+                                    <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
+                                </div>
+                                <div class="tooth">
+                                    <svg viewBox="0 0 100 100" class="interactive-circle">
+                                        <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                        <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                        <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                        <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                        <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                        <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                    </svg>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="teeth-row">
+                            <!-- Permanent teeth lower row -->
+                            {% for number in [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] %}
+                            <div class="tooth-container">
+                                 <div class="tooth-box" onclick="openModal(this, {{ number }})">
+                                    <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
+                                </div>
+                                <div class="tooth">
+                                    <svg viewBox="0 0 100 100" class="interactive-circle">
+                                        <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                        <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                        <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                        <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                        <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                        <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                    </svg>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="teeth-section">
+                        <div class="teeth-header">Lower Temporary Teeth</div>
+                        <div class="teeth-row">
+                            <!-- Lower temporary teeth row -->
+                            {% for number in [85, 84, 83, 82, 81, 71, 72, 73, 74, 75] %}
+                            <div class="tooth-container">
+                                <div class="tooth-box" onclick="openModal(this, {{ number }})">
+                                    <text class="condition-text" x="50" y="55" text-anchor="middle" dominant-baseline="middle"></text>
+                                </div>
+                                <div class="tooth">
+                                    <svg viewBox="0 0 100 100" class="interactive-circle">
+                                        <path class="outerCircle" d="M50 50 L50 0 A50 50 0 0 1 100 50 z"></path>
+                                        <path class="outerCircle" d="M50 50 L100 50 A50 50 0 0 1 50 100 z"></path>
+                                        <path class="outerCircle" d="M50 50 L50 100 A50 50 0 0 1 0 50 z"></path>
+                                        <path class="outerCircle" d="M50 50 L0 50 A50 50 0 0 1 50 0 z"></path>
+                                        <circle class="outerCircle" cx="50" cy="50" r="20"></circle>
+                                        <text x="50" y="-20" text-anchor="middle" dominant-baseline="middle">{{ number }}</text>
+                                    </svg>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
 
 <!-- ////////////////////////////////// Consent form ////////////////-->
 
@@ -154,29 +231,24 @@
     </div>
 </div>
 
-<!-- ////////////////////////////////// Overview ////////////////-->
+<!-- ////////////////////////////////// Add items ////////////////-->
 
-<div id="overview" class="tab-content" style="display:none;">
-    <!-- Overview content -->
+<div id="add-items" class="tab-content" style="display:none;">
+    <!-- Add items content -->
     <div class="exam-details">
-        <h3> Patient Records</h3>
-        <form>
-            <div>
-                <p>{{ patient.first_name }} {{ patient.middle_name }} {{ patient.last_name }}
-                    <span class="status-badge {{ 'inactive' if not patient.is_active else '' }}">{{ 'Active' if patient.is_active else 'Inactive' }}</span>
-                </p>
-                <p>Email: <a href="mailto:{{ patient.email }}">{{ patient.email }}</a></p>
-                <p>Mobile number: <a href="tel:{{ patient.mobile_number }}">{{ patient.mobile_number }}</a></p>
-                <p>Address: {{ patient.address }}</p>
-                <p>City: <strong>{{ patient.city }}</strong></p>
-                <p>Patient ID: {{ patient.patient_number }}</p>
-                <p>Patient since: {{ patient.register_date }}</p>
+        <h3>Add Items</h3>
+        <div id="items-container">
+            <div class="item-row">
+                <select class="item-dropdown">
+                    {% for item in items %}
+                    <option value="{{ item.id }}">{{ item.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="number" class="item-quantity" placeholder="Quantity Used">
+                <button type="button" class="remove-item-btn" onclick="removeItem(this)">Remove</button>
             </div>
-            <div>
-                <p>Age: {{ patient.age }}</p>
-                <p>Birth date: {{ patient.dob }}</p>
-            </div>
-        </form>
+        </div>
+        <button type="button" onclick="addItem()">Add Item</button>
     </div>
 </div>
 
@@ -327,6 +399,22 @@
     </div>
 </div>
 </div>
+<!-- ////////////////////////////////// Billing ////////////////-->
+
+<div id="generate_billing" class="tab-content" style="display:none;">
+    <!-- Overview content -->
+    <div class="exam-details">
+        <h3>Patient Records</h3>
+        <form>
+            <div>
+                <p>{{ patient.first_name }} {{ patient.middle_name }} {{ patient.last_name }}
+                    <span class="status-badge {{ 'inactive' if not patient.is_active else '' }}">{{ 'Active' if patient.is_active else 'Inactive' }}</span>
+                </p>
+                <button type="button" onclick="redirectToBilling({{ patient.patient_id }})">Go to Billing</button>
+            </div>
+        </form>
+    </div>
+</div>
 </div>
 
 <!-- Success and Error Modals -->
@@ -341,6 +429,69 @@
     <div class="modal-content">
         <span class="modal-close" onclick="closeModal('errorModal')">&times;</span>
         <p id="errorMessage"></p>
+    </div>
+</div>
+
+<!-- Price Modal -->
+<div id="priceModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('priceModal')">&times;</span>
+        <h2>Set Prices for Conditions</h2>
+        <form id="priceForm">
+            <div class="form-group">
+                <label for="priceCl">Cleaning</label>
+                <input type="number" id="priceCl" name="priceCl" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="priceX">Extraction due to caries</label>
+                <input type="number" id="priceX" name="priceX" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="priceXO">Extraction due to other causes</label>
+                <input type="number" id="priceXO" name="priceXO" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="priceAm">Amalgam Filling</label>
+                <input type="number" id="priceAm" name="priceAm" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="priceCo">Composite Filling</label>
+                <input type="number" id="priceCo" name="priceCo" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="priceJC">Jacket Crown</label>
+                <input type="number" id="priceJC" name="priceJC" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="priceAb">Abutment</label>
+                <input type="number" id="priceAb" name="priceAb" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="priceAtt">Attachment</label>
+                <input type="number" id="priceAtt" name="priceAtt" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="priceP">Pontic</label>
+                <input type="number" id="priceP" name="priceP" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="priceIn">Inlay</label>
+                <input type="number" id="priceIn" name="priceIn" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="priceImp">Implant</label>
+                <input type="number" id="priceImp" name="priceImp" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="priceS">Sealants</label>
+                <input type="number" id="priceS" name="priceS" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="priceRm">Removable dentures</label>
+                <input type="number" id="priceRm" name="priceRm" min="0" step="0.01">
+            </div>
+            <button type="button" onclick="savePrices()">Save Prices</button>
+        </form>
     </div>
 </div>
 
@@ -399,202 +550,245 @@
 </div>
 
 <script>
-    let currentTooth = null;
+let currentTooth = null;
+let prices = {};
 
-    function openTab(evt, tabName) {
-        var i, tabcontent, tablinks;
-        tabcontent = document.getElementsByClassName("tab-content");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tab");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+function openModal(toothElement, toothNumber) {
+    currentTooth = toothElement;
+    currentTooth.setAttribute('data-tooth-number', toothNumber);
+    document.getElementById('conditionModal').style.display = 'block';
+    loadConditions(toothNumber);
+    loadSegments(toothNumber);
+}
+
+function openPriceModal() {
+    document.getElementById('priceModal').style.display = 'block';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function saveConditions() {
+    const checkboxes = document.querySelectorAll('.condition-checkbox');
+    let selectedCodes = [];
+    checkboxes.forEach((checkbox) => {
+        if (checkbox.checked) {
+            selectedCodes.push({
+                code: checkbox.getAttribute('data-code'),
+                cost: prices[`price${checkbox.getAttribute('data-code')}`] || 0
+            });
         }
-        tablinks = document.getElementsByClassName("tab");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
+    });
+    const toothNumber = currentTooth.getAttribute('data-tooth-number');
+    fetch('/conditions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            tooth_number: toothNumber,
+            conditions: selectedCodes,
+            patient_id: {{ patient.patient_id }}
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displaySavedConditions(toothNumber, selectedCodes.map(c => c.code));
+            closeModal('conditionModal');
+        } else {
+            alert('Failed to save conditions');
         }
-        document.getElementById(tabName).style.display = "block";
-        evt.currentTarget.className += " active";
-    }
+    });
+}
 
-    function openModal(toothElement, toothNumber) {
-        currentTooth = toothElement;
-        currentTooth.setAttribute('data-tooth-number', toothNumber);
-        document.getElementById('conditionModal').style.display = 'block';
-        loadConditions(toothNumber);
-        loadSegments(toothNumber);
+function displaySavedConditions(toothNumber, selectedCodes) {
+    const toothBox = document.querySelector(`.tooth-box[data-tooth-number="${toothNumber}"]`);
+    if (toothBox) {
+        let conditionText = toothBox.querySelector('.condition-text');
+        if (!conditionText) {
+            conditionText = document.createElement('div');
+            conditionText.className = 'condition-text';
+            toothBox.appendChild(conditionText);
+        }
+        conditionText.textContent = selectedCodes.join(' ');
     }
+}
 
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
-    function saveConditions() {
-        const checkboxes = document.querySelectorAll('.condition-checkbox');
-        let selectedCodes = [];
-        checkboxes.forEach((checkbox) => {
-            if (checkbox.checked) {
-                selectedCodes.push(checkbox.getAttribute('data-code'));
-            }
+function loadConditions(toothNumber) {
+    fetch(`/conditions?patient_id={{ patient.patient_id }}`)
+        .then(response => response.json())
+        .then(data => {
+            const storedConditions = data.filter(condition => condition.tooth_number == toothNumber).map(condition => condition.condition_code);
+            const checkboxes = document.querySelectorAll('.condition-checkbox');
+            checkboxes.forEach((checkbox) => {
+                checkbox.checked = storedConditions.includes(checkbox.getAttribute('data-code'));
+            });
+            updatePreview();
         });
-        const toothNumber = currentTooth.getAttribute('data-tooth-number');
-        fetch('/conditions', {
+}
+
+function updatePreview() {
+    const checkboxes = document.querySelectorAll('.condition-checkbox:checked');
+    let selectedCodes = [];
+    checkboxes.forEach((checkbox) => {
+        selectedCodes.push(checkbox.getAttribute('data-code'));
+    });
+    const previewText = document.getElementById('previewText');
+    previewText.textContent = selectedCodes.join(' ');
+}
+
+function toggleSegment(segment) {
+    if (segment.style.fill === 'red') {
+        segment.style.fill = '#FFFFFF';
+    } else {
+        segment.style.fill = 'red';
+    }
+    saveSegments();
+}
+
+function saveSegments() {
+    const segments = document.querySelectorAll('.segment');
+    let selectedSegments = [];
+    segments.forEach((segment, index) => {
+        if (segment.style.fill === 'red') {
+            selectedSegments.push(index);
+        }
+    });
+    const toothNumber = currentTooth.getAttribute('data-tooth-number');
+    localStorage.setItem(`tooth_${toothNumber}_segments`, JSON.stringify(selectedSegments));
+}
+
+function loadSegments(toothNumber) {
+    const selectedSegments = JSON.parse(localStorage.getItem(`tooth_${toothNumber}_segments`)) || [];
+    const segments = document.querySelectorAll('.segment');
+    segments.forEach((segment, index) => {
+        segment.style.fill = selectedSegments.includes(index) ? 'red' : '#FFFFFF';
+    });
+}
+
+function showSuccessModal(message) {
+    document.getElementById('successMessage').textContent = message;
+    document.getElementById('successModal').style.display = 'block';
+}
+
+function showErrorModal(message) {
+    document.getElementById('errorMessage').textContent = message;
+    document.getElementById('errorModal').style.display = 'block';
+}
+
+function toggleTextBox(checkboxId, textBoxId) {
+    const checkBox = document.getElementById(checkboxId);
+    const textBox = document.getElementById(textBoxId);
+    textBox.style.display = checkBox.checked ? 'block' : 'none';
+}
+
+function toggleDatePicker(checkboxId, datePickerId) {
+    const checkBox = document.getElementById(checkboxId);
+    const datePicker = document.getElementById(datePickerId);
+    datePicker.style.display = checkBox.checked ? 'block' : 'none';
+}
+
+function saveMedicalHistory() {
+    const formData = new FormData(document.getElementById('medicalHistoryForm'));
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = (value === 'on' || value === 'true') ? true : (value === 'false' ? false : value);
+    });
+
+    data['patient_id'] = {{ patient.patient_id }};  // Ensure you have the patient_id
+
+    fetch('{{ url_for("save_medical_history") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccessModal('Medical history saved successfully.');
+        } else {
+            showErrorModal('Failed to save medical history: ' + data.error);
+        }
+    });
+}
+
+function saveDiagnosis() {
+    const formData = new FormData(document.getElementById('diagnosisForm'));
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+    data['patient_id'] = {{ patient.patient_id }};
+
+    fetch('{{ url_for("save_diagnosis") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccessModal('Diagnosis saved successfully.');
+        } else {
+            showErrorModal('Failed to save diagnosis: ' + data.error);
+        }
+    });
+}
+
+function savePrices() {
+    const priceForm = document.getElementById('priceForm');
+    const formData = new FormData(priceForm);
+    formData.forEach((value, key) => {
+        prices[key] = parseFloat(value);
+    });
+    closeModal('priceModal');
+}
+
+function updateBilling(selectedCodes) {
+    const toothNumber = currentTooth.getAttribute('data-tooth-number');
+    const patientId = {{ patient.patient_id }};
+    selectedCodes.forEach(condition => {
+        const cost = prices[`price${condition}`] || 0;
+        fetch('/billing', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
+                patient_id: patientId,
                 tooth_number: toothNumber,
-                condition_code: selectedCodes.join(' '),
-                patient_id: {{ patient.patient_id }}
+                condition: condition,
+                cost: cost
             })
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                displaySavedConditions(toothNumber, selectedCodes);
-                closeModal('conditionModal');
-            } else {
-                alert('Failed to save conditions');
+            if (!data.success) {
+                alert('Failed to update billing');
             }
         });
-    }
-
-    function displaySavedConditions(toothNumber, selectedCodes) {
-        const toothBox = document.querySelector(`.tooth-box[data-tooth-number="${toothNumber}"]`);
-        if (toothBox) {
-            let conditionText = toothBox.querySelector('.condition-text');
-            if (!conditionText) {
-                conditionText = document.createElement('div');
-                conditionText.className = 'condition-text';
-                toothBox.appendChild(conditionText);
-            }
-            conditionText.textContent = selectedCodes.join(' ');
-        }
-    }
-
-    function loadConditions(toothNumber) {
-        fetch(`/conditions?patient_id={{ patient.patient_id }}`)
-            .then(response => response.json())
-            .then(data => {
-                const storedConditions = data.filter(condition => condition.tooth_number == toothNumber).map(condition => condition.condition_code);
-                const checkboxes = document.querySelectorAll('.condition-checkbox');
-                checkboxes.forEach((checkbox) => {
-                    checkbox.checked = storedConditions.includes(checkbox.getAttribute('data-code'));
-                });
-                updatePreview();
-            });
-    }
-
-    function updatePreview() {
-        const checkboxes = document.querySelectorAll('.condition-checkbox:checked');
-        let selectedCodes = [];
-        checkboxes.forEach((checkbox) => {
-            selectedCodes.push(checkbox.getAttribute('data-code'));
-        });
-        const previewText = document.getElementById('previewText');
-        previewText.textContent = selectedCodes.join(' ');
-    }
-
-    function toggleSegment(segment) {
-        if (segment.style.fill === 'red') {
-            segment.style.fill = '#FFFFFF';
-        } else {
-            segment.style.fill = 'red';
-        }
-        saveSegments();
-    }
-
-    function saveSegments() {
-        const segments = document.querySelectorAll('.segment');
-        let selectedSegments = [];
-        segments.forEach((segment, index) => {
-            if (segment.style.fill === 'red') {
-                selectedSegments.push(index);
-            }
-        });
-        const toothNumber = currentTooth.getAttribute('data-tooth-number');
-        localStorage.setItem(`tooth_${toothNumber}_segments`, JSON.stringify(selectedSegments));
-    }
-
-    function loadSegments(toothNumber) {
-        const selectedSegments = JSON.parse(localStorage.getItem(`tooth_${toothNumber}_segments`)) || [];
-        const segments = document.querySelectorAll('.segment');
-        segments.forEach((segment, index) => {
-            segment.style.fill = selectedSegments.includes(index) ? 'red' : '#FFFFFF';
-        });
-    }
-
-    function showSuccessModal(message) {
-        document.getElementById('successMessage').textContent = message;
-        document.getElementById('successModal').style.display = 'block';
-    }
-
-    function showErrorModal(message) {
-        document.getElementById('errorMessage').textContent = message;
-        document.getElementById('errorModal').style.display = 'block';
-    }
-
-    function toggleTextBox(checkboxId, textBoxId) {
-        const checkBox = document.getElementById(checkboxId);
-        const textBox = document.getElementById(textBoxId);
-        textBox.style.display = checkBox.checked ? 'block' : 'none';
-    }
-
-    function toggleDatePicker(checkboxId, datePickerId) {
-        const checkBox = document.getElementById(checkboxId);
-        const datePicker = document.getElementById(datePickerId);
-        datePicker.style.display = checkBox.checked ? 'block' : 'none';
-    }
-
-    function saveMedicalHistory() {
-        const formData = new FormData(document.getElementById('medicalHistoryForm'));
-        const data = {};
-        formData.forEach((value, key) => {
-            data[key] = (value === 'on' || value === 'true') ? true : (value === 'false' ? false : value);
-        });
-
-        data['patient_id'] = {{ patient.patient_id }};  // Ensure you have the patient_id
-
-        fetch('{{ url_for("save_medical_history") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showSuccessModal('Medical history saved successfully.');
-            } else {
-                showErrorModal('Failed to save medical history: ' + data.error);
-            }
-        });
-    }
-
-    function saveDiagnosis() {
-        const formData = new FormData(document.getElementById('diagnosisForm'));
-        const data = {};
-        formData.forEach((value, key) => {
-            data[key] = value;
-        });
-        data['patient_id'] = {{ patient.patient_id }};
-
-        fetch('{{ url_for("save_diagnosis") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showSuccessModal('Diagnosis saved successfully.');
-            } else {
-                showErrorModal('Failed to save diagnosis: ' + data.error);
-            }
-        });
-    }
+    });
+}
 
 document.addEventListener('DOMContentLoaded', function () {
     const sidebar = document.getElementById('sidebar');
@@ -647,17 +841,68 @@ document.addEventListener('DOMContentLoaded', function () {
     {% endif %}
 });
 
-function toggleTextBox(checkboxId, textBoxId) {
-    const checkBox = document.getElementById(checkboxId);
-    const textBox = document.getElementById(textBoxId);
-    textBox.style.display = checkBox.checked ? 'block' : 'none';
+function addItem() {
+    const itemContainer = document.createElement('div');
+    itemContainer.className = 'item-row';
+
+    const itemDropdown = document.createElement('select');
+    itemDropdown.className = 'item-dropdown';
+    {% for item in items %}
+    const option = document.createElement('option');
+    option.value = "{{ item.id }}";
+    option.textContent = "{{ item.name }}";
+    itemDropdown.appendChild(option);
+    {% endfor %}
+
+    const itemQuantity = document.createElement('input');
+    itemQuantity.type = 'number';
+    itemQuantity.className = 'item-quantity';
+    itemQuantity.placeholder = 'Quantity Used';
+
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'remove-item-btn';
+    removeButton.textContent = 'Remove';
+    removeButton.onclick = function() {
+        removeItem(removeButton);
+    };
+
+    itemContainer.appendChild(itemDropdown);
+    itemContainer.appendChild(itemQuantity);
+    itemContainer.appendChild(removeButton);
+
+    document.getElementById('items-container').appendChild(itemContainer);
 }
 
-function toggleDatePicker(checkboxId, datePickerId) {
-    const checkBox = document.getElementById(checkboxId);
-    const datePicker = document.getElementById(datePickerId);
-    datePicker.style.display = checkBox.checked ? 'block' : 'none';
+function removeItem(button) {
+    button.parentElement.remove();
 }
+
+function redirectToBilling(patientId) {
+    window.location.href = `/generate_billing/${patientId}`;
+}
+
+function clickMe() {
+    let input = document.getElementById("popup");
+
+    if (input.style.display == "none") {
+        input.style.display = "block";
+    } else {
+        input.style.display = "none";
+    }
+}
+
+document.querySelectorAll('.legend input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', function () {
+        const checkedBoxes = document.querySelectorAll('.legend input[type="checkbox"]:checked');
+        const preview = document.getElementById('preview');
+
+        if (checkedBoxes.length > 4) {
+            this.checked = false;
+            return;
+        }
+    });
+});
 
 </script>
     </div>

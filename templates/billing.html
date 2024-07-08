@@ -5,6 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Billing</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* Add custom styles for the billing page */
+        .billing-container {
+            background-color: #5D2E26;
+            color: #f3edea;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .billing-container h2,
+        .billing-container h3 {
+            margin-bottom: 20px;
+        }
+
+        .billing-container table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .billing-container table th,
+        .billing-container table td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        .billing-container table th {
+            background-color: #7f4a37;
+        }
+
+        .billing-container table td {
+            background-color: #a96b58;
+        }
+
+        .billing-container .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .billing-container .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .billing-container .form-group input,
+        .billing-container .form-group select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .billing-container button {
+            padding: 10px 20px;
+            background-color: #8B4513;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .billing-container button:hover {
+            background-color: #D2691E;
+        }
+    </style>
 </head>
 <body>
     <div class="sidebar-tab" id="sidebarTab">☰</div>
@@ -19,13 +88,14 @@
                 <div class="dropdown-content">
                     <a href="{{ url_for('patients') }}">Patient Records</a>
                     <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                    <a href="#">Treatment Records</a>
+                    <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
                 </div>
             </li>
             <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
-            <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <li><a href="{{ url_for('payments') }}">Payments</a></li>
+            {% if patient is defined %}
+            <li><a href="{{ url_for('generate_billing', patient_id=patient['patient_id']) }}">Billing and Payments</a></li>
+            {% endif %}
             <br><br><br><br><br><br>
             <li><a href="{{ url_for('help') }}">Help</a></li>
             <li><a href="{{ url_for('about') }}">About</a></li>
@@ -33,26 +103,25 @@
         </ul>
     </div>
     <div class="main-content">
-        <div class="container">
-            <h1>Billing for {{ billing['date_of_billing'] }}</h1>
-            <h2>Patient: {{ patient['first_name'] }} {{ patient['last_name'] }}</h2>
-            
+        <div class="billing-container">
+            <h2>Billing for {{ billing['date_of_billing'] }}</h2>
+            <h3>Patient: {{ patient['first_name'] }} {{ patient['last_name'] }}</h3>
+
+            <h3>Conditions and Treatments</h3>
             <table>
                 <thead>
                     <tr>
                         <th>Tooth Number</th>
                         <th>Condition</th>
-                        <th>Treatment</th>
                         <th>Cost</th>
                         <th>Date of Diagnosis</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for diagnosis in diagnoses %}
+                    {% for diagnosis in diagnosis %}
                     <tr>
                         <td>{{ diagnosis['tooth_number'] }}</td>
                         <td>{{ diagnosis['condition'] }}</td>
-                        <td>{{ diagnosis['treatment'] }}</td>
                         <td>₱{{ diagnosis['cost'] }}</td>
                         <td>{{ diagnosis['date_of_diagnosis'] }}</td>
                     </tr>
@@ -60,9 +129,29 @@
                 </tbody>
             </table>
 
+            <h3>Items Used</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Unit</th>
+                        <th>Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items_used %}
+                    <tr>
+                        <td>{{ item['item_name'] }}</td>
+                        <td>{{ item['unit'] }}</td>
+                        <td>{{ item['quantity'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
             <h3>Total Cost: ₱{{ billing['total_cost'] }}</h3>
-            
-            <button onclick="window.print()">Print Bill</button>
+
+            <button id="printBillButton">Print Bill</button>
         </div>
     </div>
 
@@ -99,6 +188,12 @@
                 document.addEventListener('click', function () {
                     content.classList.remove('show');
                 });
+            });
+
+            const printBillButton = document.getElementById('printBillButton');
+            printBillButton.addEventListener('click', function () {
+                window.print();
+                window.location.href = "{{ url_for('payments', total_cost=billing['total_cost']) }}";
             });
         });
     </script>

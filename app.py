@@ -2,6 +2,7 @@ import sqlite3
 import smtplib
 import random
 import string
+from datetime import date
 from datetime import datetime, timedelta, timezone
 from email.mime.application import MIMEApplication
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
@@ -1753,47 +1754,111 @@ def verify_otp_for_password_reset():
         return redirect(url_for('verify_otp_for_password_reset'))
     return render_template('verify_otp.html')
 
+
 @app.route('/generate_billing/<int:patient_id>')
-@role_required([1, 2])  # Both admin and user can access
 def generate_billing(patient_id):
     conn = get_db_connection()
+    patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
+    diagnoses = conn.execute('SELECT * FROM diagnosis WHERE patient_id = ?', (patient_id,)).fetchall()
+    items_used = conn.execute('SELECT * FROM items_used WHERE patient_id = ?', (patient_id,)).fetchall()
 
-    # Fetch diagnosis details for the patient
-    diagnoses = conn.execute('''
-        SELECT * FROM diagnosis WHERE patient_id = ?
-    ''', (patient_id,)).fetchall()
+    total_cost = sum([diagnosis['cost'] for diagnosis in diagnoses]) + sum([item['cost'] for item in items_used])
 
-    # Calculate total cost
-    total_cost = sum(d['cost'] for d in diagnoses)
-
-    # Insert billing record
-    conn.execute('''
-        INSERT INTO billing (patient_id, total_cost, date_of_billing)
-        VALUES (?, ?, DATE('now'))
-    ''', (patient_id, total_cost))
-    conn.commit()
-
-    # Fetch the latest billing record
-    billing = conn.execute('''
-        SELECT * FROM billing WHERE patient_id = ? ORDER BY date_of_billing DESC LIMIT 1
-    ''', (patient_id,)).fetchone()
-
-    # Fetch patient details
-    patient = conn.execute('''
-        SELECT * FROM patients WHERE patient_id = ?
-    ''', (patient_id,)).fetchone()
+    billing = {
+        'date_of_billing': date.today().strftime('%Y-%m-%d'),
+        'total_cost': total_cost
+    }
 
     conn.close()
+    return render_template('billing.html', patient=patient, diagnosis=diagnoses, items_used=items_used, billing=billing)
 
-    # Log the activity
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_activity(f'{user_number} {current_time}: Generated billing for patient ID {patient_id} with total cost {total_cost}.')
+@app.route('/conditions', methods=['POST'])
+def save_conditions():
+    data = request.json
+    tooth_number = data['tooth_number']
+    conditions = data['conditions']
+    patient_id = data['patient_id']
 
-    return render_template('billing.html', diagnoses=diagnoses, billing=billing, patient=patient)
+    conn = sqlite3.connect('DMSDB.db')
+    c = conn.cursor()
+
+    try:
+        for condition in conditions:
+            c.execute('''INSERT INTO conditions (tooth_number, condition_code, cost, patient_id)
+                         VALUES (?, ?, ?, ?)''', (tooth_number, condition['code'], condition['cost'], patient_id))
+        conn.commit()
+        response = {'success': True}
+    except sqlite3.Error as e:
+        conn.rollback()
+        response = {'success': False, 'error': str(e)}
+    finally:
+        conn.close()
+
+    return jsonify(response)
+
+@app.route('/conditions', methods=['GET'])
+def get_conditions():
+    patient_id = request.args.get('patient_id')
+
+    conn = sqlite3.connect('DMSDB.db')
+    c = conn.cursor()
+    c.execute('''SELECT tooth_number, condition_code FROM conditions WHERE patient_id = ?''', (patient_id,))
+    rows = c.fetchall()
+    conn.close()
+
+    conditions = [{'tooth_number': row[0], 'condition_code': row[1]} for row in rows]
+    return jsonify(conditions)
+
+@app.route('/billing', methods=['POST'])
+def save_billing():
+    data = request.json
+    patient_id = data['patient_id']
+    tooth_number = data['tooth_number']
+    condition = data['condition']
+    cost = data['cost']
+
+    conn = sqlite3.connect('DMSDB.db')
+    c = conn.cursor()
+
+    try:
+        c.execute('''INSERT INTO billing (patient_id, tooth_number, condition, cost)
+                     VALUES (?, ?, ?, ?)''', (patient_id, tooth_number, condition, cost))
+        conn.commit()
+        response = {'success': True}
+    except sqlite3.Error as e:
+        conn.rollback()
+        response = {'success': False, 'error': str(e)}
+    finally:
+        conn.close()
+
+    return jsonify(response)
+
+@app.route('/billing', methods=['POST'])
+def update_billing():
+    data = request.get_json()
+    patient_id = data['patient_id']
+    tooth_number = data['tooth_number']
+    condition = data['condition']
+    cost = data['cost']
+
+    conn = get_db_connection()
+    conn.execute(
+        'INSERT INTO diagnosis (patient_id, tooth_number, condition, cost, date_of_diagnosis) VALUES (?, ?, ?, ?, ?)',
+        (patient_id, tooth_number, condition, cost, date.today().strftime('%Y-%m-%d'))
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
 
 
-    return render_template('billing.html', diagnoses=diagnoses, billing=billing)
+@app.route('/add_items')
+def add_items():
+    conn = get_db_connection()
+    items = conn.execute('SELECT id, name FROM items').fetchall()
+    conn.close()
+    return render_template('add_items.html', items=items)
+
 
 #INVENTORY
 
@@ -2118,6 +2183,51 @@ def update_stock_quantity():
         return jsonify({'success': False, 'message': str(e)})
     finally:
         conn.close()
+
+@app.route('/generate_consent_form/<int:patient_id>')
+@role_required([1, 2])  # Both admin and user can access
+def generate_consent_form(patient_id):
+    conn = get_db_connection()
+    patient = conn.execute('SELECT first_name, middle_name, last_name FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
+    conn.close()
+
+    if not patient:
+        return 'Patient not found', 404
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    p.setFont("Helvetica", 12)
+    p.drawCentredString(width / 2, height - 50, "Dra. Lorena Timola – Beltran Dental Clinic")
+    p.drawCentredString(width / 2, height - 70, "COSMETIC DENTISTRY/ORTHODONTIC")
+    p.drawCentredString(width / 2, height - 90, "2561 Brookside Drive Ortigas Ave. Extn. Brookside Hills Subd. Cainta, Rizal")
+    p.drawCentredString(width / 2, height - 110, "Tel no: 941-3833 Cell no.: 0917-732-4523")
+
+    p.drawString(30, height - 150, "___________________________________________________________________________________")
+
+    p.setFont("Helvetica-Bold", 16)  # Set the font to bold and size to 16
+    p.drawCentredString(width / 2, height - 190, "CONSENT FORM")
+
+    p.setFont("Helvetica", 12)
+    p.drawString(30, height - 260, f"Date: {datetime.now().strftime('%Y-%m-%d')}")
+
+    patient_name = f"{patient['last_name']}, {patient['first_name']} {patient['middle_name']}"
+    p.drawString(30, height - 370, f"I {patient_name}, hereby consent to the")
+    p.drawString(30, height - 390, "performance upon myself of the recommended operations and/or treatments that may")
+    p.drawString(30, height - 410, "be considered necessary to restore my oral and dental health. This consent is given")
+    p.drawString(30, height - 430, "freely and voluntarily and whatever the result of any intervention or treatment may be, I")
+    p.drawString(30, height - 450, "responsibility, be it known, further, that I am willing to pay for all services rendered to")
+    p.drawString(30, height - 470, "me/or my family.")
+
+    p.drawString(30, height - 530, "_______________________________________________")
+    p.drawString(30, height - 550, "Signature of Patient and/or person responsible for the payment")
+
+    p.showPage()
+    p.save()
+
+    buffer.seek(0)
+    return send_file(buffer, as_attachment=True, download_name='Consent_Form.pdf', mimetype='application/pdf')
 
 
 if __name__ == '__main__':

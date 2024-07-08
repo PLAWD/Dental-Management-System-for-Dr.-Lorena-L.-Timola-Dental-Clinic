@@ -793,7 +793,64 @@
                 }
             });
         }
+function loadInventoryItems() {
+    fetch('/get_inventory_items')
+        .then(response => response.json())
+        .then(data => {
+            const itemSelect = document.getElementById('item');
+            data.items.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.item_id;
+                option.textContent = item.name;
+                itemSelect.appendChild(option);
+            });
+        });
+}
 
+function addItem() {
+    const formData = {
+        item_id: document.getElementById('item').value,
+        units: document.getElementById('units').value
+    };
+
+    fetch('/add_billing_item', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Item added successfully.');
+        } else {
+            alert('Failed to add item: ' + data.error);
+        }
+    });
+}
+
+function removeItem() {
+    const formData = {
+        item_id: document.getElementById('item').value
+    };
+
+    fetch('/remove_billing_item', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Item removed successfully.');
+        } else {
+            alert('Failed to remove item: ' + data.error);
+        }
+    });
+}
     </script>
 </body>
 </html>
