@@ -1666,6 +1666,7 @@ header h1 {
     display: block;
     margin: 10px 0;
     width: 95%;
+    color: #593C3C;
 }
 
 form button {
@@ -2334,7 +2335,7 @@ Specific styles for user
 .users-page {
     font-family: 'Arial', sans-serif;
     background-color: #fffaf0;
-    color: #fffaf0;
+    color: #593C3C;
 }
 
 .header {
