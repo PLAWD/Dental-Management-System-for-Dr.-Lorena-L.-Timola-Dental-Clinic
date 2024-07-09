@@ -862,14 +862,14 @@ def save_diagnosis():
         cur = conn.cursor()
 
         # Check if the patient already has a diagnosis entry
-        query = "SELECT diag_id FROM diagnosis WHERE patient_id = ?"
+        query = "SELECT diagnosis_id FROM  WHERE patient_id = ?"
         cur.execute(query, (data['patient_id'],))
         result = cur.fetchone()
 
         if result:
             # Update existing diagnosis record
             query = """
-                UPDATE diagnosis
+                UPDATE diagnoses
                 SET gingivitis = ?, early_periodontitis = ?, moderate_periodontitis = ?, advanced_periodontitis = ?,
                     occlusion = ?, orthodontic = ?, stayplate = ?, appliance_others = ?, clenching = ?, clicking = ?,
                     trismus = ?, muscle_spasm = ?, panoramic = ?, cephalometric = ?, periapical_no = ?, occlusal_no = ?
@@ -886,7 +886,7 @@ def save_diagnosis():
         else:
             # Insert new diagnosis record
             query = """
-                INSERT INTO diagnosis (
+                INSERT INTO diagnoses (
                     patient_id, gingivitis, early_periodontitis, moderate_periodontitis, advanced_periodontitis,
                     occlusion, orthodontic, stayplate, appliance_others, clenching, clicking, trismus, muscle_spasm,
                     panoramic, cephalometric, periapical_no, occlusal_no
@@ -915,6 +915,7 @@ def save_diagnosis():
     finally:
         cur.close()
         conn.close()
+
 
 @app.route('/update_patient', methods=['POST'])
 def update_patient():
@@ -989,9 +990,14 @@ def intraoral_exams(patient_id):
     patient['age'] = age
 
     intraoral_exams = conn.execute('SELECT * FROM intraoral_exams WHERE patient_id = ?', (patient_id,)).fetchall()
+
+    # Fetch items from the Item table
+    items = conn.execute('SELECT item_id, item_name FROM Item').fetchall()
+    items = [dict(item) for item in items] if items else []
+
     conn.close()
-    log_activity(f'Viewed intraoral exams for patient ID {patient_id}')
-    return render_template('intraoral_exam.html', patient=patient, intraoral_exams=intraoral_exams)
+    return render_template('intraoral_exam.html', patient=patient, intraoral_exams=intraoral_exams, items=items)
+
 
 @app.route('/logout')
 def logout():
@@ -1521,6 +1527,31 @@ def appointment_records():
                            dentists=dentists,
                            statuses=statuses)
 
+@app.route('/submit_item', methods=['POST'])
+def submit_item():
+    try:
+        data = request.get_json()
+        item_id = data.get('item_id')
+        quantity = data.get('quantity')
+        patient_id = data.get('patient_id')
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Insert into items_used table
+        cursor.execute('''
+            INSERT INTO items_used (patient_id, quantity, item_id)
+            VALUES (?, ?, ?)
+        ''', (patient_id, quantity, item_id))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
 @app.route('/submit_appointment', methods=['POST'])
 def submit_appointment():
     data = request.json  # Ensure JSON data is used
@@ -1768,22 +1799,33 @@ def verify_otp_for_password_reset():
     return render_template('verify_otp.html')
 
 
-@app.route('/generate_billing/<int:patient_id>')
+@app.route('/generate_billing/<int:patient_id>', methods=['GET'])
 def generate_billing(patient_id):
     conn = get_db_connection()
-    patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
-    diagnoses = conn.execute('SELECT * FROM diagnosis WHERE patient_id = ?', (patient_id,)).fetchall()
-    items_used = conn.execute('SELECT * FROM items_used WHERE patient_id = ?', (patient_id,)).fetchall()
+    cursor = conn.cursor()
 
-    total_cost = sum([diagnosis['cost'] for diagnosis in diagnoses]) + sum([item['cost'] for item in items_used])
+    # Fetch diagnoses and calculate total cost
+    cursor.execute('''
+        SELECT tooth_number, condition_code, cost, date_of_diagnosis
+        FROM conditions
+        WHERE patient_id = ?
+    ''', (patient_id,))
+    diagnoses = cursor.fetchall()
 
-    billing = {
-        'date_of_billing': date.today().strftime('%Y-%m-%d'),
-        'total_cost': total_cost
-    }
+    # Fetch items used and their costs
+    cursor.execute('''
+        SELECT iu.tooth_number, i.item_name, i.unit, iu.quantity, i.cost, iu.date_of_diagnosis
+        FROM items_used iu
+        JOIN Items i ON iu.item_id = i.item_id
+        WHERE iu.patient_id = ?
+    ''', (patient_id,))
+    items_used = cursor.fetchall()
+
+    total_cost = sum([diagnosis['cost'] for diagnosis in diagnoses]) + sum([item['cost'] * item['quantity'] for item in items_used])
 
     conn.close()
-    return render_template('billing.html', patient=patient, diagnosis=diagnoses, items_used=items_used, billing=billing)
+
+    return render_template('billing.html', patient_id=patient_id, diagnoses=diagnoses, items_used=items_used, total_cost=total_cost)
 
 @app.route('/conditions', methods=['POST'])
 def add_condition():

@@ -230,19 +230,19 @@
 <div id="add-items" class="tab-content" style="display:none;">
     <!-- Add items content -->
     <div class="exam-details">
-        <h3>Add Items</h3>
-        <div id="items-container">
-            <div class="item-row">
-                <select class="item-dropdown">
-                    {% for item in items %}
-                    <option value="{{ item.id }}">{{ item.name }}</option>
-                    {% endfor %}
-                </select>
-                <input type="number" class="item-quantity" placeholder="Quantity Used">
-                <button type="button" class="remove-item-btn" onclick="removeItem(this)">Remove</button>
-            </div>
+        <h3>Add Items Used</h3>
+        <div class="form-group">
+            <select id="item-dropdown" class="item-dropdown">
+                {% for item in items %}
+                <option value="{{ item.item_id }}">{{ item.item_name }}</option>
+                {% endfor %}
+            </select>
+            <input type="number" id="item-quantity" class="item-quantity" placeholder="Quantity Used">
+            <button type="button" onclick="submitItem()">Submit Item</button>
         </div>
-        <button type="button" onclick="addItem()">Add Item</button>
+
+        <h3>Items Used:</h3>
+        <ul id="used-items-list" class="item-used-list"></ul>
     </div>
 </div>
 
@@ -808,7 +808,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const btn = dropdown.querySelector('.ellipsis-btn');
         const content = dropdown.querySelector('.dropdown-content');
 
-
         btn.addEventListener('click', function (event) {
             event.stopPropagation();
             content.classList.toggle('show');
@@ -835,42 +834,61 @@ document.addEventListener('DOMContentLoaded', function () {
     {% endif %}
 });
 
-function addItem() {
-    const itemContainer = document.createElement('div');
-    itemContainer.className = 'item-row';
+        const items = {{ items | tojson | safe }};
+        const patientId = {{ patient.patient_id }};
 
-    const itemDropdown = document.createElement('select');
-    itemDropdown.className = 'item-dropdown';
-    {% for item in items %}
-    const option = document.createElement('option');
-    option.value = "{{ item.id }}";
-    option.textContent = "{{ item.name }}";
-    itemDropdown.appendChild(option);
-    {% endfor %}
+        function submitItem() {
+            const itemDropdown = document.getElementById('item-dropdown');
+            const itemQuantity = document.getElementById('item-quantity');
 
-    const itemQuantity = document.createElement('input');
-    itemQuantity.type = 'number';
-    itemQuantity.className = 'item-quantity';
-    itemQuantity.placeholder = 'Quantity Used';
+            const itemId = itemDropdown.value;
+            const quantity = itemQuantity.value;
+            const itemName = itemDropdown.options[itemDropdown.selectedIndex].text;
 
-    const removeButton = document.createElement('button');
-    removeButton.type = 'button';
-    removeButton.className = 'remove-item-btn';
-    removeButton.textContent = 'Remove';
-    removeButton.onclick = function() {
-        removeItem(removeButton);
-    };
+            if (!quantity || quantity <= 0) {
+                alert('Please enter a valid quantity');
+                return;
+            }
 
-    itemContainer.appendChild(itemDropdown);
-    itemContainer.appendChild(itemQuantity);
-    itemContainer.appendChild(removeButton);
+            const itemData = {
+                item_id: itemId,
+                quantity: quantity,
+                patient_id: patientId
+            };
 
-    document.getElementById('items-container').appendChild(itemContainer);
-}
+            fetch('/submit_item', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(itemData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addItemToList(itemName, quantity);
+                    itemDropdown.value = '';
+                    itemQuantity.value = '';
+                } else {
+                    alert('Failed to submit item: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to submit item: ' + error);
+            });
+        }
 
-function removeItem(button) {
-    button.parentElement.remove();
-}
+        function addItemToList(itemName, quantity) {
+            const usedItemsList = document.getElementById('used-items-list');
+            const listItem = document.createElement('li');
+            listItem.textContent = `${itemName} x${quantity}`;
+            usedItemsList.appendChild(listItem);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Add event listeners for tabs and other functionalities
+        });
 
 function redirectToBilling(patientId) {
     window.location.href = `/generate_billing/${patientId}`;
@@ -897,7 +915,6 @@ document.querySelectorAll('.legend input[type="checkbox"]').forEach(checkbox => 
         }
     });
 });
-
 </script>
     </div>
 </body>
