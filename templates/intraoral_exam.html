@@ -73,6 +73,24 @@
             border: 1px solid #ccc;
             border-radius: 5px;
         }
+        .item-used-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .item-used-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+        }
+        .delete-button {
+            background-color: transparent;
+            border: none;
+            color: #ff0000;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 5px;
+        }
     </style>
 </head>
 <body class="intraoral-page">
@@ -95,12 +113,7 @@
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
             <li><a href="{{ url_for('payments') }}">Payments</a></li>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
+            <br><br><br><br><br><br>
             <li><a href="{{ url_for('help') }}">Help</a></li>
             <li><a href="{{ url_for('about') }}">About</a></li>
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
@@ -237,11 +250,12 @@
                 {% endfor %}
             </select>
             <input type="number" id="item-quantity" class="item-quantity" placeholder="Quantity Used">
-            <button type="button" onclick="submitItem()">Submit Item</button>
+            <button type="button" onclick="addItem()">Add Item</button>
         </div>
 
         <h3>Items Used:</h3>
         <ul id="used-items-list" class="item-used-list"></ul>
+        <button type="button" onclick="submitItems()">Submit Items</button>
     </div>
 </div>
 
@@ -518,6 +532,8 @@ function closeModal(modalId) {
 function saveConditions() {
     const checkboxes = document.querySelectorAll('.condition-checkbox');
     let selectedCodes = [];
+    const currentDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+
     checkboxes.forEach((checkbox) => {
         if (checkbox.checked) {
             selectedCodes.push({
@@ -535,7 +551,8 @@ function saveConditions() {
         body: JSON.stringify({
             tooth_number: toothNumber,
             condition_code: selectedCodes.map(c => c.code).join(','),
-            patient_id: {{ patient.patient_id }}
+            patient_id: {{ patient.patient_id }},
+            date_of_diagnosis: currentDate
         })
     })
     .then(response => response.json())
@@ -543,11 +560,13 @@ function saveConditions() {
         if (data.success) {
             displaySavedConditions(toothNumber, selectedCodes.map(c => c.code));
             closeModal('conditionModal');
+            showSuccessModal('Conditions saved successfully.');
         } else {
-            alert('Failed to save conditions');
+            showErrorModal('Failed to save conditions');
         }
     });
 }
+
 
 function displaySavedConditions(toothNumber, selectedCodes) {
     const toothBox = document.querySelector(`.tooth-box[data-tooth-number="${toothNumber}"]`);
@@ -776,61 +795,101 @@ document.addEventListener('DOMContentLoaded', function () {
     {% endif %}
 });
 
-        const items = {{ items | tojson | safe }};
-        const patientId = {{ patient.patient_id }};
+const items = {{ items | tojson | safe }};
+const patientId = {{ patient.patient_id }};
 
-        function submitItem() {
-            const itemDropdown = document.getElementById('item-dropdown');
-            const itemQuantity = document.getElementById('item-quantity');
+function addItem() {
+    const itemDropdown = document.getElementById('item-dropdown');
+    const itemQuantity = document.getElementById('item-quantity');
 
-            const itemId = itemDropdown.value;
-            const quantity = itemQuantity.value;
-            const itemName = itemDropdown.options[itemDropdown.selectedIndex].text;
+    const itemId = itemDropdown.value;
+    const quantity = itemQuantity.value;
+    const itemName = itemDropdown.options[itemDropdown.selectedIndex].text;
 
-            if (!quantity || quantity <= 0) {
-                alert('Please enter a valid quantity');
-                return;
-            }
+    if (!quantity || quantity <= 0) {
+        alert('Please enter a valid quantity');
+        return;
+    }
 
-            const itemData = {
-                item_id: itemId,
-                quantity: quantity,
-                patient_id: patientId
-            };
+    const itemData = {
+        item_id: itemId,
+        quantity: quantity,
+        patient_id: patientId
+    };
 
-            fetch('/submit_item', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(itemData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    addItemToList(itemName, quantity);
-                    itemDropdown.value = '';
-                    itemQuantity.value = '';
-                } else {
-                    alert('Failed to submit item: ' + data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to submit item: ' + error);
-            });
+    fetch('/submit_item', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(itemData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            addItemToList(itemName, quantity);
+            itemDropdown.value = '';
+            itemQuantity.value = '';
+        } else {
+            alert('Failed to submit item: ' + data.error);
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to submit item: ' + error);
+    });
+}
 
-        function addItemToList(itemName, quantity) {
-            const usedItemsList = document.getElementById('used-items-list');
-            const listItem = document.createElement('li');
-            listItem.textContent = `${itemName} x${quantity}`;
-            usedItemsList.appendChild(listItem);
+function addItemToList(itemName, quantity) {
+    const usedItemsList = document.getElementById('used-items-list');
+    const listItem = document.createElement('li');
+    listItem.textContent = `${itemName} x${quantity}`;
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'x';
+    deleteButton.className = 'delete-button';
+    deleteButton.onclick = function () {
+        usedItemsList.removeChild(listItem);
+    };
+
+    listItem.appendChild(deleteButton);
+    usedItemsList.appendChild(listItem);
+}
+
+function submitItems() {
+    const items = [];
+    const usedItemsList = document.getElementById('used-items-list').children;
+
+    for (const item of usedItemsList) {
+        const [itemName, quantity] = item.textContent.split(' x');
+        const itemId = Array.from(document.getElementById('item-dropdown').options).find(option => option.text === itemName).value;
+        items.push({ item_id: itemId, quantity: parseInt(quantity), patient_id: patientId });
+    }
+
+    fetch('/submit_items', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ items })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccessModal('Items submitted successfully.');
+        } else {
+            showErrorModal('Failed to submit items: ' + data.error);
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showErrorModal('Failed to submit items: ' + error);
+    });
+}
 
-        document.addEventListener('DOMContentLoaded', function () {
-            // Add event listeners for tabs and other functionalities
-        });
+document.addEventListener('DOMContentLoaded', function () {
+    // Add event listeners for tabs and other functionalities
+});
 
 function redirectToBilling(patientId) {
     window.location.href = `/generate_billing/${patientId}`;

@@ -26,7 +26,7 @@
         }
 
         .billing-container table th, .billing-container table td {
-            padding: 10px; /* Reduced padding */
+            padding: 10px;
             text-align: center;
         }
 
@@ -53,9 +53,9 @@
         }
 
         .costbox {
-            width: 60px; /* Reduced width */
-            padding: 5px; /* Reduced padding */
-            font-size: 14px; /* Reduced font size */
+            width: 60px;
+            padding: 5px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -78,13 +78,7 @@
             <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <li><a href="{{ url_for('payments') }}">Payments</a></li>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
+            <br><br><br><br><br><br>
             <li><a href="{{ url_for('help') }}">Help</a></li>
             <li><a href="{{ url_for('about') }}">About</a></li>
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
@@ -105,14 +99,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for diagnosis in diagnoses if diagnosis['date_of_diagnosis'] == current_date %}
-                    <tr>
-                        <td>{{ diagnosis['tooth_number'] }}</td>
-                        <td>{{ diagnosis['condition_code'] }}</td>
-                        <td>
-                            <input type="number" name="diagnosis_cost_{{ diagnosis['tooth_number'] }}_{{ diagnosis['condition_code'] }}" value="{{ diagnosis['cost'] }}" step="0.01" min="0" required class="costbox">
-                        </td>
-                    </tr>
+                    {% for diagnosis in diagnoses %}
+                        {% if diagnosis['date_of_diagnosis'] == current_date %}
+                        <tr>
+                            <td>{{ diagnosis['tooth_number'] }}</td>
+                            <td>{{ diagnosis['condition_code'] }}</td>
+                            <td>
+                                <input type="number" name="diagnosis_cost_{{ diagnosis['tooth_number'] }}_{{ diagnosis['condition_code'] }}" value="{{ diagnosis['cost'] }}" step="0.01" min="0" required class="costbox">
+                            </td>
+                        </tr>
+                        {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
@@ -121,43 +117,35 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Tooth Number</th>
                         <th>Item</th>
-                        <th>Unit</th>
                         <th>Quantity</th>
-                        <th>Cost (₱)</th>
-                        <th>Date of Diagnosis</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in items_used if item['date_of_diagnosis'] == current_date %}
-                    <tr>
-                        <td>{{ item['tooth_number'] }}</td>
-                        <td>{{ item['item_name'] }}</td>
-                        <td>{{ item['unit'] }}</td>
-                        <td>{{ item['quantity'] }}</td>
-                        <td>
-                            <input type="number" name="item_cost_{{ item['tooth_number'] }}_{{ item['item_name'] }}" value="{{ item['cost'] }}" step="0.01" min="0" required class="costbox">
-                        </td>
-                        <td>{{ item['date_of_diagnosis'] }}</td>
-                    </tr>
+                    {% for item in items_used %}
+                        {% if item['date_of_diagnosis'] == current_date %}
+                        <tr>
+                            <td>{{ item['item_name'] }}</td>
+                            <td>{{ item['quantity'] }}</td>
+                        </tr>
+                        {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
 
             <h3>Total Cost: ₱{{ total_cost }}</h3>
 
-            <button type="submit">Update Costs</button>
+            <button type="submit">Apply Costs</button>
         </form>
 
-        <button id="printBillButton">Print Bill</button>
+        <button id="proceedToPaymentButton">Proceed to Payment</button>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const printBillButton = document.getElementById('printBillButton');
-            printBillButton.addEventListener('click', function () {
-                window.print();
+            const proceedToPaymentButton = document.getElementById('proceedToPaymentButton');
+            proceedToPaymentButton.addEventListener('click', function () {
+                window.location.href = '{{ url_for("payments", patient_id=patient_id) }}';
             });
 
             const sidebar = document.getElementById('sidebar');

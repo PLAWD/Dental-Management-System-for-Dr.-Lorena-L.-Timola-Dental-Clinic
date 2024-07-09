@@ -26,13 +26,7 @@
             <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <li><a href="{{ url_for('payments') }}">Payments</a></li>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
+            <br><br><br><br><br><br>
             <li><a href="{{ url_for('help') }}">Help</a></li>
             <li><a href="{{ url_for('about') }}">About</a></li>
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
@@ -49,12 +43,9 @@
             <h2 class="payments-header">Process Payment</h2>
             <form id="paymentForm" method="POST">
                 <div class="form-group">
-                    <label for="patient">Select Patient:</label>
-                    <select id="patient" name="patient">
-                        {% for patient in patients %}
-                        <option value="{{ patient.patient_id }}">{{ patient.last_name }}, {{ patient.first_name }} {{ patient.middle_name }}</option>
-                        {% endfor %}
-                    </select>
+                    <label for="patient">Patient:</label>
+                    <p class="patient-name">{{ patient_name }}</p>
+                    <input type="hidden" id="patient" name="patient" value="{{ patient_id }}">
                 </div>
                 <div class="form-group">
                     <label for="payment_method">Payment Method:</label>
@@ -72,7 +63,7 @@
                 </div>
                 <div id="ewalletPayment" class="payment-details" style="display:none;">
                     <p>Scan the QR code to pay:</p>
-                    <img src="static/images/gkas.png" alt="QR Code">
+                    <img src="{{ url_for('static', filename='images/gkas.png') }}" alt="QR Code">
                     <label for="referenceNumber">Reference Number:</label>
                     <input type="text" id="referenceNumber" name="reference_number">
                 </div>

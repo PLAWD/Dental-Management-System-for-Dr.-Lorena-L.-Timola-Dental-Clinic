@@ -1162,15 +1162,31 @@ def generate_report(report_type):
 
     return send_file(buffer, as_attachment=True, download_name=filename)
 
-@app.route('/payments')
-def payments():
+@app.route('/payments/<int:patient_id>', methods=['GET'])
+def payments(patient_id):
     conn = get_db_connection()
-    patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
+    cursor = conn.cursor()
+
+    # Fetch patient details
+    cursor.execute('SELECT first_name, middle_name, last_name FROM patients WHERE patient_id = ?', (patient_id,))
+    patient = cursor.fetchone()
+    if not patient:
+        conn.close()
+        flash(f'Patient with ID {patient_id} not found.', 'error')
+        return redirect(url_for('dashboard'))
+
+    patient_name = f"{patient['first_name']} {patient['middle_name']} {patient['last_name']}"
+
+    # Fetch other necessary data here, if needed
+
     conn.close()
+
     user_number = session.get('user_number')
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_activity(f'{user_number} {current_time}: Accessed payments page')
-    return render_template('payments.html', patients=patients)
+    log_activity(f'{user_number} {current_time}: Accessed payments page for patient {patient_name}')
+
+    return render_template('payments.html', patient_name=patient_name, patient_id=patient_id)
+
 
 @app.route('/process_payment', methods=['POST'])
 def process_payment():
@@ -1538,6 +1554,7 @@ def appointment_records():
                            dentists=dentists,
                            statuses=statuses)
 
+
 @app.route('/submit_item', methods=['POST'])
 def submit_item():
     try:
@@ -1546,14 +1563,17 @@ def submit_item():
         quantity = data.get('quantity')
         patient_id = data.get('patient_id')
 
+        # Get the current local date
+        current_date = datetime.now().strftime('%Y-%m-%d')
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
         # Insert into items_used table
         cursor.execute('''
-            INSERT INTO items_used (patient_id, quantity, item_id)
-            VALUES (?, ?, ?)
-        ''', (patient_id, quantity, item_id))
+            INSERT INTO items_used (patient_id, quantity, item_id, date_of_diagnosis)
+            VALUES (?, ?, ?, ?)
+        ''', (patient_id, quantity, item_id, current_date))
 
         conn.commit()
         conn.close()
@@ -1561,7 +1581,6 @@ def submit_item():
         return jsonify({'success': True}), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
-
 
 @app.route('/submit_appointment', methods=['POST'])
 def submit_appointment():
@@ -1813,31 +1832,41 @@ def verify_otp_for_password_reset():
 @app.route('/generate_billing/<int:patient_id>', methods=['GET'])
 def generate_billing(patient_id):
     conn = get_db_connection()
+    conn.row_factory = sqlite3.Row  # Enable dictionary cursor
     cursor = conn.cursor()
 
     # Fetch patient name
     cursor.execute('SELECT first_name, last_name FROM patients WHERE patient_id = ?', (patient_id,))
     patient = cursor.fetchone()
-    patient_name = f"{patient['first_name']} {patient['last_name']}"
+    if patient:
+        patient_name = f"{patient['first_name']} {patient['last_name']}"
+    else:
+        patient_name = "Unknown"
+        print(f"Patient with ID {patient_id} not found.")  # Debugging
 
-    # Fetch diagnoses and calculate total cost
+    # Fetch diagnoses
     cursor.execute('''
         SELECT tooth_number, condition_code, cost, date_of_diagnosis
         FROM conditions
         WHERE patient_id = ?
     ''', (patient_id,))
     diagnoses = cursor.fetchall()
+    print(f"Diagnoses: {diagnoses}")  # Debugging
 
-    # Fetch items used and their costs
+    # Fetch items used
     cursor.execute('''
-        SELECT iu.tooth_number, i.item_name, iu.quantity, i.cost, iu.date_of_diagnosis
+        SELECT i.item_name, iu.quantity, iu.date_of_diagnosis, i.cost
         FROM items_used iu
-        JOIN Items i ON iu.item_id = i.item_id
+        JOIN Item i ON iu.item_id = i.item_id
         WHERE iu.patient_id = ?
     ''', (patient_id,))
     items_used = cursor.fetchall()
+    print(f"Items Used Query: SELECT i.item_name, iu.quantity, iu.date_of_diagnosis, i.cost FROM items_used iu JOIN Item i ON iu.item_id = i.item_id WHERE iu.patient_id = {patient_id}")
+    print(f"Items Used: {items_used}")  # Debugging
 
-    total_cost = sum([d['cost'] for d in diagnoses if d['cost'] is not None]) + sum([item['cost'] * item['quantity'] for item in items_used if item['cost'] is not None])
+    # Calculate total cost
+    total_cost = sum(d['cost'] for d in diagnoses if d['cost']) + sum(item['quantity'] * item['cost'] for item in items_used if item['cost'])
+    print(f"Total Cost: {total_cost}")  # Debugging
 
     conn.close()
 
@@ -1885,26 +1914,30 @@ def update_billing(patient_id):
     return redirect(url_for('generate_billing', patient_id=patient_id))
 
 
-
 @app.route('/conditions', methods=['POST'])
-def add_condition():
-    data = request.json
-    required_fields = ['tooth_number', 'condition_code', 'patient_id']
-    if not all(field in data for field in required_fields):
-        return jsonify({'error': 'Missing fields'}), 400
+def save_conditions():
+    data = request.get_json()
+    tooth_number = data.get('tooth_number')
+    condition_code = data.get('condition_code')
+    patient_id = data.get('patient_id')
+    date_of_diagnosis = data.get('date_of_diagnosis',
+                                 datetime.now().strftime('%Y-%m-%d'))  # Use current date if not provided
 
-    with sqlite3.connect('instance/DMSDB.db') as conn:
-        cur = conn.cursor()
-        cur.execute("INSERT INTO conditions (tooth_number, condition_code, patient_id) VALUES (?, ?, ?)",
-                    (data['tooth_number'], data['condition_code'], data['patient_id']))
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            INSERT INTO conditions (tooth_number, condition_code, patient_id, date_of_diagnosis)
+            VALUES (?, ?, ?, ?)
+        ''', (tooth_number, condition_code, patient_id, date_of_diagnosis))
         conn.commit()
-
-    # Log the activity
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_activity(f'{user_number} {current_time}: Added condition for patient ID {data["patient_id"]}, tooth number {data["tooth_number"]}, condition code {data["condition_code"]}')
-
-    return jsonify({'success': True}), 201
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        print(f"Error saving conditions: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+    finally:
+        conn.close()
 
 @app.route('/conditions/<int:condition_id>', methods=['DELETE'])
 def delete_condition(condition_id):
@@ -1927,6 +1960,33 @@ def add_items():
     conn.close()
     return render_template('add_items.html', items=items)
 
+########################################THIS IS FOR THE INTRAORAL EXAM #############################################################################################
+@app.route('/submit_items', methods=['POST'])
+def submit_items():
+    try:
+        data = request.get_json()
+        items = data.get('items')
+
+        # Get the current local date
+        current_date = datetime.now().strftime('%Y-%m-%d')
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        for item in items:
+            cursor.execute('''
+                INSERT INTO items_used (patient_id, quantity, item_id, date_of_diagnosis)
+                VALUES (?, ?, ?, ?)
+            ''', (item['patient_id'], item['quantity'], item['item_id'], current_date))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+########################################THIS IS FOR THE INTRAORAL EXAM #############################################################################################
 
 #INVENTORY
 
