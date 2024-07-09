@@ -17,6 +17,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import os
 from random import randint
+from cryptography.fernet import Fernet
+
 
 app = Flask(__name__)
 app.config['DATABASE'] = 'instance/DMSDB.db'
@@ -1252,8 +1254,14 @@ def backup_system():
     default_path = os.path.join(os.path.expanduser("~"), 'Desktop')
     path = request.args.get('path', default_path)
 
+    if not path:
+        path = default_path
+
     if not os.path.exists(path):
-        return jsonify({"success": False, "error": "Invalid path"}), 400
+        try:
+            os.makedirs(path)
+        except Exception as e:
+            return jsonify({"success": False, "error": f"Failed to create directory: {str(e)}"}), 400
 
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_name = f'backup_{current_time}.db'
@@ -1278,9 +1286,14 @@ def backup_system():
         # Log the activity
         log_activity(f'{user_number} {log_time}: System backup created at {backup_path}')
 
-        return jsonify({"success": True, "path": backup_path})
+        # Send the backup file for download
+        return send_file(backup_path, as_attachment=True, download_name=backup_name)
+
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+pass
+
 
 @app.route('/restore_system', methods=['POST'])
 def restore_system():
