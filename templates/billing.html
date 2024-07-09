@@ -11,7 +11,7 @@
             color: #f3edea;
             padding: 20px;
             border-radius: 10px;
-            max-width: 400px;
+            max-width: 600px;
             margin: 0 auto;
             text-align: center;
         }
@@ -26,8 +26,8 @@
         }
 
         .billing-container table th, .billing-container table td {
-            padding: 10px;
-            text-align: left;
+            padding: 10px; /* Reduced padding */
+            text-align: center;
         }
 
         .billing-container table th {
@@ -51,61 +51,104 @@
         .billing-container button:hover {
             background-color: #D2691E;
         }
+
+        .costbox {
+            width: 60px; /* Reduced width */
+            padding: 5px; /* Reduced padding */
+            font-size: 14px; /* Reduced font size */
+        }
     </style>
 </head>
 <body>
+    <div class="sidebar-tab" id="sidebarTab">☰</div>
+    <div id="sidebar" class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('profile') }}">Profile</a></li>
+            <li><a href="{{ url_for('users') }}">Users</a></li>
+            <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
+            <li class="dropdown">
+                <a href="#">Records</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('patients') }}">Patient Records</a>
+                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                    <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
+                </div>
+            </li>
+            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
+            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+            <li><a href="{{ url_for('reports') }}">Reports</a></li>
+            <li><a href="{{ url_for('payments') }}">Payments</a></li>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <li><a href="{{ url_for('help') }}">Help</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+
     <div class="billing-container">
-        <h2>Billing for {{ patient_id }}</h2>
+        <h2>Billing for {{ patient_name }}</h2>
 
         <h3>Conditions and Treatments</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Tooth Number</th>
-                    <th>Condition</th>
-                    <th>Cost</th>
-                    <th>Date of Diagnosis</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for diagnosis in diagnoses %}
-                <tr>
-                    <td>{{ diagnosis['tooth_number'] }}</td>
-                    <td>{{ diagnosis['condition_code'] }}</td>
-                    <td>₱{{ diagnosis['cost'] }}</td>
-                    <td>{{ diagnosis['date_of_diagnosis'] }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <form action="{{ url_for('update_billing', patient_id=patient_id) }}" method="post">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tooth Number</th>
+                        <th>Condition</th>
+                        <th>Cost (₱)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for diagnosis in diagnoses if diagnosis['date_of_diagnosis'] == current_date %}
+                    <tr>
+                        <td>{{ diagnosis['tooth_number'] }}</td>
+                        <td>{{ diagnosis['condition_code'] }}</td>
+                        <td>
+                            <input type="number" name="diagnosis_cost_{{ diagnosis['tooth_number'] }}_{{ diagnosis['condition_code'] }}" value="{{ diagnosis['cost'] }}" step="0.01" min="0" required class="costbox">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-        <h3>Items Used</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Tooth Number</th>
-                    <th>Item</th>
-                    <th>Unit</th>
-                    <th>Quantity</th>
-                    <th>Cost</th>
-                    <th>Date of Diagnosis</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items_used %}
-                <tr>
-                    <td>{{ item['tooth_number'] }}</td>
-                    <td>{{ item['item_name'] }}</td>
-                    <td>{{ item['unit'] }}</td>
-                    <td>{{ item['quantity'] }}</td>
-                    <td>₱{{ item['cost'] * item['quantity'] }}</td>
-                    <td>{{ item['date_of_diagnosis'] }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+            <h3>Items Used</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tooth Number</th>
+                        <th>Item</th>
+                        <th>Unit</th>
+                        <th>Quantity</th>
+                        <th>Cost (₱)</th>
+                        <th>Date of Diagnosis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items_used if item['date_of_diagnosis'] == current_date %}
+                    <tr>
+                        <td>{{ item['tooth_number'] }}</td>
+                        <td>{{ item['item_name'] }}</td>
+                        <td>{{ item['unit'] }}</td>
+                        <td>{{ item['quantity'] }}</td>
+                        <td>
+                            <input type="number" name="item_cost_{{ item['tooth_number'] }}_{{ item['item_name'] }}" value="{{ item['cost'] }}" step="0.01" min="0" required class="costbox">
+                        </td>
+                        <td>{{ item['date_of_diagnosis'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-        <h3>Total Cost: ₱{{ total_cost }}</h3>
+            <h3>Total Cost: ₱{{ total_cost }}</h3>
+
+            <button type="submit">Update Costs</button>
+        </form>
 
         <button id="printBillButton">Print Bill</button>
     </div>
@@ -115,6 +158,39 @@
             const printBillButton = document.getElementById('printBillButton');
             printBillButton.addEventListener('click', function () {
                 window.print();
+            });
+
+            const sidebar = document.getElementById('sidebar');
+            const sidebarTab = document.getElementById('sidebarTab');
+            const mainContent = document.querySelector('.billing-container');
+
+            sidebarTab.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                mainContent.classList.toggle('shifted');
+                sidebarTab.style.display = 'none';
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    mainContent.classList.remove('shifted');
+                    sidebarTab.style.display = 'block';
+                }
+            });
+
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                const btn = dropdown.querySelector('.ellipsis-btn');
+                const content = dropdown.querySelector('.dropdown-content');
+
+                btn.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    content.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function () {
+                    content.classList.remove('show');
+                });
             });
         });
     </script>

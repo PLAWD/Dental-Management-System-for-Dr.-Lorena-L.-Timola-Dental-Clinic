@@ -3,8 +3,7 @@ import sqlite3
 import smtplib
 import random
 import string
-from datetime import date
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 from email.mime.application import MIMEApplication
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
 from reportlab.lib.units import inch
@@ -1816,6 +1815,11 @@ def generate_billing(patient_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Fetch patient name
+    cursor.execute('SELECT first_name, last_name FROM patients WHERE patient_id = ?', (patient_id,))
+    patient = cursor.fetchone()
+    patient_name = f"{patient['first_name']} {patient['last_name']}"
+
     # Fetch diagnoses and calculate total cost
     cursor.execute('''
         SELECT tooth_number, condition_code, cost, date_of_diagnosis
@@ -1826,18 +1830,61 @@ def generate_billing(patient_id):
 
     # Fetch items used and their costs
     cursor.execute('''
-        SELECT iu.tooth_number, i.item_name, i.unit, iu.quantity, i.cost, iu.date_of_diagnosis
+        SELECT iu.tooth_number, i.item_name, iu.quantity, i.cost, iu.date_of_diagnosis
         FROM items_used iu
         JOIN Items i ON iu.item_id = i.item_id
         WHERE iu.patient_id = ?
     ''', (patient_id,))
     items_used = cursor.fetchall()
 
-    total_cost = sum([diagnosis['cost'] for diagnosis in diagnoses]) + sum([item['cost'] * item['quantity'] for item in items_used])
+    total_cost = sum([d['cost'] for d in diagnoses if d['cost'] is not None]) + sum([item['cost'] * item['quantity'] for item in items_used if item['cost'] is not None])
 
     conn.close()
 
-    return render_template('billing.html', patient_id=patient_id, diagnoses=diagnoses, items_used=items_used, total_cost=total_cost)
+    # Get current date
+    current_date = date.today().strftime("%Y-%m-%d")
+
+    return render_template('billing.html', patient_name=patient_name, patient_id=patient_id, diagnoses=diagnoses, items_used=items_used, total_cost=total_cost, current_date=current_date)
+
+@app.route('/update_billing/<int:patient_id>', methods=['POST'])
+def update_billing(patient_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Update diagnoses costs
+    for key, value in request.form.items():
+        if key.startswith('diagnosis_cost_'):
+            parts = key.split('_')
+            tooth_number = parts[2]
+            condition_code = parts[3]
+            cost = float(value)
+            cursor.execute('''
+                UPDATE conditions
+                SET cost = ?
+                WHERE patient_id = ? AND tooth_number = ? AND condition_code = ?
+            ''', (cost, patient_id, tooth_number, condition_code))
+
+    # Update items used costs
+    for key, value in request.form.items():
+        if key.startswith('item_cost_'):
+            parts = key.split('_')
+            tooth_number = parts[2]
+            item_name = parts[3]
+            cost = float(value)
+            cursor.execute('''
+                UPDATE items_used
+                SET cost = ?
+                WHERE patient_id = ? AND tooth_number = ? AND item_id = (
+                    SELECT item_id FROM Items WHERE item_name = ?
+                )
+            ''', (cost, patient_id, tooth_number, item_name))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('generate_billing', patient_id=patient_id))
+
+
 
 @app.route('/conditions', methods=['POST'])
 def add_condition():
