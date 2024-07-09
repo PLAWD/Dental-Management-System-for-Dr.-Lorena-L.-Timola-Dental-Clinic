@@ -1773,84 +1773,38 @@ def generate_billing(patient_id):
     return render_template('billing.html', patient=patient, diagnosis=diagnoses, items_used=items_used, billing=billing)
 
 @app.route('/conditions', methods=['POST'])
-def save_conditions():
+def add_condition():
     data = request.json
-    tooth_number = data['tooth_number']
-    conditions = data['conditions']
-    patient_id = data['patient_id']
+    required_fields = ['tooth_number', 'condition_code', 'patient_id']
+    if not all(field in data for field in required_fields):
+        return jsonify({'error': 'Missing fields'}), 400
 
-    conn = sqlite3.connect('DMSDB.db')
-    c = conn.cursor()
-
-    try:
-        for condition in conditions:
-            c.execute('''INSERT INTO conditions (tooth_number, condition_code, cost, patient_id)
-                         VALUES (?, ?, ?, ?)''', (tooth_number, condition['code'], condition['cost'], patient_id))
+    with sqlite3.connect('instance/DMSDB.db') as conn:
+        cur = conn.cursor()
+        cur.execute("INSERT INTO conditions (tooth_number, condition_code, patient_id) VALUES (?, ?, ?)",
+                    (data['tooth_number'], data['condition_code'], data['patient_id']))
         conn.commit()
-        response = {'success': True}
-    except sqlite3.Error as e:
-        conn.rollback()
-        response = {'success': False, 'error': str(e)}
-    finally:
-        conn.close()
 
-    return jsonify(response)
+    # Log the activity
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Added condition for patient ID {data["patient_id"]}, tooth number {data["tooth_number"]}, condition code {data["condition_code"]}')
 
-@app.route('/conditions', methods=['GET'])
-def get_conditions():
-    patient_id = request.args.get('patient_id')
+    return jsonify({'success': True}), 201
 
-    conn = sqlite3.connect('DMSDB.db')
-    c = conn.cursor()
-    c.execute('''SELECT tooth_number, condition_code FROM conditions WHERE patient_id = ?''', (patient_id,))
-    rows = c.fetchall()
-    conn.close()
-
-    conditions = [{'tooth_number': row[0], 'condition_code': row[1]} for row in rows]
-    return jsonify(conditions)
-
-@app.route('/billing', methods=['POST'])
-def save_billing():
-    data = request.json
-    patient_id = data['patient_id']
-    tooth_number = data['tooth_number']
-    condition = data['condition']
-    cost = data['cost']
-
-    conn = sqlite3.connect('DMSDB.db')
-    c = conn.cursor()
-
-    try:
-        c.execute('''INSERT INTO billing (patient_id, tooth_number, condition, cost)
-                     VALUES (?, ?, ?, ?)''', (patient_id, tooth_number, condition, cost))
+@app.route('/conditions/<int:condition_id>', methods=['DELETE'])
+def delete_condition(condition_id):
+    with sqlite3.connect('database.db') as conn:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM conditions WHERE condition_id=?", (condition_id,))
         conn.commit()
-        response = {'success': True}
-    except sqlite3.Error as e:
-        conn.rollback()
-        response = {'success': False, 'error': str(e)}
-    finally:
-        conn.close()
 
-    return jsonify(response)
+    # Log the activity
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Deleted condition with ID {condition_id}')
 
-@app.route('/billing', methods=['POST'])
-def update_billing():
-    data = request.get_json()
-    patient_id = data['patient_id']
-    tooth_number = data['tooth_number']
-    condition = data['condition']
-    cost = data['cost']
-
-    conn = get_db_connection()
-    conn.execute(
-        'INSERT INTO diagnosis (patient_id, tooth_number, condition, cost, date_of_diagnosis) VALUES (?, ?, ?, ?, ?)',
-        (patient_id, tooth_number, condition, cost, date.today().strftime('%Y-%m-%d'))
-    )
-    conn.commit()
-    conn.close()
-
-    return jsonify({'success': True})
-
+    return jsonify({'success': True}), 200
 
 @app.route('/add_items')
 def add_items():

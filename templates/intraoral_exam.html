@@ -31,7 +31,6 @@
             justify-content: center;
             align-items: center;
         }
-
         .modal-content {
             background-color: #fefefe;
             margin: auto;
@@ -42,7 +41,6 @@
             border-radius: 10px;
             position: relative;
         }
-
         .close {
             position: absolute;
             right: 20px;
@@ -52,24 +50,20 @@
             font-weight: bold;
             cursor: pointer;
         }
-
         .close:hover,
         .close:focus {
             color: black;
             text-decoration: none;
             cursor: pointer;
         }
-
         .form-group {
             margin-bottom: 15px;
         }
-
         .form-group label {
             display: block;
             font-weight: bold;
             margin-bottom: 5px;
         }
-
         .form-group input[type="text"],
         .form-group input[type="number"],
         .form-group select {
@@ -125,7 +119,7 @@
             <div class="exam-form">
                 <div class="teeth-diagram">
                     <div class="legend">
-                         <button class="price-button" onclick="openPriceModal()">Set Prices</button>
+                        <button class="price-button" onclick="openPriceModal()">Set Prices</button>
                         <label><input type="checkbox" class="condition-checkbox" data-code="Cl"> Cleaning </label><br>
                     </div>
                     <div class="teeth-section">
@@ -602,7 +596,7 @@ function saveConditions() {
         },
         body: JSON.stringify({
             tooth_number: toothNumber,
-            conditions: selectedCodes,
+            condition_code: selectedCodes.map(c => c.code).join(','),
             patient_id: {{ patient.patient_id }}
         })
     })
