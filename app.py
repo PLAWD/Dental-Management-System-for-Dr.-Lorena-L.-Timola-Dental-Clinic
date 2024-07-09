@@ -275,16 +275,16 @@ def dashboard():
     log_activity(f'Dashboard accessed by {first_name}')
     return render_template('dashboard.html', first_name=first_name, appointments=appointments, patients=patients, dentists=dentists, statuses=statuses)
 
-@app.route('/create_appointment', methods=['GET'])
-def create_appointment():
-    conn = get_db_connection()
-    patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
-    dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
-    statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
-    conn.close()
-    user_number = session.get('user_number')
-    log_activity(f'{user_number} {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Create appointment page accessed')
-    return render_template('create_appointment.html', patients=patients, dentists=dentists, statuses=statuses)
+# @app.route('/create_appointment', methods=['GET'])
+# def create_appointment():
+#     conn = get_db_connection()
+#     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
+#     dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
+#     statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
+#     conn.close()
+#     user_number = session.get('user_number')
+#     log_activity(f'{user_number} {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Create appointment page accessed')
+#     return render_template('create_appointment.html', patients=patients, dentists=dentists, statuses=statuses)
 
 @app.route('/view_appointment')
 def view_appointment():
