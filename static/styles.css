@@ -3121,6 +3121,6 @@ text {
     height: 80%;
 }
 
-.patient-name {
+.patient-name, .kondisyon, .totcos {
     color: #D0C8BB;
 }

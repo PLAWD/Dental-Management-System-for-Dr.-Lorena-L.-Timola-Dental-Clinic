@@ -26,7 +26,12 @@
             <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
             <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
             <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <br><br><br><br><br><br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
             <li><a href="{{ url_for('help') }}">Help</a></li>
             <li><a href="{{ url_for('about') }}">About</a></li>
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
@@ -68,11 +73,17 @@
                     <input type="text" id="referenceNumber" name="reference_number">
                 </div>
                 <div class="form-group">
-                    <label for="services">Services:</label>
-                    <div id="services">
-                        <!-- Services will be dynamically added here -->
+                    <label for="conditions">Conditions and Costs:</label>
+                    <div id="conditions">
+                        {% for diagnosis in diagnoses %}
+                        <div class="condition-entry">
+                            <p class="kondisyon">{{ diagnosis['condition_name'] }}: ₱{{ diagnosis['cost'] }}</p>
+                        </div>
+                        {% endfor %}
                     </div>
-                    <button type="button" onclick="addService()">+ Add Service</button>
+                </div>
+                <div class="form-group">
+                    <h3 class="totcos">Total Cost: ₱{{ total_cost }}</h3>
                 </div>
                 <div class="form-group">
                     <label for="payment_type">Payment Type:</label>
@@ -102,22 +113,6 @@
             }
         }
 
-        function addService() {
-            const servicesContainer = document.getElementById('services');
-            const serviceDiv = document.createElement('div');
-            serviceDiv.classList.add('service-entry');
-            serviceDiv.innerHTML = `
-                <input type="text" name="service_name" placeholder="Service Name">
-                <input type="text" name="service_amount" placeholder="Amount">
-                <button type="button" onclick="removeService(this)">- Remove</button>
-            `;
-            servicesContainer.appendChild(serviceDiv);
-        }
-
-        function removeService(button) {
-            button.parentElement.remove();
-        }
-
         document.getElementById('paymentForm').addEventListener('submit', function(event) {
             event.preventDefault();
             document.getElementById('confirmation').style.display = 'block';
@@ -126,15 +121,8 @@
         function confirmPayment() {
             const form = document.getElementById('paymentForm');
             const formData = new FormData(form);
-            const services = [];
-            document.querySelectorAll('.service-entry').forEach(entry => {
-                const serviceName = entry.querySelector('input[name="service_name"]').value;
-                const serviceAmount = entry.querySelector('input[name="service_amount"]').value;
-                services.push({ name: serviceName, amount: serviceAmount });
-            });
 
             const data = Object.fromEntries(formData);
-            data.services = services;
 
             fetch('{{ url_for("process_payment") }}', {
                 method: 'POST',

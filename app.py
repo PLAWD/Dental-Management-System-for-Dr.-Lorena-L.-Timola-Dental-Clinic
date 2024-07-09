@@ -1167,25 +1167,47 @@ def payments(patient_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Fetch patient details
+    # Fetch patient name
     cursor.execute('SELECT first_name, middle_name, last_name FROM patients WHERE patient_id = ?', (patient_id,))
     patient = cursor.fetchone()
-    if not patient:
-        conn.close()
-        flash(f'Patient with ID {patient_id} not found.', 'error')
-        return redirect(url_for('dashboard'))
+    if patient:
+        patient_name = f"{patient['first_name']} {patient['middle_name']} {patient['last_name']}"
+    else:
+        patient_name = "Unknown"
+        print(f"Patient with ID {patient_id} not found.")  # Debugging
 
-    patient_name = f"{patient['first_name']} {patient['middle_name']} {patient['last_name']}"
+    # Fetch diagnoses
+    cursor.execute('''
+        SELECT c.tooth_number, c.condition_code, c.cost, c.date_of_diagnosis, cc.condition_name
+        FROM conditions c
+        JOIN condition_codes cc ON c.condition_code = cc.condition_code
+        WHERE c.patient_id = ?
+    ''', (patient_id,))
+    diagnoses = cursor.fetchall()
+    print(f"Diagnoses: {diagnoses}")  # Debugging
 
-    # Fetch other necessary data here, if needed
+    # Fetch items used
+    cursor.execute('''
+        SELECT i.item_name, iu.quantity, iu.date_of_diagnosis, i.cost
+        FROM items_used iu
+        JOIN Items i ON iu.item_id = i.item_id
+        WHERE iu.patient_id = ?
+    ''', (patient_id,))
+    items_used = cursor.fetchall()
+    print(f"Items Used Query: SELECT i.item_name, iu.quantity, iu.date_of_diagnosis, i.cost FROM items_used iu JOIN Items i ON iu.item_id = i.item_id WHERE iu.patient_id = {patient_id}")
+    print(f"Items Used: {items_used}")  # Debugging
+
+    # Calculate total cost
+    total_cost = sum(d['cost'] for d in diagnoses if d['cost']) + sum(item['quantity'] * item['cost'] for item in items_used if item['cost'])
+    print(f"Total Cost: {total_cost}")  # Debugging
 
     conn.close()
 
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_activity(f'{user_number} {current_time}: Accessed payments page for patient {patient_name}')
+    # Get current date
+    current_date = datetime.now().strftime("%Y-%m-%d")
 
-    return render_template('payments.html', patient_name=patient_name, patient_id=patient_id)
+    return render_template('payments.html', patient_name=patient_name, patient_id=patient_id, diagnoses=diagnoses, items_used=items_used, total_cost=total_cost, current_date=current_date)
+
 
 
 @app.route('/process_payment', methods=['POST'])
