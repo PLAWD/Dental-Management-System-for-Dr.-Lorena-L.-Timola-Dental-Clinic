@@ -348,13 +348,13 @@
         <form id="diagnosisForm">
             <div class="form-group">
                 <label>Periodontal Screening</label>
-                <input type="checkbox" class="diagnosis-checkbox" id="G" data-code="G">
+                <input type="checkbox" name="gingivitis" class="diagnosis-checkbox" id="G" data-code="G">
                 <label for="G"> Gingivitis </label>
-                <input type="checkbox" class="diagnosis-checkbox" id="EP" data-code="EP">
+                <input type="checkbox" name="early_periodontitis" class="diagnosis-checkbox" id="EP" data-code="EP">
                 <label for="EP"> Early Periodontitis </label>
-                <input type="checkbox" class="diagnosis-checkbox" id="MP" data-code="MP">
+                <input type="checkbox" name="moderate_periodontitis" class="diagnosis-checkbox" id="MP" data-code="MP">
                 <label for="MP"> Moderate Periodontitis </label>
-                <input type="checkbox" class="diagnosis-checkbox" id="AP" data-code="AP">
+                <input type="checkbox" name="advanced_periodontitis" class="diagnosis-checkbox" id="AP" data-code="AP">
                 <label for="AP"> Advanced Periodontitis </label>
             </div>
             <div class="form-group">
@@ -368,23 +368,26 @@
             </div>
             <div class="form-group">
                 <label>Appliances</label>
-                <input type="checkbox" class="diagnosis-checkbox" data-code="O"> Orthodontic
-                <input type="checkbox" class="diagnosis-checkbox" data-code="S"> Stayplate
-                <input type="checkbox" class="diagnosis-checkbox" data-code="OT"> Others <input type="text" name="appliance_others">
+                <input type="checkbox" name="orthodontic" class="diagnosis-checkbox" data-code="O"> Orthodontic
+                <input type="checkbox" name="stayplate" class="diagnosis-checkbox" data-code="S"> Stayplate
+                <input type="checkbox" name="appliance_others_checkbox" class="diagnosis-checkbox" data-code="OT"> Others
+                <input type="text" name="appliance_others">
             </div>
             <div class="form-group">
                 <label>TMD</label>
-                <input type="checkbox" class="diagnosis-checkbox" data-code="C"> Clenching
-                <input type="checkbox" class="diagnosis-checkbox" data-code="CL"> Clicking
-                <input type="checkbox" class="diagnosis-checkbox" data-code="T"> Trismus
-                <input type="checkbox" class="diagnosis-checkbox" data-code="MS"> Muscle spasm
+                <input type="checkbox" name="clenching" class="diagnosis-checkbox" data-code="C"> Clenching
+                <input type="checkbox" name="clicking" class="diagnosis-checkbox" data-code="CL"> Clicking
+                <input type="checkbox" name="trismus" class="diagnosis-checkbox" data-code="T"> Trismus
+                <input type="checkbox" name="muscle_spasm" class="diagnosis-checkbox" data-code="MS"> Muscle spasm
             </div>
             <div class="form-group">
                 <label>X-ray Taken</label>
-                <input type="checkbox" class="diagnosis-checkbox" data-code="P"> Panoramic
-                <input type="checkbox" class="diagnosis-checkbox" data-code="C"> Cephalometric
-                <input type="checkbox" class="diagnosis-checkbox" data-code="PT"> Periapical Tth. No. <input type="text" name="periapical_no">
-                <input type="checkbox" class="diagnosis-checkbox" data-code="O"> Occlusal <input type="text" name="occlusal_no">
+                <input type="checkbox" name="panoramic" class="diagnosis-checkbox" data-code="P"> Panoramic
+                <input type="checkbox" name="cephalometric" class="diagnosis-checkbox" data-code="C"> Cephalometric
+                <input type="checkbox" name="periapical_checkbox" class="diagnosis-checkbox" data-code="PT"> Periapical Tth. No.
+                <input type="text" name="periapical_no">
+                <input type="checkbox" name="occlusal_checkbox" class="diagnosis-checkbox" data-code="O"> Occlusal
+                <input type="text" name="occlusal_no">
             </div>
             <div class="submit-group">
                 <button type="button" onclick="saveDiagnosis()">Save Diagnosis</button>
@@ -393,6 +396,7 @@
     </div>
 </div>
 </div>
+
 <!-- ////////////////////////////////// Billing ////////////////-->
 
 <div id="generate_billing" class="tab-content" style="display:none;">
@@ -727,10 +731,20 @@ function saveMedicalHistory() {
 function saveDiagnosis() {
     const formData = new FormData(document.getElementById('diagnosisForm'));
     const data = {};
-    formData.forEach((value, key) => {
-        data[key] = value;
+
+    // Process all form elements including checkboxes
+    document.querySelectorAll('#diagnosisForm input, #diagnosisForm select').forEach(element => {
+        if (element.type === 'checkbox') {
+            data[element.name] = element.checked ? 1 : 0;
+        } else {
+            data[element.name] = element.value;
+        }
     });
+
+    // Add patient ID to the data
     data['patient_id'] = {{ patient.patient_id }};
+
+    console.log('Diagnosis data to send:', data); // Debugging
 
     fetch('{{ url_for("save_diagnosis") }}', {
         method: 'POST',
@@ -741,13 +755,19 @@ function saveDiagnosis() {
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Response:', data); // Debugging
         if (data.success) {
             showSuccessModal('Diagnosis saved successfully.');
         } else {
-            showErrorModal('Failed to save diagnosis: ' + data.error);
+            showErrorModal('Failed to save diagnosis: ' + data.message);
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showErrorModal('Failed to save diagnosis: ' + error.message);
     });
 }
+
 
 function savePrices() {
     const priceForm = document.getElementById('priceForm');

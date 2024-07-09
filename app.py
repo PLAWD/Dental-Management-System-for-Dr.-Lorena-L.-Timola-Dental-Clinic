@@ -1,3 +1,4 @@
+import logging
 import sqlite3
 import smtplib
 import random
@@ -17,7 +18,6 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import os
 from random import randint
-from cryptography.fernet import Fernet
 
 
 app = Flask(__name__)
@@ -28,6 +28,7 @@ app.secret_key = 'supersecretkey'
 EMAIL_ADDRESS = 'dentaluserfr@gmail.com'
 EMAIL_PASSWORD = 'hvcw gyiy bvyq zwlf'
 
+logging.basicConfig(level=logging.DEBUG)
 
 def role_required(roles):
     def decorator(f):
@@ -856,15 +857,31 @@ def save_medical_history():
 @app.route('/save_diagnosis', methods=['POST'])
 def save_diagnosis():
     data = request.get_json()
+    logging.debug(f"Received data: {data}")
+    diagnosis_date = datetime.now().strftime('%Y-%m-%d')
 
     try:
         conn = get_db_connection()
         cur = conn.cursor()
 
         # Check if the patient already has a diagnosis entry
-        query = "SELECT diagnosis_id FROM  WHERE patient_id = ?"
+        query = "SELECT diagnosis_id FROM diagnoses WHERE patient_id = ?"
         cur.execute(query, (data['patient_id'],))
         result = cur.fetchone()
+
+        # Extract data from request
+        gingivitis = data.get('gingivitis', 0)
+        early_periodontitis = data.get('early_periodontitis', 0)
+        moderate_periodontitis = data.get('moderate_periodontitis', 0)
+        advanced_periodontitis = data.get('advanced_periodontitis', 0)
+        orthodontic = data.get('orthodontic', 0)
+        stayplate = data.get('stayplate', 0)
+        clenching = data.get('clenching', 0)
+        clicking = data.get('clicking', 0)
+        trismus = data.get('trismus', 0)
+        muscle_spasm = data.get('muscle_spasm', 0)
+        panoramic = data.get('panoramic', 0)
+        cephalometric = data.get('cephalometric', 0)
 
         if result:
             # Update existing diagnosis record
@@ -872,16 +889,15 @@ def save_diagnosis():
                 UPDATE diagnoses
                 SET gingivitis = ?, early_periodontitis = ?, moderate_periodontitis = ?, advanced_periodontitis = ?,
                     occlusion = ?, orthodontic = ?, stayplate = ?, appliance_others = ?, clenching = ?, clicking = ?,
-                    trismus = ?, muscle_spasm = ?, panoramic = ?, cephalometric = ?, periapical_no = ?, occlusal_no = ?
+                    trismus = ?, muscle_spasm = ?, panoramic = ?, cephalometric = ?, periapical_no = ?, occlusal_no = ?,
+                    diagnosis_date = ?
                 WHERE patient_id = ?
             """
             params = (
-                data.get('gingivitis', False), data.get('early_periodontitis', False), data.get('moderate_periodontitis', False),
-                data.get('advanced_periodontitis', False), data.get('occlusion', ''), data.get('orthodontic', False),
-                data.get('stayplate', False), data.get('appliance_others', ''), data.get('clenching', False),
-                data.get('clicking', False), data.get('trismus', False), data.get('muscle_spasm', False),
-                data.get('panoramic', False), data.get('cephalometric', False), data.get('periapical_no', ''),
-                data.get('occlusal_no', ''), data['patient_id']
+                gingivitis, early_periodontitis, moderate_periodontitis, advanced_periodontitis,
+                data.get('occlusion', ''), orthodontic, stayplate, data.get('appliance_others', ''), clenching,
+                clicking, trismus, muscle_spasm, panoramic, cephalometric, data.get('periapical_no', ''),
+                data.get('occlusal_no', ''), diagnosis_date, data['patient_id']
             )
         else:
             # Insert new diagnosis record
@@ -889,33 +905,29 @@ def save_diagnosis():
                 INSERT INTO diagnoses (
                     patient_id, gingivitis, early_periodontitis, moderate_periodontitis, advanced_periodontitis,
                     occlusion, orthodontic, stayplate, appliance_others, clenching, clicking, trismus, muscle_spasm,
-                    panoramic, cephalometric, periapical_no, occlusal_no
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    panoramic, cephalometric, periapical_no, occlusal_no, diagnosis_date
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             params = (
-                data['patient_id'], data.get('gingivitis', False), data.get('early_periodontitis', False),
-                data.get('moderate_periodontitis', False), data.get('advanced_periodontitis', False), data.get('occlusion', ''),
-                data.get('orthodontic', False), data.get('stayplate', False), data.get('appliance_others', ''),
-                data.get('clenching', False), data.get('clicking', False), data.get('trismus', False),
-                data.get('muscle_spasm', False), data.get('panoramic', False), data.get('cephalometric', False),
-                data.get('periapical_no', ''), data.get('occlusal_no', '')
+                data['patient_id'], gingivitis, early_periodontitis, moderate_periodontitis, advanced_periodontitis,
+                data.get('occlusion', ''), orthodontic, stayplate, data.get('appliance_others', ''), clenching,
+                clicking, trismus, muscle_spasm, panoramic, cephalometric, data.get('periapical_no', ''),
+                data.get('occlusal_no', ''), diagnosis_date
             )
+
+        logging.debug(f"Executing query: {query}")
+        logging.debug(f"With params: {params}")
 
         cur.execute(query, params)
         conn.commit()
-
-        # Log the activity
-        user_number = session.get('user_number')
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_activity(f'{user_number} {current_time}: Saved diagnosis for patient ID {data["patient_id"]}')
-
-        return jsonify(success=True)
     except Exception as e:
-        return jsonify(success=False, error=str(e))
+        logging.error(f"Failed to save diagnosis: {str(e)}")
+        return jsonify({"success": False, "message": f"Failed to save diagnosis: {str(e)}"})
     finally:
         cur.close()
         conn.close()
 
+    return jsonify({"success": True, "message": "Diagnosis saved successfully"})
 
 @app.route('/update_patient', methods=['POST'])
 def update_patient():
@@ -1849,7 +1861,7 @@ def add_condition():
 
 @app.route('/conditions/<int:condition_id>', methods=['DELETE'])
 def delete_condition(condition_id):
-    with sqlite3.connect('database.db') as conn:
+    with sqlite3.connect('instance/DMSDB.db') as conn:
         cur = conn.cursor()
         cur.execute("DELETE FROM conditions WHERE condition_id=?", (condition_id,))
         conn.commit()
