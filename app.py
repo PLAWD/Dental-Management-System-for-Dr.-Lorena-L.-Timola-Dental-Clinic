@@ -2,6 +2,7 @@ import sqlite3
 import smtplib
 import random
 import string
+from datetime import date
 from datetime import datetime, timedelta, timezone
 from email.mime.application import MIMEApplication
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
@@ -16,6 +17,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import os
 from random import randint
+from cryptography.fernet import Fernet
+
 
 app = Flask(__name__)
 app.config['DATABASE'] = 'instance/DMSDB.db'
@@ -35,62 +38,46 @@ def role_required(roles):
                 return redirect(url_for('login'))
 
             user_role_id = session['role_id']
-            # Assuming role_id 1 is admin and role_id 2 is user
             if user_role_id not in roles:
                 flash('You do not have permission to access this page.')
                 return redirect(url_for('dashboard'))
             return f(*args, **kwargs)
-
         return decorated_function
-
     return decorator
 
-<<<<<<< Updated upstream
-=======
-
 # Function to establish a database connection
->>>>>>> Stashed changes
 def get_db_connection():
-    conn = sqlite3.connect(app.config['DATABASE'], timeout=30)
-    conn.execute('PRAGMA journal_mode=WAL')
+    conn = sqlite3.connect(app.config['DATABASE'], timeout=10)  # Corrected access to the DATABASE config
     conn.row_factory = sqlite3.Row
     return conn
+
 
 def generate_otp():
     return ''.join(random.choices(string.digits, k=6))
 
-<<<<<<< Updated upstream
-=======
-
 # Function to send emails
->>>>>>> Stashed changes
 def send_email(to_email, subject, body, attachment=None, attachment_name=None):
     msg = MIMEMultipart()
     msg['From'] = EMAIL_ADDRESS
     msg['To'] = to_email
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
-
     if attachment and attachment_name:
         part = MIMEApplication(attachment.read(), Name=attachment_name)
         part['Content-Disposition'] = f'attachment; filename="{attachment_name}"'
         msg.attach(part)
-
     with smtplib.SMTP('smtp.gmail.com', 587) as server:
         server.starttls()
         server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         server.send_message(msg)
 
-
 def generate_captcha():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-
 
 def generate_strong_password(length=12):
     characters = string.ascii_letters + string.digits + string.punctuation
     password = ''.join(random.choices(characters, k=length))
     return password
-
 
 def log_activity(activity):
     user_number = session.get('user_number')  # Assuming you store the user's number in the session
@@ -98,39 +85,31 @@ def log_activity(activity):
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_message = f"{user_number} {current_time}: {activity}"
     conn = get_db_connection()
-    conn.execute('INSERT INTO user_logs (user_number, user_name, activity) VALUES (?, ?, ?)',
-                 (user_number, user_name, log_message))
+    conn.execute('INSERT INTO user_logs (user_number, user_name, activity) VALUES (?, ?, ?)', (user_number, user_name, log_message))
     conn.commit()
     conn.close()
-
 
 @app.route('/')
 def login():
     return render_template('login.html')
 
-
 @app.route('/do_login', methods=['POST'])
 def do_login():
     login = request.form.get('login')
     password = request.form.get('password')
-
     conn = get_db_connection()
     user = conn.execute('SELECT * FROM users WHERE email = ? OR username = ?', (login, login)).fetchone()
-
     if user:
         if user['is_locked']:
             log_activity(f'Login attempt failed for locked user: {login}')
             conn.close()
             return jsonify({'success': False, 'message': 'Account locked due to too many failed login attempts.'})
-
         if check_password_hash(user['password_hash'], password):
-            # Reset failed attempts after successful login
             conn.execute('UPDATE users SET failed_attempts = 0, is_locked = 0 WHERE user_id = ?', (user['user_id'],))
             conn.commit()
             conn.close()
-
             session['user_id'] = user['user_id']
-            session['role_id'] = user['role_id']
+            session['role_id'] = user['role_id']  # Ensure role_id is stored in session
             session['first_name'] = user['first_name']
             session['user_email'] = user['email']
             session['user_number'] = user['user_number']  # Ensure this is also stored in session
@@ -146,10 +125,8 @@ def do_login():
             else:
                 conn.execute('UPDATE users SET failed_attempts = ? WHERE user_id = ?',
                              (failed_attempts, user['user_id']))
-
             conn.commit()
             conn.close()
-
             if is_locked:
                 log_activity(f'User {login} account locked due to too many failed login attempts')
                 return jsonify({'success': False, 'message': 'Account locked due to too many failed login attempts.'})
@@ -161,10 +138,8 @@ def do_login():
         conn.close()
         return jsonify({'success': False, 'message': 'Invalid credentials. Please try again.'})
 
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
+
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
@@ -191,7 +166,6 @@ def forgot_password():
         return redirect(url_for('forgot_password'))
     return render_template('forgot_password.html')
 
-
 # Route to resend OTP for password reset
 @app.route('/resend_otp', methods=['POST'])
 def resend_otp():
@@ -199,13 +173,10 @@ def resend_otp():
         otp_sent_time_str = session['otp_sent_time']
         otp_sent_time = datetime.fromisoformat(otp_sent_time_str)
 
-        if otp_sent_time and datetime.now(timezone.utc) - otp_sent_time < timedelta(
-                seconds=session.get('resend_timer', 60)):
-            remaining_time = timedelta(seconds=session.get('resend_timer', 60)) - (
-                        datetime.now(timezone.utc) - otp_sent_time)
+        if otp_sent_time and datetime.now(timezone.utc) - otp_sent_time < timedelta(seconds=session.get('resend_timer', 60)):
+            remaining_time = timedelta(seconds=session.get('resend_timer', 60)) - (datetime.now(timezone.utc) - otp_sent_time)
             log_activity('Attempt to resend OTP before timer expiration')
-            return jsonify(
-                {'success': False, 'message': f'Please wait {remaining_time.seconds} seconds before resending OTP.'})
+            return jsonify({'success': False, 'message': f'Please wait {remaining_time.seconds} seconds before resending OTP.'})
 
     otp = generate_otp()
     session['otp'] = otp
@@ -214,7 +185,6 @@ def resend_otp():
     send_email(session['reset_email'], 'Password Reset OTP', f'Your OTP for password reset is {otp}')
     log_activity('OTP resent successfully')
     return jsonify({'success': True, 'new_timer': session['resend_timer']})
-
 
 @app.route('/verify_otp', methods=['GET', 'POST'])
 def verify_otp():
@@ -239,7 +209,6 @@ def verify_otp():
             log_activity('OTP session expired')
         return redirect(url_for('verify_otp'))
     return render_template('verify_otp.html')
-
 
 def is_password_in_history(user_id, new_password):
     conn = get_db_connection()
@@ -269,9 +238,7 @@ def reset_password():
         email = session.get('reset_email')
 
         conn = get_db_connection()
-        previous_passwords = conn.execute(
-            'SELECT password_hash FROM password_history WHERE user_id = (SELECT user_id FROM users WHERE email = ?) ORDER BY changed_at DESC LIMIT 5',
-            (email,)).fetchall()
+        previous_passwords = conn.execute('SELECT password_hash FROM password_history WHERE user_id = (SELECT user_id FROM users WHERE email = ?) ORDER BY changed_at DESC LIMIT 5', (email,)).fetchall()
 
         for prev_password in previous_passwords:
             if check_password_hash(prev_password['password_hash'], password):
@@ -281,9 +248,7 @@ def reset_password():
 
         # Update the user's password and set their status to active (assuming active status id is 1)
         conn.execute('UPDATE users SET password_hash = ?, userstat_id = 1 WHERE email = ?', (hashed_password, email))
-        conn.execute(
-            'INSERT INTO password_history (user_id, password_hash) VALUES ((SELECT user_id FROM users WHERE email = ?), ?)',
-            (email, hashed_password))
+        conn.execute('INSERT INTO password_history (user_id, password_hash) VALUES ((SELECT user_id FROM users WHERE email = ?), ?)', (email, hashed_password))
         conn.commit()
         conn.close()
 
@@ -294,27 +259,21 @@ def reset_password():
         return redirect(url_for('login'))
     return render_template('reset_password.html')
 
-
 @app.route('/dashboard')
 def dashboard():
     if 'role_id' not in session:
         log_activity('Unauthorized access attempt to dashboard')
         return redirect(url_for('login'))
-
     conn = get_db_connection()
-    appointments = conn.execute(
-        'SELECT p.first_name || " " || p.last_name AS patient_name, a.appointment_date, a.start_time, a.end_time FROM appointments a JOIN patients p ON a.patient_id = p.patient_id').fetchall()
+    appointments = conn.execute('SELECT p.first_name || " " || p.last_name AS patient_name, a.appointment_date, a.start_time, a.end_time FROM appointments a JOIN patients p ON a.patient_id = p.patient_id').fetchall()
     patients = conn.execute('SELECT patient_id, first_name, middle_name, last_name FROM patients').fetchall()
     dentists = conn.execute('SELECT dentist_id, first_name, last_name FROM dentists').fetchall()
     statuses = conn.execute('SELECT status_id, status_name FROM AppointmentStatus').fetchall()
     conn.close()
-
     first_name = session.get('first_name')
     user_number = session.get('user_number')
     log_activity(f'Dashboard accessed by {first_name}')
-    return render_template('dashboard.html', first_name=first_name, appointments=appointments, patients=patients,
-                           dentists=dentists, statuses=statuses)
-
+    return render_template('dashboard.html', first_name=first_name, appointments=appointments, patients=patients, dentists=dentists, statuses=statuses)
 
 @app.route('/create_appointment', methods=['GET'])
 def create_appointment():
@@ -326,7 +285,6 @@ def create_appointment():
     user_number = session.get('user_number')
     log_activity(f'{user_number} {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: Create appointment page accessed')
     return render_template('create_appointment.html', patients=patients, dentists=dentists, statuses=statuses)
-
 
 @app.route('/view_appointment')
 def view_appointment():
@@ -354,7 +312,6 @@ def view_appointment():
     log_activity(f'{user_number} {current_time}: Failed to view appointment {appointment_id} - not found')
     return jsonify({'error': 'Appointment not found'}), 404
 
-
 @app.route('/update_appointment', methods=['POST'])
 def update_appointment():
     data = request.get_json()
@@ -375,8 +332,7 @@ def update_appointment():
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     if selected_date < current_date:
-        log_activity(
-            f'{user_number} {current_time}: Failed to update appointment {appointment_id} - past date selected')
+        log_activity(f'{user_number} {current_time}: Failed to update appointment {appointment_id} - past date selected')
         return jsonify({'success': False, 'message': 'Cannot select a date that has already passed.'})
 
     conn = get_db_connection()
@@ -391,8 +347,7 @@ def update_appointment():
             (start_time < ? AND end_time > ?) OR
             (? < start_time AND ? > end_time)
         )
-    ''', (appointment_date, dentist_id, appointment_id, start_time, start_time, end_time, end_time, start_time,
-          end_time)).fetchone()
+    ''', (appointment_date, dentist_id, appointment_id, start_time, start_time, end_time, end_time, start_time, end_time)).fetchone()
 
     if conflict:
         conn.close()
@@ -403,8 +358,7 @@ def update_appointment():
         UPDATE appointments 
         SET appointment_date = ?, start_time = ?, end_time = ?, appointment_type = ?, chief_complaints = ?, procedures = ?, dentist_id = ?, status_id = ?
         WHERE appointment_id = ?
-    ''', (appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id,
-          appointment_id))
+    ''', (appointment_date, start_time, end_time, appointment_type, chief_complaints, procedures, dentist_id, status_id, appointment_id))
 
     conn.commit()
     conn.close()
@@ -451,7 +405,6 @@ def complete_appointment():
     log_activity(f'{user_number} {current_time}: Failed to complete appointment {appointment_id} - not found')
     return jsonify({'success': False, 'message': 'Appointment not found'})
 
-
 @app.route('/get_appointments')
 def get_appointments():
     conn = get_db_connection()
@@ -474,7 +427,6 @@ def get_appointments():
     log_activity('Retrieved list of appointments')
     return jsonify(events)
 
-
 @app.route('/search', methods=['GET'])
 def search():
     query = request.args.get('query')
@@ -482,7 +434,6 @@ def search():
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_activity(f'{user_number} {current_time}: Search performed with query: {query}')
     return f"Search results for: {query}"
-
 
 @app.route('/users')
 @role_required([1])  # Only admin can access
@@ -504,7 +455,6 @@ def users():
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_activity(f'{user_number} {current_time}: Accessed users page')
     return render_template('users.html', users=users, total_users=total_users, roles=roles, statuses=statuses)
-
 
 @app.route('/get_user_details')
 def get_user_details():
@@ -542,7 +492,6 @@ def get_user_details():
         log_activity(f'{user_number} {current_time}: Failed to view details for user ID {user_id} - not found')
         return jsonify({'error': 'User not found'}), 404
 
-
 @app.route('/disable_user', methods=['POST'])
 def disable_user():
     data = request.get_json()
@@ -562,7 +511,6 @@ def disable_user():
         return jsonify({'success': False, 'error': str(e)})
     finally:
         conn.close()
-
 
 @app.route('/update_user', methods=['POST'])
 def update_user():
@@ -589,7 +537,6 @@ def update_user():
     log_activity(f'{user_number} {current_time}: Updated user ID {user_id}')
     return jsonify({'success': True})
 
-
 @app.route('/register_user')
 def register_user():
     conn = get_db_connection()
@@ -606,7 +553,6 @@ def generate_user_number(role_name):
     prefix = 'A-' if role_name == 'Admin' else 'E-'
     random_number = random.randint(100000, 999999)
     return f"{prefix}{random_number}"
-
 
 @app.route('/submit_register_user', methods=['POST'])
 def submit_register_user():
@@ -659,7 +605,6 @@ def submit_register_user():
     log_activity(f'{user_number} {current_time}: Registered new user {username} with role ID {role_id}')
     return redirect(url_for('users'))
 
-
 @app.route('/patients')
 @role_required([1, 2])  # Both admin and user can access
 def patients():
@@ -676,7 +621,6 @@ def patients():
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_activity(f'{user_number} {current_time}: Accessed patients page')
     return render_template('patients.html', patients=patients, total_patients=total_patients)
-
 
 @app.route('/overview/<int:patient_id>')
 def overview(patient_id):
@@ -710,7 +654,6 @@ def overview(patient_id):
                            examination=examination or {},
                            medical_history=medical_history or {})
 
-
 @app.route('/get_patient_details', methods=['GET'])
 def get_patient_details():
     patient_id = request.args.get('patient_id')
@@ -726,7 +669,6 @@ def get_patient_details():
         return jsonify(dict(patient))
     log_activity(f'{user_number} {current_time}: Failed to view details for patient ID {patient_id} - not found')
     return jsonify(error="Patient not found"), 404
-
 
 @app.route('/add_patient', methods=['POST'])
 def add_patient():
@@ -759,8 +701,7 @@ def add_patient():
           medical_conditions, current_medication, employment_status, other_employment_detail, occupation))
     patient_id = cur.lastrowid
 
-    for name, relationship, phone in zip(emergency_contact_names, emergency_contact_relationships,
-                                         emergency_contact_phones):
+    for name, relationship, phone in zip(emergency_contact_names, emergency_contact_relationships, emergency_contact_phones):
         cur.execute('''
             INSERT INTO emergency_contacts (patient_id, contact_name, relationship, contact_phone) 
             VALUES (?, ?, ?, ?)
@@ -808,7 +749,6 @@ def submit_add_patient():
         log_activity(f'{user_number} {current_time}: Failed to submit new patient {first_name} {last_name} - {str(e)}')
         return jsonify(success=False, error=str(e))
 
-
 @app.route('/submit_edit_patient', methods=['POST'])
 def submit_edit_patient():
     data = request.get_json()
@@ -833,8 +773,7 @@ def submit_edit_patient():
             UPDATE patients
             SET first_name = ?, middle_name = ?, last_name = ?, dob = ?, sex = ?, address = ?, city = ?, occupation = ?, mobile_number = ?, email = ?
             WHERE patient_id = ?
-        ''', (
-        first_name, middle_name, last_name, dob, sex, address, city, occupation, mobile_number, email, patient_id))
+        ''', (first_name, middle_name, last_name, dob, sex, address, city, occupation, mobile_number, email, patient_id))
         conn.commit()
         conn.close()
         log_activity(f'{user_number} {current_time}: Edited patient ID {patient_id}')
@@ -842,7 +781,6 @@ def submit_edit_patient():
     except Exception as e:
         log_activity(f'{user_number} {current_time}: Failed to edit patient ID {patient_id} - {str(e)}')
         return jsonify(success=False, error=str(e))
-
 
 @app.route('/save_medical_history', methods=['POST'])
 def save_medical_history():
@@ -915,7 +853,6 @@ def save_medical_history():
         cur.close()
         conn.close()
 
-
 @app.route('/save_diagnosis', methods=['POST'])
 def save_diagnosis():
     data = request.get_json()
@@ -925,22 +862,21 @@ def save_diagnosis():
         cur = conn.cursor()
 
         # Check if the patient already has a diagnosis entry
-        query = "SELECT diag_id FROM diagnosis WHERE patient_id = ?"
+        query = "SELECT diagnosis_id FROM  WHERE patient_id = ?"
         cur.execute(query, (data['patient_id'],))
         result = cur.fetchone()
 
         if result:
             # Update existing diagnosis record
             query = """
-                UPDATE diagnosis
+                UPDATE diagnoses
                 SET gingivitis = ?, early_periodontitis = ?, moderate_periodontitis = ?, advanced_periodontitis = ?,
                     occlusion = ?, orthodontic = ?, stayplate = ?, appliance_others = ?, clenching = ?, clicking = ?,
                     trismus = ?, muscle_spasm = ?, panoramic = ?, cephalometric = ?, periapical_no = ?, occlusal_no = ?
                 WHERE patient_id = ?
             """
             params = (
-                data.get('gingivitis', False), data.get('early_periodontitis', False),
-                data.get('moderate_periodontitis', False),
+                data.get('gingivitis', False), data.get('early_periodontitis', False), data.get('moderate_periodontitis', False),
                 data.get('advanced_periodontitis', False), data.get('occlusion', ''), data.get('orthodontic', False),
                 data.get('stayplate', False), data.get('appliance_others', ''), data.get('clenching', False),
                 data.get('clicking', False), data.get('trismus', False), data.get('muscle_spasm', False),
@@ -950,7 +886,7 @@ def save_diagnosis():
         else:
             # Insert new diagnosis record
             query = """
-                INSERT INTO diagnosis (
+                INSERT INTO diagnoses (
                     patient_id, gingivitis, early_periodontitis, moderate_periodontitis, advanced_periodontitis,
                     occlusion, orthodontic, stayplate, appliance_others, clenching, clicking, trismus, muscle_spasm,
                     panoramic, cephalometric, periapical_no, occlusal_no
@@ -958,8 +894,7 @@ def save_diagnosis():
             """
             params = (
                 data['patient_id'], data.get('gingivitis', False), data.get('early_periodontitis', False),
-                data.get('moderate_periodontitis', False), data.get('advanced_periodontitis', False),
-                data.get('occlusion', ''),
+                data.get('moderate_periodontitis', False), data.get('advanced_periodontitis', False), data.get('occlusion', ''),
                 data.get('orthodontic', False), data.get('stayplate', False), data.get('appliance_others', ''),
                 data.get('clenching', False), data.get('clicking', False), data.get('trismus', False),
                 data.get('muscle_spasm', False), data.get('panoramic', False), data.get('cephalometric', False),
@@ -1001,8 +936,7 @@ def update_patient():
         UPDATE patients
         SET first_name = ?, last_name = ?, phone = ?, email = ?, address = ?, city = ?, next_appointment = ?, last_appointment = ?, register_date = ?
         WHERE patient_id = ?
-    ''', (
-    first_name, last_name, phone, email, address, city, next_appointment, last_appointment, register_date, patient_id))
+    ''', (first_name, last_name, phone, email, address, city, next_appointment, last_appointment, register_date, patient_id))
     conn.commit()
     conn.close()
 
@@ -1010,7 +944,6 @@ def update_patient():
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_activity(f'{user_number} {current_time}: Updated patient ID {patient_id}')
     return jsonify({'success': True})
-
 
 @app.route('/disable_patient', methods=['POST'])
 def disable_patient():
@@ -1028,7 +961,6 @@ def disable_patient():
     except Exception as e:
         log_activity(f'{user_number} {current_time}: Failed to disable patient ID {patient_id} - {str(e)}')
         return jsonify(success=False, error=str(e))
-
 
 @app.route('/treatments')
 def treatments():
@@ -1058,9 +990,13 @@ def intraoral_exams(patient_id):
     patient['age'] = age
 
     intraoral_exams = conn.execute('SELECT * FROM intraoral_exams WHERE patient_id = ?', (patient_id,)).fetchall()
+
+    # Fetch items from the Item table
+    items = conn.execute('SELECT item_id, item_name FROM Item').fetchall()
+    items = [dict(item) for item in items] if items else []
+
     conn.close()
-    log_activity(f'Viewed intraoral exams for patient ID {patient_id}')
-    return render_template('intraoral_exam.html', patient=patient, intraoral_exams=intraoral_exams)
+    return render_template('intraoral_exam.html', patient=patient, intraoral_exams=intraoral_exams, items=items)
 
 
 @app.route('/logout')
@@ -1070,182 +1006,6 @@ def logout():
     log_activity(f'{user_number} {current_time}: User logged out')
     session.clear()
     return redirect(url_for('login'))
-
-<<<<<<< Updated upstream
-@app.route('/inventory')
-@role_required([1, 2])  # Both admin and user can access
-def inventory():
-    conn = get_db_connection()
-    inventory_items = conn.execute('''
-        SELECT item_id, name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, unit
-        FROM inventory
-        WHERE is_disabled = 0
-    ''').fetchall()
-    conn.close()
-    return render_template('inventory.html', inventory_items=inventory_items)
-
-@app.route('/submit_add_item', methods=['POST'])
-def submit_add_item():
-    data = request.get_json()
-    name = data['name']
-    category = data['category']
-    variations = data['variations']
-    stocked_quantity = data['stocked_quantity']
-    seller = data['seller']
-    price_min = data['price_min']
-    price_max = data['price_max']
-    low_stock_threshold = data['low_stock_threshold']
-    unit = data['unit']
-
-    try:
-        conn = get_db_connection()
-        conn.execute('''
-            INSERT INTO inventory (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, unit)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, unit))
-        conn.commit()
-        conn.close()
-
-        # Log the activity
-        user_number = session.get('user_number')
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_activity(f'{user_number} {current_time}: Added new item to inventory: {name}')
-
-        return jsonify(success=True)
-    except Exception as e:
-        return jsonify(success=False, error=str(e))
-
-@app.route('/add_stock', methods=['POST'])
-def add_stock():
-    data = request.get_json()
-    item_id = data['item_id']
-    additional_stock = data['additional_stock']
-
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    try:
-        conn = get_db_connection()
-        conn.execute('UPDATE inventory SET stocked_quantity = stocked_quantity + ? WHERE item_id = ?',
-                     (additional_stock, item_id))
-        conn.commit()
-        conn.close()
-        log_activity(f'{user_number} {current_time}: Added stock to item ID {item_id}: {additional_stock} units')
-        return jsonify(success=True)
-    except Exception as e:
-        log_activity(f'{user_number} {current_time}: Failed to add stock to item ID {item_id}: {additional_stock} units - {str(e)}')
-        return jsonify(success=False, error=str(e))
-
-@app.route('/deactivate_item', methods=['POST'])
-def deactivate_item():
-    data = request.get_json()
-    item_id = data['item_id']
-
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    try:
-        conn = get_db_connection()
-        conn.execute('UPDATE inventory SET is_disabled = 1 WHERE item_id = ?', (item_id,))
-        conn.commit()
-        conn.close()
-        log_activity(f'{user_number} {current_time}: Deactivated item with ID {item_id}')
-        return jsonify(success=True)
-    except Exception as e:
-        log_activity(f'{user_number} {current_time}: Failed to deactivate item with ID {item_id} - {str(e)}')
-        return jsonify(success=False, error=str(e))
-
-@app.route('/register_item', methods=['GET', 'POST'])
-def register_item():
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    if request.method == 'POST':
-        name = request.form['name']
-        category = request.form['category']
-        variations = request.form['variations']
-        stocked_quantity = request.form['stocked_quantity']
-        seller = request.form['seller']
-        price_min = request.form['price_min']
-        price_max = request.form['price_max']
-        low_stock_threshold = request.form['low_stock_threshold']
-
-        conn = get_db_connection()
-        conn.execute('''
-            INSERT INTO inventory (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold))
-        conn.commit()
-        conn.close()
-        log_activity(f'{user_number} {current_time}: Registered new item: {name}')
-        flash('Item registered successfully.')
-        return redirect(url_for('inventory'))
-    return render_template('register_item.html')
-
-@app.route('/item/<int:item_id>')
-def view_item(item_id):
-    conn = get_db_connection()
-    item = conn.execute('SELECT * FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
-    conn.close()
-    if item is None:
-        flash('Item not found!')
-        return redirect(url_for('inventory'))
-
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_activity(f'{user_number} {current_time}: Viewed item with ID {item_id}')
-    return render_template('view_item.html', item=item)
-
-@app.route('/edit_inventory/<int:item_id>', methods=['GET', 'POST'])
-@role_required([1])  # Assuming only admin can edit
-def edit_inventory(item_id):
-    conn = get_db_connection()
-    if request.method == 'POST':
-        name = request.form['name']
-        category = request.form['category']
-        variations = request.form['variations']
-        stocked_quantity = request.form['stocked_quantity']
-        seller = request.form['seller']
-        price_min = request.form['price_min']
-        price_max = request.form['price_max']
-        low_stock_threshold = request.form['low_stock_threshold']
-        unit = request.form['unit']
-
-        conn.execute('''
-            UPDATE inventory
-            SET name = ?, category = ?, variations = ?, stocked_quantity = ?, seller = ?, price_min = ?, price_max = ?, low_stock_threshold = ?, unit = ?
-            WHERE item_id = ?
-        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, unit, item_id))
-        conn.commit()
-        conn.close()
-
-        # Log the activity
-        user_number = session.get('user_number')
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_activity(f'{user_number} {current_time}: Edited item with ID {item_id}')
-
-        return redirect(url_for('inventory'))
-
-    item = conn.execute('SELECT * FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
-    conn.close()
-    return render_template('edit_inventory.html', item=item)
-
-@app.route('/disable_inventory/<int:item_id>')
-@role_required([1])  # Assuming only admin can disable
-def disable_inventory(item_id):
-    conn = get_db_connection()
-    item = conn.execute('SELECT is_disabled FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
-    new_status = not item['is_disabled']
-    conn.execute('UPDATE inventory SET is_disabled = ? WHERE item_id = ?', (new_status, item_id))
-    conn.commit()
-    conn.close()
-
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_activity(f'{user_number} {current_time}: Disabled item with ID {item_id}')
-    return redirect(url_for('inventory'))
-=======
->>>>>>> Stashed changes
 
 @app.route('/reports')
 @role_required([1, 2])  # Both admin and user can access
@@ -1308,12 +1068,10 @@ def generate_report(report_type):
     width, height = letter
 
     p.setFont("Helvetica-Bold", 14)
-    p.drawCentredString(width / 2.0, height - 50,
-                        f"{report_type.capitalize()} Report for Dr. Lorena L. Timola Dental Clinic")
+    p.drawCentredString(width / 2.0, height - 50, f"{report_type.capitalize()} Report for Dr. Lorena L. Timola Dental Clinic")
 
     p.setFont("Helvetica", 12)
-    p.drawCentredString(width / 2.0, height - 70,
-                        f"Blk 1 Lot 4 Brookside Dr. corner Columbus St Brookside Hills Gate 1, Brgy, Cainta, 1900 Rizal")
+    p.drawCentredString(width / 2.0, height - 70, f"Blk 1 Lot 4 Brookside Dr. corner Columbus St Brookside Hills Gate 1, Brgy, Cainta, 1900 Rizal")
 
     if report_type == 'appointments':
         p.setFont("Helvetica-Bold", 10)
@@ -1393,7 +1151,6 @@ def generate_report(report_type):
 
     return send_file(buffer, as_attachment=True, download_name=filename)
 
-
 @app.route('/payments')
 def payments():
     conn = get_db_connection()
@@ -1403,7 +1160,6 @@ def payments():
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_activity(f'{user_number} {current_time}: Accessed payments page')
     return render_template('payments.html', patients=patients)
-
 
 @app.route('/process_payment', methods=['POST'])
 def process_payment():
@@ -1449,8 +1205,7 @@ def process_payment():
     conn.commit()
 
     # Log the activity
-    log_activity(
-        f'{user_number} {current_time}: Processed payment for patient {patient_full_name} ({patient_id}), amount: {amount}, payment method: {payment_method}')
+    log_activity(f'{user_number} {current_time}: Processed payment for patient {patient_full_name} ({patient_id}), amount: {amount}, payment method: {payment_method}')
 
     # Generate the PDF receipt
     buffer = BytesIO()
@@ -1493,7 +1248,6 @@ def process_payment():
     conn.close()
     return jsonify({'success': True})
 
-
 @app.route('/maintenance')
 def maintenance():
     user_number = session.get('user_number')
@@ -1501,14 +1255,19 @@ def maintenance():
     log_activity(f'{user_number} {current_time}: Accessed maintenance page')
     return render_template('maintenance.html')
 
-
 @app.route('/backup_system', methods=['GET'])
 def backup_system():
     default_path = os.path.join(os.path.expanduser("~"), 'Desktop')
     path = request.args.get('path', default_path)
 
+    if not path:
+        path = default_path
+
     if not os.path.exists(path):
-        return jsonify({"success": False, "error": "Invalid path"}), 400
+        try:
+            os.makedirs(path)
+        except Exception as e:
+            return jsonify({"success": False, "error": f"Failed to create directory: {str(e)}"}), 400
 
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_name = f'backup_{current_time}.db'
@@ -1533,9 +1292,13 @@ def backup_system():
         # Log the activity
         log_activity(f'{user_number} {log_time}: System backup created at {backup_path}')
 
-        return jsonify({"success": True, "path": backup_path})
+        # Send the backup file for download
+        return send_file(backup_path, as_attachment=True, download_name=backup_name)
+
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+pass
 
 
 @app.route('/restore_system', methods=['POST'])
@@ -1558,7 +1321,6 @@ def restore_system():
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @app.route('/user_log', methods=['GET'])
 def user_log():
@@ -1589,7 +1351,6 @@ def help():
 
     return render_template('help.html', faqs=faqs)
 
-
 @app.route('/add_faq', methods=['POST'])
 def add_faq():
     data = request.get_json()
@@ -1609,7 +1370,6 @@ def add_faq():
     log_activity(f'{user_number} {current_time}: Added FAQ with question: {question}')
 
     return jsonify(success=True)
-
 
 @app.route('/about')
 def about():
@@ -1649,7 +1409,6 @@ def profile():
         flash('User not found', 'error')
         return redirect(url_for('dashboard'))
 
-
 @app.route('/resend_otp_profile', methods=['POST'])
 def resend_otp_profile():
     otp = str(randint(100000, 999999))
@@ -1662,7 +1421,6 @@ def resend_otp_profile():
     log_activity(f'{user_number} {current_time}: Resent OTP for profile email change')
 
     return jsonify({'success': True})
-
 
 @app.route('/verify_otp_profile', methods=['POST'])
 def verify_otp_profile():
@@ -1691,7 +1449,6 @@ def verify_otp_profile():
     else:
         return jsonify({'success': False, 'message': 'OTP session expired. Please request a new OTP.'})
 
-
 @app.route('/send_new_email_otp_profile', methods=['POST'])
 def send_new_email_otp_profile():
     if 'user_id' not in session or not session.get('otp_verified'):
@@ -1708,7 +1465,6 @@ def send_new_email_otp_profile():
     log_activity(f'{user_number} {current_time}: Sent new email OTP for profile')
 
     return jsonify({'success': True})
-
 
 @app.route('/verify_new_email_otp_profile', methods=['POST'])
 def verify_new_email_otp_profile():
@@ -1740,7 +1496,6 @@ def verify_new_email_otp_profile():
     else:
         return jsonify({'success': False, 'message': 'OTP session expired. Please request a new OTP.'})
 
-
 @app.route('/appointment_records')
 @role_required([1, 2])  # Both admin and user can access
 def appointment_records():
@@ -1771,6 +1526,30 @@ def appointment_records():
                            patients=patients,
                            dentists=dentists,
                            statuses=statuses)
+
+@app.route('/submit_item', methods=['POST'])
+def submit_item():
+    try:
+        data = request.get_json()
+        item_id = data.get('item_id')
+        quantity = data.get('quantity')
+        patient_id = data.get('patient_id')
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Insert into items_used table
+        cursor.execute('''
+            INSERT INTO items_used (patient_id, quantity, item_id)
+            VALUES (?, ?, ?)
+        ''', (patient_id, quantity, item_id))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
 
 
 @app.route('/submit_appointment', methods=['POST'])
@@ -1836,11 +1615,9 @@ def submit_appointment():
 
     user_number = session.get('user_number')
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_activity(
-        f'{user_number} {current_time}: Created appointment for patient ID {patient_id} on {appointment_date} from {start_time} to {end_time}')
+    log_activity(f'{user_number} {current_time}: Created appointment for patient ID {patient_id} on {appointment_date} from {start_time} to {end_time}')
 
     return jsonify({'success': True})
-
 
 @app.route('/treatment_records')
 @role_required([1, 2])  # Both admin and user can access
@@ -1862,8 +1639,6 @@ def treatment_records():
     log_activity(f'{user_number} {current_time}: Accessed treatment records page')
 
     return render_template('treatment_records.html', records=records)
-
-
 @app.route('/change_password', methods=['POST'])
 def change_password():
     if 'user_id' not in session:
@@ -1906,7 +1681,6 @@ def change_password():
 
     return jsonify({'success': True, 'message': 'Password updated successfully'}), 200
 
-
 @app.route('/change_email', methods=['POST'])
 def change_email():
     password = request.form['password']
@@ -1938,7 +1712,6 @@ def change_email():
     flash('Email changed successfully.')
     return redirect(url_for('profile'))
 
-
 @app.route('/send_new_email_otp', methods=['POST'])
 def send_new_email_otp():
     if 'user_id' not in session or not session.get('otp_verified'):
@@ -1961,7 +1734,6 @@ def send_new_email_otp():
     log_activity(f'{user_number} {current_time}: Requested OTP for email change.')
 
     return jsonify({'success': True})
-
 
 @app.route('/verify_otp_for_email_change', methods=['POST'])
 def verify_otp_for_email_change():
@@ -2000,7 +1772,6 @@ def verify_otp_for_email_change():
 
         return jsonify({'success': False, 'message': 'Invalid OTP'})
 
-
 @app.route('/verify_otp_for_password_reset', methods=['GET', 'POST'])
 def verify_otp_for_password_reset():
     if request.method == 'POST':
@@ -2028,55 +1799,77 @@ def verify_otp_for_password_reset():
     return render_template('verify_otp.html')
 
 
-@app.route('/generate_billing/<int:patient_id>')
-@role_required([1, 2])  # Both admin and user can access
+@app.route('/generate_billing/<int:patient_id>', methods=['GET'])
 def generate_billing(patient_id):
     conn = get_db_connection()
+    cursor = conn.cursor()
 
-    # Fetch diagnosis details for the patient
-    diagnoses = conn.execute('''
-        SELECT * FROM diagnosis WHERE patient_id = ?
-    ''', (patient_id,)).fetchall()
+    # Fetch diagnoses and calculate total cost
+    cursor.execute('''
+        SELECT tooth_number, condition_code, cost, date_of_diagnosis
+        FROM conditions
+        WHERE patient_id = ?
+    ''', (patient_id,))
+    diagnoses = cursor.fetchall()
 
-    # Calculate total cost
-    total_cost = sum(d['cost'] for d in diagnoses)
+    # Fetch items used and their costs
+    cursor.execute('''
+        SELECT iu.tooth_number, i.item_name, i.unit, iu.quantity, i.cost, iu.date_of_diagnosis
+        FROM items_used iu
+        JOIN Items i ON iu.item_id = i.item_id
+        WHERE iu.patient_id = ?
+    ''', (patient_id,))
+    items_used = cursor.fetchall()
 
-    # Insert billing record
-    conn.execute('''
-        INSERT INTO billing (patient_id, total_cost, date_of_billing)
-        VALUES (?, ?, DATE('now'))
-    ''', (patient_id, total_cost))
-    conn.commit()
-
-    # Fetch the latest billing record
-    billing = conn.execute('''
-        SELECT * FROM billing WHERE patient_id = ? ORDER BY date_of_billing DESC LIMIT 1
-    ''', (patient_id,)).fetchone()
-
-    # Fetch patient details
-    patient = conn.execute('''
-        SELECT * FROM patients WHERE patient_id = ?
-    ''', (patient_id,)).fetchone()
+    total_cost = sum([diagnosis['cost'] for diagnosis in diagnoses]) + sum([item['cost'] * item['quantity'] for item in items_used])
 
     conn.close()
+
+    return render_template('billing.html', patient_id=patient_id, diagnoses=diagnoses, items_used=items_used, total_cost=total_cost)
+
+@app.route('/conditions', methods=['POST'])
+def add_condition():
+    data = request.json
+    required_fields = ['tooth_number', 'condition_code', 'patient_id']
+    if not all(field in data for field in required_fields):
+        return jsonify({'error': 'Missing fields'}), 400
+
+    with sqlite3.connect('instance/DMSDB.db') as conn:
+        cur = conn.cursor()
+        cur.execute("INSERT INTO conditions (tooth_number, condition_code, patient_id) VALUES (?, ?, ?)",
+                    (data['tooth_number'], data['condition_code'], data['patient_id']))
+        conn.commit()
 
     # Log the activity
     user_number = session.get('user_number')
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_activity(
-        f'{user_number} {current_time}: Generated billing for patient ID {patient_id} with total cost {total_cost}.')
+    log_activity(f'{user_number} {current_time}: Added condition for patient ID {data["patient_id"]}, tooth number {data["tooth_number"]}, condition code {data["condition_code"]}')
 
-    return render_template('billing.html', diagnoses=diagnoses, billing=billing, patient=patient)
+    return jsonify({'success': True}), 201
 
-<<<<<<< Updated upstream
-@app.route('/generate_consent_form/<int:patient_id>')
-@role_required([1, 2])  # Both admin and user can access
-def generate_consent_form(patient_id):
-=======
-    return render_template('billing.html', diagnoses=diagnoses, billing=billing)
+@app.route('/conditions/<int:condition_id>', methods=['DELETE'])
+def delete_condition(condition_id):
+    with sqlite3.connect('database.db') as conn:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM conditions WHERE condition_id=?", (condition_id,))
+        conn.commit()
+
+    # Log the activity
+    user_number = session.get('user_number')
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_activity(f'{user_number} {current_time}: Deleted condition with ID {condition_id}')
+
+    return jsonify({'success': True}), 200
+
+@app.route('/add_items')
+def add_items():
+    conn = get_db_connection()
+    items = conn.execute('SELECT id, name FROM items').fetchall()
+    conn.close()
+    return render_template('add_items.html', items=items)
 
 
-# INVENTORY
+#INVENTORY
 
 
 @app.route('/inventory')
@@ -2084,15 +1877,329 @@ def generate_consent_form(patient_id):
 def inventory():
     return render_template('inventory.html')
 
-
 @app.route('/get_inventory')
 def get_inventory():
->>>>>>> Stashed changes
+    conn = get_db_connection()
+    inventory = conn.execute('''
+        SELECT i.inventory_id, it.item_name, it.unique_item_id, c.category_name, v.variation_name, i.stocked_quantity, s.seller_name, 
+               i.exact_price, i.low_stock_threshold, u.first_name || ' ' || u.last_name AS added_by, 
+               i.added_by_role, i.date_added, i.time_added, i.is_disabled
+        FROM Inventory i
+        JOIN Item it ON i.item_id = it.item_id
+        JOIN Category c ON it.category_id = c.category_id
+        LEFT JOIN Variation v ON it.variation_id = v.variation_id
+        JOIN Seller s ON i.seller_id = s.seller_id
+        JOIN users u ON i.added_by_id = u.user_id
+    ''').fetchall()
+    conn.close()
+    return jsonify([dict(row) for row in inventory])
+
+@app.route('/get_items')
+def get_items():
+    conn = get_db_connection()
+    items = conn.execute('SELECT item_name FROM Item').fetchall()
+    conn.close()
+    return jsonify([dict(row) for row in items])
+
+@app.route('/get_item/<int:inventory_id>')
+def get_item(inventory_id):
+    conn = get_db_connection()
+    item = conn.execute('''
+        SELECT it.item_name, c.category_name, it.variation_description, v.variation_name,
+               MIN(p.price) AS min_price, MAX(p.price) AS max_price,
+               (SELECT SUM(i2.stocked_quantity) FROM Inventory i2
+                JOIN Item it2 ON i2.item_id = it2.item_id
+                WHERE it2.item_name = it.item_name) AS total_inventory
+        FROM Inventory i
+        JOIN Item it ON i.item_id = it.item_id
+        JOIN Category c ON it.category_id = c.category_id
+        LEFT JOIN Variation v ON it.variation_id = v.variation_id
+        LEFT JOIN Price p ON i.item_id = p.item_id
+        WHERE it.item_name = (
+            SELECT item_name FROM Inventory i2
+            JOIN Item it2 ON i2.item_id = it2.item_id
+            WHERE i2.inventory_id = ?
+        )
+    ''', (inventory_id,)).fetchone()
+    conn.close()
+    if item:
+        return jsonify(dict(item))
+    else:
+        return jsonify({'error': 'Item not found'}), 404
+    
+@app.route('/add_category', methods=['POST'])
+def add_category():
+    data = request.json
+    category_name = data['category_name']
+    conn = get_db_connection()
+    try:
+        conn.execute('INSERT INTO Category (category_name) VALUES (?)', (category_name,))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
+
+@app.route('/add_variation', methods=['POST'])
+def add_variation():
+    data = request.json
+    variation_name = data['variation_name']
+    conn = get_db_connection()
+    try:
+        conn.execute('INSERT INTO Variation (variation_name) VALUES (?)', (variation_name,))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
+
+@app.route('/add_seller', methods=['POST'])
+def add_seller():
+    data = request.json
+    seller_name = data['seller_name']
+    conn = get_db_connection()
+    try:
+        conn.execute('INSERT INTO Seller (seller_name) VALUES (?)', (seller_name,))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
+
+@app.route('/register_item', methods=['POST'])
+def register_item():
+    data = request.json
+    item_name = data['item_name']
+    category_id = data['category_id']
+    variation_id = data.get('variation_id')
+    stocked_quantity = data['stocked_quantity']
+    seller_id = data['seller_id']
+    exact_price = data['exact_price']
+    low_stock_threshold = data['low_stock_threshold']
+    added_by_id = session['user_id']
+    added_by_role = session['role_id']
+    date_added = datetime.now().strftime('%Y-%m-%d')
+    time_added = datetime.now().strftime('%H:%M:%S')
+    
+    conn = get_db_connection()
+    
+    # Fetch the category name based on category_id
+    category_name = conn.execute('SELECT category_name FROM Category WHERE category_id = ?', (category_id,)).fetchone()[0]
+    
+    unique_item_id = generate_unique_item_id(category_name)  # Generate unique item ID using category name
+
+    try:
+        # Insert into Item table with the unique item ID
+        conn.execute('''
+            INSERT INTO Item (item_name, category_id, variation_id, unique_item_id)
+            VALUES (?, ?, ?, ?)
+        ''', (item_name, category_id, variation_id, unique_item_id))
+        
+        item_id = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
+        
+        # Insert into Inventory table
+        conn.execute('''
+            INSERT INTO Inventory (item_id, stocked_quantity, seller_id, exact_price, low_stock_threshold, added_by, added_by_id, added_by_role, date_added, time_added)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (item_id, stocked_quantity, seller_id, exact_price, low_stock_threshold, added_by_id, added_by_id, added_by_role, date_added, time_added))
+        
+        # Insert into Price table
+        conn.execute('''
+            INSERT INTO Price (item_id, seller_id, price, date_added, time_added)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (item_id, seller_id, exact_price, date_added, time_added))
+        
+        conn.commit()
+        return jsonify({'success': True, 'unique_item_id': unique_item_id})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
+
+
+        
+@app.route('/update_variation_description', methods=['POST'])
+def update_variation_description():
+    data = request.json
+    item_id = data['item_id']
+    variation_description = data['variation_description']
+    conn = get_db_connection()
+    try:
+        conn.execute('UPDATE Item SET variation_description = ? WHERE item_id = ?', (variation_description, item_id))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
+
+@app.route('/get_categories')
+def get_categories():
+    conn = get_db_connection()
+    categories = conn.execute('SELECT * FROM Category').fetchall()
+    conn.close()
+    return jsonify([dict(row) for row in categories])
+
+@app.route('/get_variations')
+def get_variations():
+    conn = get_db_connection()
+    variations = conn.execute('SELECT * FROM Variation').fetchall()
+    conn.close()
+    return jsonify([dict(row) for row in variations])
+
+@app.route('/get_sellers')
+def get_sellers():
+    conn = get_db_connection()
+    sellers = conn.execute('SELECT * FROM Seller').fetchall()
+    conn.close()
+    return jsonify([dict(row) for row in sellers])
+
+@app.route('/deactivate_item', methods=['POST'])
+def deactivate_item():
+    data = request.get_json()
+    item_id = data['item_id']
+    try:
+        conn = get_db_connection()
+        conn.execute('UPDATE inventory SET is_disabled = 1 WHERE item_id = ?', (item_id,))
+        conn.commit()
+        conn.close()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
+
+@app.route('/item/<int:item_id>')
+def view_item(item_id):
+    conn = get_db_connection()
+    item = conn.execute('SELECT * FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
+    conn.close()
+    if item is None:
+        flash('Item not found!')
+        return redirect(url_for('inventory'))
+    return render_template('view_item.html', item=item)
+
+@app.route('/edit_inventory/<int:item_id>', methods=['GET', 'POST'])
+@role_required([1])  # Assuming only admin can edit
+def edit_inventory(item_id):
+    conn = get_db_connection()
+    if request.method == 'POST':
+        name = request.form['name']
+        category = request.form['category']
+        variations = request.form['variations']
+        stocked_quantity = request.form['stocked_quantity']
+        seller = request.form['seller']
+        price_min = request.form['price_min']
+        price_max = request.form['price_max']
+        low_stock_threshold = request.form['low_stock_threshold']
+        conn.execute('''
+            UPDATE inventory
+            SET name = ?, category = ?, variations = ?, stocked_quantity = ?, seller = ?, price_min = ?, price_max = ?, low_stock_threshold = ?
+            WHERE item_id = ?
+        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, item_id))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('inventory'))
+    item = conn.execute('SELECT * FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
+    conn.close()
+    return render_template('edit_inventory.html', item=item)
+
+@app.route('/disable_inventory/<int:item_id>')
+@role_required([1])  # Assuming only admin can disable
+def disable_inventory(item_id):
+    conn = get_db_connection()
+    item = conn.execute('SELECT is_disabled FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
+    new_status = not item['is_disabled']
+    conn.execute('UPDATE inventory SET is_disabled = ? WHERE item_id = ?', (new_status, item_id))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('inventory'))
+
+@app.route('/edit_item', methods=['POST'])
+def edit_item():
+    data = request.json
+    inventory_id = data['inventory_id']
+    stocked_quantity = data['stocked_quantity']
+    seller_id = data['seller_id']
+    exact_price = data['exact_price']
+    low_stock_threshold = data['low_stock_threshold']
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            UPDATE Inventory
+            SET stocked_quantity = ?, seller_id = ?, exact_price = ?, low_stock_threshold = ?
+            WHERE inventory_id = ?
+        ''', (stocked_quantity, seller_id, exact_price, low_stock_threshold, inventory_id))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
+
+@app.route('/disable_item', methods=['POST'])
+def disable_item():
+    data = request.json
+    inventory_id = data['inventory_id']
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            UPDATE Inventory
+            SET is_disabled = 1
+            WHERE inventory_id = ?
+        ''', (inventory_id,))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
+
+def generate_unique_item_id(category_name):
+    prefix = category_name[:2].upper()  # Get the first two letters of the category name and convert to uppercase
+    number = random.randint(100000, 999999)  # Random 6-digit number
+    return f"{prefix}-{number}"
+
+@app.route('/get_item_details/<int:inventory_id>')
+def get_item_details(inventory_id):
+    conn = get_db_connection()
+    item = conn.execute('''
+        SELECT it.item_name, c.category_name, v.variation_name, i.stocked_quantity
+        FROM Inventory i
+        JOIN Item it ON i.item_id = it.item_id
+        JOIN Category c ON it.category_id = c.category_id
+        LEFT JOIN Variation v ON it.variation_id = v.variation_id
+        WHERE i.inventory_id = ?
+    ''', (inventory_id,)).fetchone()
+    conn.close()
+    if item:
+        return jsonify(dict(item))
+    else:
+        return jsonify({'error': 'Item not found'}), 404
+
+@app.route('/update_stock_quantity', methods=['POST'])
+def update_stock_quantity():
+    data = request.json
+    inventory_id = data['inventory_id']
+    stocked_quantity = data['stocked_quantity']
+    conn = get_db_connection()
+    try:
+        conn.execute('UPDATE Inventory SET stocked_quantity = ? WHERE inventory_id = ?', (stocked_quantity, inventory_id))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
+
+@app.route('/generate_consent_form/<int:patient_id>')
+@role_required([1, 2])  # Both admin and user can access
+def generate_consent_form(patient_id):
     conn = get_db_connection()
     patient = conn.execute('SELECT first_name, middle_name, last_name FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
     conn.close()
 
-<<<<<<< Updated upstream
     if not patient:
         return 'Patient not found', 404
 
@@ -2131,355 +2238,8 @@ def get_inventory():
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='Consent_Form.pdf', mimetype='application/pdf')
 
-# Boo's Commit
-@app.route('/conditions', methods=['POST'])
-def add_condition():
-=======
-
-@app.route('/get_items')
-def get_items():
-    conn = get_db_connection()
-    items = conn.execute('SELECT item_name FROM Item').fetchall()
-    conn.close()
-    return jsonify([dict(row) for row in items])
-
-
-@app.route('/get_item/<int:inventory_id>')
-def get_item(inventory_id):
-    conn = get_db_connection()
-    item = conn.execute('''
-        SELECT it.item_name, c.category_name, it.variation_description, v.variation_name,
-               MIN(p.price) AS min_price, MAX(p.price) AS max_price
-        FROM Inventory i
-        JOIN Item it ON i.item_id = it.item_id
-        JOIN Category c ON it.category_id = c.category_id
-        LEFT JOIN Variation v ON it.variation_id = v.variation_id
-        LEFT JOIN Price p ON i.item_id = p.item_id
-        WHERE it.item_name = (
-            SELECT item_name FROM Inventory i2
-            JOIN Item it2 ON i2.item_id = it2.item_id
-            WHERE i2.inventory_id = ?
-        )
-    ''', (inventory_id,)).fetchone()
-    conn.close()
-    if item:
-        return jsonify(dict(item))
-    else:
-        return jsonify({'error': 'Item not found'}), 404
-
-
-@app.route('/add_category', methods=['POST'])
-def add_category():
->>>>>>> Stashed changes
-    data = request.json
-    required_fields = ['tooth_number', 'condition_code', 'patient_id']
-    if not all(field in data for field in required_fields):
-        return jsonify({'error': 'Missing fields'}), 400
-
-    with sqlite3.connect('instance/DMSDB.db') as conn:
-        cur = conn.cursor()
-        cur.execute("INSERT INTO conditions (tooth_number, condition_code, patient_id) VALUES (?, ?, ?)",
-                    (data['tooth_number'], data['condition_code'], data['patient_id']))
-        conn.commit()
-
-<<<<<<< Updated upstream
-    # Log the activity
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_activity(f'{user_number} {current_time}: Added condition for patient ID {data["patient_id"]}, tooth number {data["tooth_number"]}, condition code {data["condition_code"]}')
-
-    return jsonify({'success': True}), 201
-
-
-@app.route('/conditions/<int:condition_id>', methods=['DELETE'])
-def delete_condition(condition_id):
-    with sqlite3.connect('database.db') as conn:
-        cur = conn.cursor()
-        cur.execute("DELETE FROM conditions WHERE condition_id=?", (condition_id,))
-=======
-
-@app.route('/add_variation', methods=['POST'])
-def add_variation():
-    data = request.json
-    variation_name = data['variation_name']
-    conn = get_db_connection()
-    try:
-        conn.execute('INSERT INTO Variation (variation_name) VALUES (?)', (variation_name,))
->>>>>>> Stashed changes
-        conn.commit()
-
-<<<<<<< Updated upstream
-    # Log the activity
-    user_number = session.get('user_number')
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_activity(f'{user_number} {current_time}: Deleted condition with ID {condition_id}')
-
-    return jsonify({'success': True}), 200
-
-# Boo's Commit
-
 
 if __name__ == '__main__':
    app.run(debug=True)
 #    app.run(host='192.168.183.72', port=5000, debug=True)
-=======
 
-@app.route('/add_seller', methods=['POST'])
-def add_seller():
-    data = request.json
-    seller_name = data['seller_name']
-    conn = get_db_connection()
-    try:
-        conn.execute('INSERT INTO Seller (seller_name) VALUES (?)', (seller_name,))
-        conn.commit()
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
-    finally:
-        conn.close()
-
-
-@app.route('/register_item', methods=['POST'])
-def register_item():
-    data = request.json
-    item_name = data['item_name']
-    category_id = data['category_id']
-    variation_id = data.get('variation_id')
-    stocked_quantity = data['stocked_quantity']
-    seller_id = data['seller_id']
-    exact_price = data['exact_price']
-    low_stock_threshold = data['low_stock_threshold']
-    added_by_id = session['user_id']
-    added_by_role = session['role_id']
-    date_added = datetime.now().strftime('%Y-%m-%d')
-    time_added = datetime.now().strftime('%H:%M:%S')
-
-    conn = get_db_connection()
-
-    # Fetch the category name based on category_id
-    category_name = conn.execute('SELECT category_name FROM Category WHERE category_id = ?', (category_id,)).fetchone()[
-        0]
-
-    unique_item_id = generate_unique_item_id(category_name)  # Generate unique item ID using category name
-
-    try:
-        # Insert into Item table with the unique item ID
-        conn.execute('''
-            INSERT INTO Item (item_name, category_id, variation_id, unique_item_id)
-            VALUES (?, ?, ?, ?)
-        ''', (item_name, category_id, variation_id, unique_item_id))
-
-        item_id = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
-
-        # Insert into Inventory table
-        conn.execute('''
-            INSERT INTO Inventory (item_id, stocked_quantity, seller_id, exact_price, low_stock_threshold, added_by, added_by_id, added_by_role, date_added, time_added)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-        item_id, stocked_quantity, seller_id, exact_price, low_stock_threshold, added_by_id, added_by_id, added_by_role,
-        date_added, time_added))
-
-        # Insert into Price table
-        conn.execute('''
-            INSERT INTO Price (item_id, seller_id, price, date_added, time_added)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (item_id, seller_id, exact_price, date_added, time_added))
-
-        conn.commit()
-        return jsonify({'success': True, 'unique_item_id': unique_item_id})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
-    finally:
-        conn.close()
-
-
-@app.route('/update_variation_description', methods=['POST'])
-def update_variation_description():
-    data = request.json
-    item_id = data['item_id']
-    variation_description = data['variation_description']
-    conn = get_db_connection()
-    try:
-        conn.execute('UPDATE Item SET variation_description = ? WHERE item_id = ?', (variation_description, item_id))
-        conn.commit()
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
-    finally:
-        conn.close()
-
-
-@app.route('/get_categories')
-def get_categories():
-    conn = get_db_connection()
-    categories = conn.execute('SELECT * FROM Category').fetchall()
-    conn.close()
-    return jsonify([dict(row) for row in categories])
-
-
-@app.route('/get_variations')
-def get_variations():
-    conn = get_db_connection()
-    variations = conn.execute('SELECT * FROM Variation').fetchall()
-    conn.close()
-    return jsonify([dict(row) for row in variations])
-
-
-@app.route('/get_sellers')
-def get_sellers():
-    conn = get_db_connection()
-    sellers = conn.execute('SELECT * FROM Seller').fetchall()
-    conn.close()
-    return jsonify([dict(row) for row in sellers])
-
-
-@app.route('/deactivate_item', methods=['POST'])
-def deactivate_item():
-    data = request.get_json()
-    item_id = data['item_id']
-    try:
-        conn = get_db_connection()
-        conn.execute('UPDATE inventory SET is_disabled = 1 WHERE item_id = ?', (item_id,))
-        conn.commit()
-        conn.close()
-        return jsonify(success=True)
-    except Exception as e:
-        return jsonify(success=False, error=str(e))
-
-
-@app.route('/item/<int:item_id>')
-def view_item(item_id):
-    conn = get_db_connection()
-    item = conn.execute('SELECT * FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
-    conn.close()
-    if item is None:
-        flash('Item not found!')
-        return redirect(url_for('inventory'))
-    return render_template('view_item.html', item=item)
-
-
-@app.route('/edit_inventory/<int:item_id>', methods=['GET', 'POST'])
-@role_required([1])  # Assuming only admin can edit
-def edit_inventory(item_id):
-    conn = get_db_connection()
-    if request.method == 'POST':
-        name = request.form['name']
-        category = request.form['category']
-        variations = request.form['variations']
-        stocked_quantity = request.form['stocked_quantity']
-        seller = request.form['seller']
-        price_min = request.form['price_min']
-        price_max = request.form['price_max']
-        low_stock_threshold = request.form['low_stock_threshold']
-        conn.execute('''
-            UPDATE inventory
-            SET name = ?, category = ?, variations = ?, stocked_quantity = ?, seller = ?, price_min = ?, price_max = ?, low_stock_threshold = ?
-            WHERE item_id = ?
-        ''', (name, category, variations, stocked_quantity, seller, price_min, price_max, low_stock_threshold, item_id))
-        conn.commit()
-        conn.close()
-        return redirect(url_for('inventory'))
-    item = conn.execute('SELECT * FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
-    conn.close()
-    return render_template('edit_inventory.html', item=item)
-
-
-@app.route('/disable_inventory/<int:item_id>')
-@role_required([1])  # Assuming only admin can disable
-def disable_inventory(item_id):
-    conn = get_db_connection()
-    item = conn.execute('SELECT is_disabled FROM inventory WHERE item_id = ?', (item_id,)).fetchone()
-    new_status = not item['is_disabled']
-    conn.execute('UPDATE inventory SET is_disabled = ? WHERE item_id = ?', (new_status, item_id))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('inventory'))
-
-
-@app.route('/edit_item', methods=['POST'])
-def edit_item():
-    data = request.json
-    inventory_id = data['inventory_id']
-    stocked_quantity = data['stocked_quantity']
-    seller_id = data['seller_id']
-    exact_price = data['exact_price']
-    low_stock_threshold = data['low_stock_threshold']
-    conn = get_db_connection()
-    try:
-        conn.execute('''
-            UPDATE Inventory
-            SET stocked_quantity = ?, seller_id = ?, exact_price = ?, low_stock_threshold = ?
-            WHERE inventory_id = ?
-        ''', (stocked_quantity, seller_id, exact_price, low_stock_threshold, inventory_id))
-        conn.commit()
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
-    finally:
-        conn.close()
-
-
-@app.route('/disable_item', methods=['POST'])
-def disable_item():
-    data = request.json
-    inventory_id = data['inventory_id']
-    conn = get_db_connection()
-    try:
-        conn.execute('''
-            UPDATE Inventory
-            SET is_disabled = 1
-            WHERE inventory_id = ?
-        ''', (inventory_id,))
-        conn.commit()
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
-    finally:
-        conn.close()
-
-
-def generate_unique_item_id(category_name):
-    prefix = category_name[:2].upper()  # Get the first two letters of the category name and convert to uppercase
-    number = random.randint(100000, 999999)  # Random 6-digit number
-    return f"{prefix}-{number}"
-
-
-@app.route('/get_item_details/<int:inventory_id>')
-def get_item_details(inventory_id):
-    conn = get_db_connection()
-    item = conn.execute('''
-        SELECT it.item_name, c.category_name, v.variation_name, i.stocked_quantity
-        FROM Inventory i
-        JOIN Item it ON i.item_id = it.item_id
-        JOIN Category c ON it.category_id = c.category_id
-        LEFT JOIN Variation v ON it.variation_id = v.variation_id
-        WHERE i.inventory_id = ?
-    ''', (inventory_id,)).fetchone()
-    conn.close()
-    if item:
-        return jsonify(dict(item))
-    else:
-        return jsonify({'error': 'Item not found'}), 404
-
-
-@app.route('/update_stock_quantity', methods=['POST'])
-def update_stock_quantity():
-    data = request.json
-    inventory_id = data['inventory_id']
-    stocked_quantity = data['stocked_quantity']
-    conn = get_db_connection()
-    try:
-        conn.execute('UPDATE Inventory SET stocked_quantity = ? WHERE inventory_id = ?',
-                     (stocked_quantity, inventory_id))
-        conn.commit()
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
-    finally:
-        conn.close()
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
-#    app.run(host='192.168.183.72', port=5000, debug=True)
->>>>>>> Stashed changes

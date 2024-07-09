@@ -32,7 +32,7 @@ body {
 form {
     display: flex;
     flex-direction: column;
-    color: #D0C8BB;
+    color: #38332c;
 }
 
 h2 {
@@ -65,7 +65,7 @@ button:hover {
 }
 
 a {
-    color: #cbc7c2;
+    color: #7f5520;
     text-align: right;
     margin-bottom: 10px;
 }
@@ -1666,7 +1666,6 @@ header h1 {
     display: block;
     margin: 10px 0;
     width: 95%;
-    color: #593C3C;
 }
 
 form button {
@@ -2335,7 +2334,7 @@ Specific styles for user
 .users-page {
     font-family: 'Arial', sans-serif;
     background-color: #fffaf0;
-    color: #593C3C;
+    color: #393733;
 }
 
 .header {
