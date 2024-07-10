@@ -1176,7 +1176,7 @@ def payments(patient_id):
         patient_name = "Unknown"
         print(f"Patient with ID {patient_id} not found.")  # Debugging
 
-    # Fetch diagnoses
+    # Fetch diagnoses with condition names and costs
     cursor.execute('''
         SELECT c.tooth_number, c.condition_code, c.cost, c.date_of_diagnosis, cc.condition_name
         FROM conditions c
@@ -1186,19 +1186,8 @@ def payments(patient_id):
     diagnoses = cursor.fetchall()
     print(f"Diagnoses: {diagnoses}")  # Debugging
 
-    # Fetch items used
-    cursor.execute('''
-        SELECT i.item_name, iu.quantity, iu.date_of_diagnosis, i.cost
-        FROM items_used iu
-        JOIN Items i ON iu.item_id = i.item_id
-        WHERE iu.patient_id = ?
-    ''', (patient_id,))
-    items_used = cursor.fetchall()
-    print(f"Items Used Query: SELECT i.item_name, iu.quantity, iu.date_of_diagnosis, i.cost FROM items_used iu JOIN Items i ON iu.item_id = i.item_id WHERE iu.patient_id = {patient_id}")
-    print(f"Items Used: {items_used}")  # Debugging
-
-    # Calculate total cost
-    total_cost = sum(d['cost'] for d in diagnoses if d['cost']) + sum(item['quantity'] * item['cost'] for item in items_used if item['cost'])
+    # Calculate total cost from fetched diagnoses
+    total_cost = sum(d['cost'] for d in diagnoses if d['cost'])
     print(f"Total Cost: {total_cost}")  # Debugging
 
     conn.close()
@@ -1206,8 +1195,7 @@ def payments(patient_id):
     # Get current date
     current_date = datetime.now().strftime("%Y-%m-%d")
 
-    return render_template('payments.html', patient_name=patient_name, patient_id=patient_id, diagnoses=diagnoses, items_used=items_used, total_cost=total_cost, current_date=current_date)
-
+    return render_template('payments.html', patient_name=patient_name, patient_id=patient_id, diagnoses=diagnoses, total_cost=total_cost, current_date=current_date)
 
 
 @app.route('/process_payment', methods=['POST'])
@@ -1868,9 +1856,10 @@ def generate_billing(patient_id):
 
     # Fetch diagnoses
     cursor.execute('''
-        SELECT tooth_number, condition_code, cost, date_of_diagnosis
-        FROM conditions
-        WHERE patient_id = ?
+        SELECT c.tooth_number, c.condition_code, cc.condition_name, c.cost, c.date_of_diagnosis
+        FROM conditions c
+        JOIN condition_codes cc ON c.condition_code = cc.condition_code
+        WHERE c.patient_id = ?
     ''', (patient_id,))
     diagnoses = cursor.fetchall()
     print(f"Diagnoses: {diagnoses}")  # Debugging
@@ -1897,15 +1886,18 @@ def generate_billing(patient_id):
 
     return render_template('billing.html', patient_name=patient_name, patient_id=patient_id, diagnoses=diagnoses, items_used=items_used, total_cost=total_cost, current_date=current_date)
 
+
 @app.route('/update_billing/<int:patient_id>', methods=['POST'])
 def update_billing(patient_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Update diagnoses costs
+    # Update condition costs
     for key, value in request.form.items():
         if key.startswith('diagnosis_cost_'):
             parts = key.split('_')
+            if len(parts) < 4:
+                continue
             tooth_number = parts[2]
             condition_code = parts[3]
             cost = float(value)
@@ -1915,25 +1907,12 @@ def update_billing(patient_id):
                 WHERE patient_id = ? AND tooth_number = ? AND condition_code = ?
             ''', (cost, patient_id, tooth_number, condition_code))
 
-    # Update items used costs
-    for key, value in request.form.items():
-        if key.startswith('item_cost_'):
-            parts = key.split('_')
-            tooth_number = parts[2]
-            item_name = parts[3]
-            cost = float(value)
-            cursor.execute('''
-                UPDATE items_used
-                SET cost = ?
-                WHERE patient_id = ? AND tooth_number = ? AND item_id = (
-                    SELECT item_id FROM Items WHERE item_name = ?
-                )
-            ''', (cost, patient_id, tooth_number, item_name))
-
     conn.commit()
     conn.close()
 
     return redirect(url_for('generate_billing', patient_id=patient_id))
+
+
 
 
 @app.route('/conditions', methods=['POST'])
@@ -1942,17 +1921,18 @@ def save_conditions():
     tooth_number = data.get('tooth_number')
     condition_code = data.get('condition_code')
     patient_id = data.get('patient_id')
-    date_of_diagnosis = data.get('date_of_diagnosis',
-                                 datetime.now().strftime('%Y-%m-%d'))  # Use current date if not provided
+    date_of_diagnosis = data.get('date_of_diagnosis', datetime.now().strftime('%Y-%m-%d'))  # Use current date if not provided
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        cursor.execute('''
-            INSERT INTO conditions (tooth_number, condition_code, patient_id, date_of_diagnosis)
-            VALUES (?, ?, ?, ?)
-        ''', (tooth_number, condition_code, patient_id, date_of_diagnosis))
+        # Insert each condition separately
+        for code in condition_code.split(','):
+            cursor.execute('''
+                INSERT INTO conditions (tooth_number, condition_code, patient_id, date_of_diagnosis)
+                VALUES (?, ?, ?, ?)
+            ''', (tooth_number, code.strip(), patient_id, date_of_diagnosis))
         conn.commit()
         return jsonify({'success': True}), 200
     except Exception as e:
@@ -1960,6 +1940,7 @@ def save_conditions():
         return jsonify({'success': False, 'message': str(e)}), 500
     finally:
         conn.close()
+
 
 @app.route('/conditions/<int:condition_id>', methods=['DELETE'])
 def delete_condition(condition_id):

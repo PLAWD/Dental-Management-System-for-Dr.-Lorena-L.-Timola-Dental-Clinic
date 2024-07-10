@@ -61,15 +61,15 @@
                     </select>
                 </div>
                 <div id="cashPayment" class="payment-details">
-                    <label for="amount">Amount:</label>
+                    <label for="amount" class="l-amount">Amount:</label>
                     <input type="text" id="amount" name="amount">
-                    <label for="referenceNumberCash">Reference Number:</label>
+                    <label for="referenceNumberCash" class="l-refno">Reference Number:</label>
                     <input type="text" id="referenceNumberCash" name="reference_number_cash">
                 </div>
                 <div id="ewalletPayment" class="payment-details" style="display:none;">
-                    <p>Scan the QR code to pay:</p>
+                    <p class="p-qr">Scan the QR code to pay:</p>
                     <img src="{{ url_for('static', filename='images/gkas.png') }}" alt="QR Code">
-                    <label for="referenceNumber">Reference Number:</label>
+                    <label for="referenceNumber" class="l-refno">Reference Number:</label>
                     <input type="text" id="referenceNumber" name="reference_number">
                 </div>
                 <div class="form-group">

@@ -86,9 +86,9 @@
     </div>
 
     <div class="billing-container">
-        <h2>Billing for {{ patient_name }}</h2>
+        <h2 class="h2-bill">Billing for {{ patient_name }}</h2>
 
-        <h3>Conditions and Treatments</h3>
+        <h3 class="totcos">Conditions and Treatments</h3>
         <form action="{{ url_for('update_billing', patient_id=patient_id) }}" method="post">
             <table>
                 <thead>
@@ -113,27 +113,7 @@
                 </tbody>
             </table>
 
-            <h3>Items Used</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Quantity</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in items_used %}
-                        {% if item['date_of_diagnosis'] == current_date %}
-                        <tr>
-                            <td>{{ item['item_name'] }}</td>
-                            <td>{{ item['quantity'] }}</td>
-                        </tr>
-                        {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <h3>Total Cost: ₱{{ total_cost }}</h3>
+            <h3 class="totcos">Total Cost: ₱{{ total_cost }}</h3>
 
             <button type="submit">Apply Costs</button>
         </form>

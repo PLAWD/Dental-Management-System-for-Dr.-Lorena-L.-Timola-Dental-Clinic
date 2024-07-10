@@ -1,143 +1,143 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Treatments</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f5ede3;
-            color: #5b2c1e;
-        }
-        .main-content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            width: 100%;
-        }
-        .treatments-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 80%;
-            max-width: 800px;
-            text-align: center; /* Center the text */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        .treatments-header {
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Center the content */
-        }
-        .form-group label {
-            margin-bottom: 5px;
-        }
-        .form-group select {
-            width: 50%; /* Reduce the width to better center align */
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            display: block;
-            width: 50%; /* Reduce the width to better center align */
-            padding: 10px;
-            background-color: #5b2c1e;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 20px; /* Add margin to create space above the button */
-        }
-        button:hover {
-            background-color: #3a1e12;
-        }
-    </style>
-</head>
-<body class="treatments-page">
-    <div class="sidebar-tab" id="sidebarTab">☰</div>
-    <div id="sidebar" class="sidebar">
-        <ul>
-            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li><a href="{{ url_for('profile') }}">Profile</a></li>
-            <li><a href="{{ url_for('users') }}">Users</a></li>
-            <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
-            <li class="dropdown">
-                <a href="#">Records</a>
-                <div class="dropdown-content">
-                    <a href="{{ url_for('patients') }}">Patient Records</a>
-                    <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
-                    <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
-                </div>
-            </li>
-            <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
-            <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
-            <li><a href="{{ url_for('reports') }}">Reports</a></li>
-            <br><br><br><br><br><br>
-            <li><a href="{{ url_for('help') }}">Help</a></li>
-            <li><a href="{{ url_for('about') }}">About</a></li>
-            <li><a href="{{ url_for('logout') }}">Logout</a></li>
-        </ul>
-    </div>
-    <div class="main-content">
-        <div class="treatments-container">
-            <h2 class="treatments-header">Select Patient for Treatment</h2>
-            <form id="treatmentForm" method="GET" action="#">
-                <div class="form-group">
-                    <label for="patient">Select Patient:</label>
-                    <select id="patient" name="patient">
-                        {% for patient in patients %}
-                        <option value="{{ patient.patient_id }}">{{ patient.last_name }}, {{ patient.first_name }} {{ patient.middle_name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <button type="submit" onclick="updateFormAction()">Proceed to Intraoral Exam</button>
-            </form>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Treatments</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <style>
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background-color: #f5ede3;
+                color: #5b2c1e;
+            }
+            .main-content {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100%;
+                width: 100%;
+            }
+            .treatments-container {
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                width: 80%;
+                max-width: 800px;
+                text-align: center; /* Center the text */
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            .treatments-header {
+                margin-bottom: 20px;
+            }
+            .form-group {
+                margin-bottom: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center; /* Center the content */
+            }
+            .form-group label {
+                margin-bottom: 5px;
+            }
+            .form-group select {
+                width: 50%; /* Reduce the width to better center align */
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+            }
+            button {
+                display: block;
+                width: 50%; /* Reduce the width to better center align */
+                padding: 10px;
+                background-color: #5b2c1e;
+                color: #fff;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+                margin-top: 20px; /* Add margin to create space above the button */
+            }
+            button:hover {
+                background-color: #3a1e12;
+            }
+        </style>
+    </head>
+    <body class="treatments-page">
+        <div class="sidebar-tab" id="sidebarTab">☰</div>
+        <div id="sidebar" class="sidebar">
+            <ul>
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                <li><a href="{{ url_for('users') }}">Users</a></li>
+                <li><a href="{{ url_for('treatments') }}">Treatment</a></li>
+                <li class="dropdown">
+                    <a href="#">Records</a>
+                    <div class="dropdown-content">
+                        <a href="{{ url_for('patients') }}">Patient Records</a>
+                        <a href="{{ url_for('appointment_records') }}">Appointment Records</a>
+                        <a href="{{ url_for('treatment_records') }}">Treatment Records</a>
+                    </div>
+                </li>
+                <li><a href="{{ url_for('maintenance') }}">Maintenance</a></li>
+                <li><a href="{{ url_for('inventory') }}">Inventory</a></li>
+                <li><a href="{{ url_for('reports') }}">Reports</a></li>
+                <br><br><br><br><br><br>
+                <li><a href="{{ url_for('help') }}">Help</a></li>
+                <li><a href="{{ url_for('about') }}">About</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
         </div>
-    </div>
-    <script>
-        function updateFormAction() {
-            const patientId = document.getElementById('patient').value;
-            const form = document.getElementById('treatmentForm');
-            form.action = `/intraoral_exams/${patientId}`;
-        }
+        <div class="main-content">
+            <div class="treatments-container">
+                <h2 class="treatments-header">Select Patient for Treatment</h2>
+                <form id="treatmentForm" method="GET" action="#">
+                    <div class="form-group">
+                        <label for="patient">Select Patient:</label>
+                        <select id="patient" name="patient">
+                            {% for patient in patients %}
+                            <option value="{{ patient.patient_id }}">{{ patient.last_name }}, {{ patient.first_name }} {{ patient.middle_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" onclick="updateFormAction()">Proceed to Intraoral Exam</button>
+                </form>
+            </div>
+        </div>
+        <script>
+            function updateFormAction() {
+                const patientId = document.getElementById('patient').value;
+                const form = document.getElementById('treatmentForm');
+                form.action = `/intraoral_exams/${patientId}`;
+            }
 
-        document.addEventListener('DOMContentLoaded', function () {
-            const sidebar = document.getElementById('sidebar');
-            const sidebarTab = document.getElementById('sidebarTab');
-            const mainContent = document.querySelector('.main-content');
+            document.addEventListener('DOMContentLoaded', function () {
+                const sidebar = document.getElementById('sidebar');
+                const sidebarTab = document.getElementById('sidebarTab');
+                const mainContent = document.querySelector('.main-content');
 
-            sidebarTab.addEventListener('click', function () {
-                sidebar.classList.toggle('show');
-                mainContent.classList.toggle('shifted');
-                sidebarTab.style.display = 'none';
+                sidebarTab.addEventListener('click', function () {
+                    sidebar.classList.toggle('show');
+                    mainContent.classList.toggle('shifted');
+                    sidebarTab.style.display = 'none';
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
+                        sidebar.classList.remove('show');
+                        mainContent.classList.remove('shifted');
+                        sidebarTab.style.display = 'block';
+                    }
+                });
             });
-
-            document.addEventListener('click', function (event) {
-                if (!sidebar.contains(event.target) && !sidebarTab.contains(event.target)) {
-                    sidebar.classList.remove('show');
-                    mainContent.classList.remove('shifted');
-                    sidebarTab.style.display = 'block';
-                }
-            });
-        });
-    </script>
-</body>
-</html>
+        </script>
+    </body>
+    </html>

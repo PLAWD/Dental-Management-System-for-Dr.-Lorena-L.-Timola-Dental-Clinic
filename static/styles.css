@@ -3121,6 +3121,7 @@ text {
     height: 80%;
 }
 
-.patient-name, .kondisyon, .totcos {
+.patient-name, .kondisyon, .totcos, .l-amount, .l-refno, .p-qr, .h2-bill {
     color: #D0C8BB;
 }
+
