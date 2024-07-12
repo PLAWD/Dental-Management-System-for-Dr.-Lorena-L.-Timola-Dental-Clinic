@@ -2658,7 +2658,7 @@ Specific styles for reports
 .report-options select,
 .date-range input {
     margin-right: 20px;
-    color: #D0C8BB;
+    color: #593C3C;
 }
 
 button {
@@ -2732,6 +2732,7 @@ Specific styles for payments
 
 #confirmation p {
     margin-bottom: 20px;
+    color: #D0C8BB;
 }
 
 #confirmation button {
@@ -2739,13 +2740,13 @@ Specific styles for payments
     margin: 0 10px;
     border: none;
     border-radius: 4px;
-    background-color: #4CAF50;
-    color: white;
+    background-color: #D0C8BB;
+    color: #593C3C;
     cursor: pointer;
 }
 
 #confirmation button:hover {
-    background-color: #45a049;
+    background-color: #B9B09E;
 }
 
 /*=============================================================================================================================================================================================================================

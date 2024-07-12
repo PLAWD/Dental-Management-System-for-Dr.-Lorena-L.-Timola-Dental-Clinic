@@ -116,6 +116,8 @@
                     <th>Date</th>
                     <th>Patient Name</th>
                     <th>Services</th>
+                    <th>Conditions</th>
+                    <th>Total Cost (₱)</th>
                 </tr>
             </thead>
             <tbody>
@@ -124,6 +126,8 @@
                     <td>{{ record['treatment_date'] }}</td>
                     <td>{{ record['patient_name'] }}</td>
                     <td>{{ record['services'] }}</td>
+                    <td>{{ record['conditions'] }}</td>
+                    <td>{{ record['total_cost'] }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

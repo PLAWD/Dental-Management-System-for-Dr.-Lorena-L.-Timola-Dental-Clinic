@@ -97,6 +97,7 @@
             <div id="confirmation" style="display:none;">
                 <p>Are you sure the details are correct?</p>
                 <button onclick="confirmPayment()">Yes</button>
+                <br>
                 <button onclick="cancelPayment()">No</button>
             </div>
             <div id="feedback" style="display:none;"></div>
@@ -122,7 +123,15 @@
             const form = document.getElementById('paymentForm');
             const formData = new FormData(form);
 
+            const conditions = [];
+            document.querySelectorAll('.condition-entry').forEach(entry => {
+                const conditionText = entry.querySelector('.kondisyon').innerText;
+                const [name, amount] = conditionText.split(': ₱');
+                conditions.push({ name: name.trim(), amount: parseFloat(amount) });
+            });
+
             const data = Object.fromEntries(formData);
+            data.conditions = conditions;
 
             fetch('{{ url_for("process_payment") }}', {
                 method: 'POST',

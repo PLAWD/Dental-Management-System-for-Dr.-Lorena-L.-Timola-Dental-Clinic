@@ -1204,7 +1204,7 @@ def process_payment():
     patient_id = data['patient']
     payment_method = data['payment_method']
     amount = data['amount']
-    services = data['services']
+    conditions = data.get('conditions', [])  # Use an empty list if conditions are not provided
     payment_type = data['payment_type']  # Full or Partial
     reference_number = data.get('reference_number', '')
 
@@ -1235,9 +1235,9 @@ def process_payment():
         'INSERT INTO payments (patient_id, payment_method, amount, payment_date, reference_number, payment_type) VALUES (?, ?, ?, ?, ?, ?)',
         (patient_id, payment_method, amount, payment_date, reference_number, payment_type))
 
-    for service in services:
+    for condition in conditions:
         conn.execute('INSERT INTO services (patient_id, service_name, amount, payment_date) VALUES (?, ?, ?, ?)',
-                     (patient_id, service['name'], service['amount'], payment_date))
+                     (patient_id, condition['name'], condition['amount'], payment_date))
 
     conn.commit()
 
@@ -1263,11 +1263,11 @@ def process_payment():
     p.drawString(inch, height - 2.6 * inch, f"{amount} in {payment_type.lower()} payment for {patient_full_name}")
 
     p.drawString(inch, height - 3 * inch, "IN SETTLEMENT FOR THE FOLLOWING")
-    p.drawString(inch, height - 3.2 * inch, "Service        Amount")
+    p.drawString(inch, height - 3.2 * inch, "Condition        Amount")
 
     y = height - 3.4 * inch
-    for service in services:
-        p.drawString(inch, y, f"{service['name']}        {service['amount']}")
+    for condition in conditions:
+        p.drawString(inch, y, f"{condition['name']}        {condition['amount']}")
         y -= 0.2 * inch
 
     p.drawString(inch, y - 0.4 * inch, f"FORM OF PAYMENT: {payment_method}")
@@ -1284,6 +1284,7 @@ def process_payment():
 
     conn.close()
     return jsonify({'success': True})
+
 
 @app.route('/maintenance')
 def maintenance():
@@ -1663,20 +1664,30 @@ def submit_appointment():
 @role_required([1, 2])  # Both admin and user can access
 def treatment_records():
     conn = get_db_connection()
-    records = conn.execute('''
-        SELECT s.payment_date AS treatment_date, 
-               p.first_name || ' ' || p.middle_name || ' ' || p.last_name AS patient_name, 
-               GROUP_CONCAT(s.service_name, ', ') AS services
-        FROM services s
-        JOIN patients p ON s.patient_id = p.patient_id
-        GROUP BY s.payment_date, p.first_name, p.middle_name, p.last_name
+    cursor = conn.cursor()
+
+    # Fetch combined treatment and condition records
+    cursor.execute('''
+        SELECT 
+            s.payment_date AS treatment_date,
+            p.first_name || ' ' || p.middle_name || ' ' || p.last_name AS patient_name,
+            GROUP_CONCAT(s.service_name, ', ') AS services,
+            GROUP_CONCAT(c.condition_code, ', ') AS conditions
+        FROM patients p
+        LEFT JOIN services s ON p.patient_id = s.patient_id
+        LEFT JOIN conditions c ON p.patient_id = c.patient_id
+        GROUP BY p.patient_id, s.payment_date
         ORDER BY s.payment_date DESC
-    ''').fetchall()
+    ''')
+    records = cursor.fetchall()
     conn.close()
 
     user_number = session.get('user_number')
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_activity(f'{user_number} {current_time}: Accessed treatment records page')
+
+    return render_template('treatment_records.html', records=records)
+
 
     return render_template('treatment_records.html', records=records)
 @app.route('/change_password', methods=['POST'])
